@@ -7,6 +7,7 @@ substitutions:
   toggle_relay_1_on_touch: "true"
   toggle_relay_2_on_touch: "true"
   toggle_relay_3_on_touch: "true"
+  toggle_relay_4_on_touch: "true"
 
   vibra_time: 150ms
   button_on_time: 500ms
@@ -80,6 +81,9 @@ esphome:
           state: OFF
       - binary_sensor.template.publish:
           id: touchfield_3
+          state: OFF
+      - binary_sensor.template.publish:
+          id: touchfield_4
           state: OFF
       - binary_sensor.template.publish:
           id: multi_touch
@@ -168,6 +172,10 @@ globals:
     type: int [3]
     restore_value: no
     initial_value: ${touch_color}    
+  - id: button_press_start_time
+    type: uint32_t[4]
+    restore_value: no
+    initial_value: '{0, 0, 0, 0}'
 
 
 
@@ -176,6 +184,7 @@ binary_sensor:
     name: "Touchfield 1"
     id: touchfield_1
     on_press:
+      - lambda: "id(button_press_start_time)[0] = millis();"
       - if:
           condition:
             lambda: "return ${toggle_relay_1_on_touch};"
@@ -186,11 +195,16 @@ binary_sensor:
           id: touchfield_1
           state: OFF
       - script.execute: refresh_led_default
+    on_release:
+      - lambda: |-
+          uint32_t long_press_duration = millis() - id(button_press_start_time)[0];
+          ESP_LOGD("button", "Button 1 held for %u ms", long_press_duration);
 
   - platform: template
     name: "Touchfield 2"
     id: touchfield_2
     on_press:
+      - lambda: "id(button_press_start_time)[1] = millis();"
       - if:
           condition:
             lambda: "return ${toggle_relay_2_on_touch};"
@@ -201,11 +215,16 @@ binary_sensor:
           id: touchfield_2
           state: OFF
       - script.execute: refresh_led_default
+    on_release:
+      - lambda: |-
+          uint32_t long_press_duration = millis() - id(button_press_start_time)[0];
+          ESP_LOGD("button", "Button 2 held for %u ms", long_press_duration);
 
   - platform: template
     name: "Touchfield 3"
     id: touchfield_3
     on_press:
+      - lambda: "id(button_press_start_time)[2] = millis();"
       - if:
           condition:
             lambda: "return ${toggle_relay_3_on_touch};"
@@ -216,6 +235,30 @@ binary_sensor:
           id: touchfield_3
           state: OFF
       - script.execute: refresh_led_default
+    on_release:
+      - lambda: |-
+          uint32_t long_press_duration = millis() - id(button_press_start_time)[0];
+          ESP_LOGD("button", "Button 3 held for %u ms", long_press_duration);
+
+  - platform: template
+    name: "Touchfield 4"
+    id: touchfield_4
+    on_press:
+      - lambda: "id(button_press_start_time)[3] = millis();"
+      - if:
+          condition:
+            lambda: "return ${toggle_relay_4_on_touch};"
+          then:
+            - switch.toggle: relay_4
+      - delay: ${button_on_time}
+      - binary_sensor.template.publish:
+          id: touchfield_4
+          state: OFF
+      - script.execute: refresh_led_default
+    on_release:
+      - lambda: |-
+          uint32_t long_press_duration = millis() - id(button_press_start_time)[0];
+          ESP_LOGD("button", "Button 4 held for %u ms", long_press_duration);
 
   - platform: template
     name: "Swipe left"
@@ -286,6 +329,18 @@ switch:
     id: relay_3
     name: "${friendly_name} L3"
     pin: ${relay_3_pin}
+    restore_mode: RESTORE_DEFAULT_OFF
+    on_turn_on:
+      then:
+        - script.execute: refresh_led_default
+    on_turn_off:
+      then:
+        - script.execute: refresh_led_default
+
+  - platform: gpio
+    id: relay_4
+    name: "${friendly_name} L4"
+    pin: ${relay_4_pin}
     restore_mode: RESTORE_DEFAULT_OFF
     on_turn_on:
       then:
@@ -394,6 +449,72 @@ light:
       - id: leds
         from: 11
         to: 11
+
+  - platform: partition
+    name: "LEDs Top right"
+    id: leds_top_right
+    internal: true
+    segments:
+      - id: leds
+        from: 27
+        to: 27
+  - platform: partition
+    name: "LEDs Top center right"
+    id: leds_top_center_right
+    internal: true
+    segments:
+      - id: leds
+        from: 25
+        to: 25
+  - platform: partition
+    name: "LEDs Top center left"
+    id: leds_top_center_left
+    internal: true
+    segments:
+      - id: leds
+        from: 23
+        to: 23
+  - platform: partition
+    name: "LEDs Top left"
+    id: leds_top_left
+    internal: true
+    segments:
+      - id: leds
+        from: 21
+        to: 21
+
+  - platform: partition
+    name: "LEDs Bottom right"
+    id: leds_bottom_right
+    internal: true
+    segments:
+      - id: leds
+        from: 7
+        to: 7
+  - platform: partition
+    name: "LEDs Bottom center right"
+    id: leds_bottom_center_right
+    internal: true
+    segments:
+      - id: leds
+        from: 9
+        to: 9
+  - platform: partition
+    name: "LEDs Bottom center left"
+    id: leds_bottom_center_left
+    internal: true
+    segments:
+      - id: leds
+        from: 11
+        to: 11
+  - platform: partition
+    name: "LEDs Bottom left"
+    id: leds_bottom_left
+    internal: true
+    segments:
+      - id: leds
+        from: 13
+        to: 13
 
   - platform: partition
     name: "LEDs Nightlight"
@@ -576,35 +697,75 @@ script:
 
       - if:
           condition:
-            lambda: "return (${relay_count}>1 && id(relay_1).state) ;"
+            lambda: "return (id(touchfield_1).state) ;"
           then:
-            - script.execute: led_on_button_left
+            - script.execute: led_on_button_1
           else:
-            - script.execute: led_off_button_left
+            - script.execute: led_off_button_1
 
       - if:
           condition:
-            lambda: "return (${relay_count}==3 && id(relay_2).state) || (${relay_count}==1 && id(relay_1).state);"
+            lambda: "return (id(touchfield_2).state) ;"
           then:
-            - script.execute: led_on_button_middle
+            - script.execute: led_on_button_2
           else:
-            - script.execute: led_off_button_middle
+            - script.execute: led_off_button_2
 
       - if:
           condition:
-            lambda: "return (${relay_count}==2 && id(relay_2).state) || (${relay_count}==3 && id(relay_3).state);"
+            lambda: "return (id(touchfield_3).state) ;"
           then:
-            - script.execute: led_on_button_right
+            - script.execute: led_on_button_3
           else:
-            - script.execute: led_off_button_right
+            - script.execute: led_off_button_3
 
       - if:
           condition:
-            lambda: "return id(nightlight).state || id(nightlight_active).state;"
+            lambda: "return (id(touchfield_4).state) ;"
           then:
-            - script.execute: led_on_nightlight
+            - script.execute: led_on_button_4
           else:
-            - light.turn_off: leds_nightlight
+            - script.execute: led_off_button_4
+
+  - id: led_on_button_1
+    mode: restart
+    then:
+      - light.turn_on:
+          id: leds_bottom_left
+          brightness: ${button_brightness}
+          red: !lambda "return id(button_color)[0]/100.0;"
+          green: !lambda "return id(button_color)[1]/100.0;"
+          blue:  !lambda "return id(button_color)[2]/100.0;"
+
+  - id: led_on_button_2
+    mode: restart
+    then:
+      - light.turn_on:
+          id: leds_bottom_center_left
+          brightness: ${button_brightness}
+          red: !lambda "return id(button_color)[0]/100.0;"
+          green: !lambda "return id(button_color)[1]/100.0;"
+          blue:  !lambda "return id(button_color)[2]/100.0;"
+
+  - id: led_on_button_3
+    mode: restart
+    then:
+      - light.turn_on:
+          id: leds_bottom_center_right
+          brightness: ${button_brightness}
+          red: !lambda "return id(button_color)[0]/100.0;"
+          green: !lambda "return id(button_color)[1]/100.0;"
+          blue:  !lambda "return id(button_color)[2]/100.0;"
+
+  - id: led_on_button_4
+    mode: restart
+    then:
+      - light.turn_on:
+          id: leds_bottom_right
+          brightness: ${button_brightness}
+          red: !lambda "return id(button_color)[0]/100.0;"
+          green: !lambda "return id(button_color)[1]/100.0;"
+          blue:  !lambda "return id(button_color)[2]/100.0;"
 
   - id: led_on_button_left
     mode: restart
@@ -636,6 +797,74 @@ script:
           green: !lambda "return id(button_color)[1]/100.0;"
           blue:  !lambda "return id(button_color)[2]/100.0;"
 
+
+  - id: led_off_button_1
+    mode: restart
+    then:
+      - if:
+          condition:
+            lambda: "return id(nightlight).state || id(nightlight_active).state;"
+          then:
+            - light.turn_on:
+                id: leds_bottom_left
+                brightness: ${nightlight_brightness}
+                red: !lambda "return id(nightlight_color)[0]/100.0;"
+                green: !lambda "return id(nightlight_color)[1]/100.0;"
+                blue:  !lambda "return id(nightlight_color)[2]/100.0;"
+          else:
+            - light.turn_off:
+                id: leds_bottom_left
+
+  - id: led_off_button_2
+    mode: restart
+    then:
+      - if:
+          condition:
+            lambda: "return id(nightlight).state || id(nightlight_active).state;"
+          then:
+            - light.turn_on:
+                id: leds_bottom_center_left
+                brightness: ${nightlight_brightness}
+                red: !lambda "return id(nightlight_color)[0]/100.0;"
+                green: !lambda "return id(nightlight_color)[1]/100.0;"
+                blue:  !lambda "return id(nightlight_color)[2]/100.0;"
+          else:
+            - light.turn_off:
+                id: leds_bottom_center_left
+
+  - id: led_off_button_3
+    mode: restart
+    then:
+      - if:
+          condition:
+            lambda: "return id(nightlight).state || id(nightlight_active).state;"
+          then:
+            - light.turn_on:
+                id: leds_bottom_center_right
+                brightness: ${nightlight_brightness}
+                red: !lambda "return id(nightlight_color)[0]/100.0;"
+                green: !lambda "return id(nightlight_color)[1]/100.0;"
+                blue:  !lambda "return id(nightlight_color)[2]/100.0;"
+          else:
+            - light.turn_off:
+                id: leds_center_right
+
+  - id: led_off_button_4
+    mode: restart
+    then:
+      - if:
+          condition:
+            lambda: "return id(nightlight).state || id(nightlight_active).state;"
+          then:
+            - light.turn_on:
+                id: leds_bottom_right
+                brightness: ${nightlight_brightness}
+                red: !lambda "return id(nightlight_color)[0]/100.0;"
+                green: !lambda "return id(nightlight_color)[1]/100.0;"
+                blue:  !lambda "return id(nightlight_color)[2]/100.0;"
+          else:
+            - light.turn_off:
+                id: leds_bottom_right
 
   - id: led_off_button_left
     mode: restart
