@@ -184,7 +184,9 @@ binary_sensor:
     name: "Touchfield 1"
     id: touchfield_1
     on_press:
-      - lambda: "id(button_press_start_time)[0] = millis();"
+      - lambda: |-
+          id(button_press_start_time)[0] = millis();
+          ESP_LOGD("button", "Button 1 on_press at %u", millis());
       - if:
           condition:
             lambda: "return ${toggle_relay_1_on_touch};"
@@ -204,7 +206,9 @@ binary_sensor:
     name: "Touchfield 2"
     id: touchfield_2
     on_press:
-      - lambda: "id(button_press_start_time)[1] = millis();"
+      - lambda: |-
+          id(button_press_start_time)[1] = millis();
+          ESP_LOGD("button", "Button 2 on_press at %u", millis());
       - if:
           condition:
             lambda: "return ${toggle_relay_2_on_touch};"
@@ -224,7 +228,9 @@ binary_sensor:
     name: "Touchfield 3"
     id: touchfield_3
     on_press:
-      - lambda: "id(button_press_start_time)[2] = millis();"
+      - lambda: |-
+          id(button_press_start_time)[2] = millis();
+          ESP_LOGD("button", "Button 3 on_press at %u", millis());
       - if:
           condition:
             lambda: "return ${toggle_relay_3_on_touch};"
@@ -244,7 +250,9 @@ binary_sensor:
     name: "Touchfield 4"
     id: touchfield_4
     on_press:
-      - lambda: "id(button_press_start_time)[3] = millis();"
+      - lambda: |-
+          id(button_press_start_time)[3] = millis();
+          ESP_LOGD("button", "Button 4 on_press at %u", millis());
       - if:
           condition:
             lambda: "return ${toggle_relay_4_on_touch};"
