@@ -620,6 +620,7 @@ tx_ultimate_touch:
 #   - script.execute: led_on_touch
     - script.execute:
         id: button_pressed
+        button: 0
         x: touch.x
     - lambda: >
         ESP_LOGD("tx_ultimate_touch.on_press", "Touch Position: %d / State: %d", touch.x, touch.state);
