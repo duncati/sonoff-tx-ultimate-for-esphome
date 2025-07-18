@@ -732,12 +732,12 @@ script:
           // ESP_LOGD("button", "Button %d LED was %s", button, is_on ? "ON" : "OFF");
 
           // Get current color & brightness
-          int *color = target_led->get(led_index).get();
-          ESP_LOGD("button", "Button %d color was %f, %f, %f - %f", button, color[0], color[1], color[2]);
-          //ESP_LOGD("button", "Button %d color was %f, %f, %f - %f", button, color.r, color.g, color.b);
+          esphome::Color color = target_led->get(led_index).get();
+          ESP_LOGD("button", "Button %d color was %f, %f, %f - %f", button, color.r, color.g, color.b);
 
           // Turn on
-          target_led->get(led_index).set(id(button_color));
+          esphome::Color newColor = Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]);
+          target_led->get(led_index).set(newColor);
           target_led->schedule_show();
 
           //id(my_light).get_output()->set_pixel(0, 255, 0, 0);  // Set first LED to red
