@@ -727,15 +727,12 @@ script:
           target_led->dump_config();
 
           // Is light on?
-          /*
-          bool is_on = false;
-          target_led->current_values_as_binary(&is_on);
-          ESP_LOGD("button", "Button %d LED was %s", button, is_on ? "ON" : "OFF");
-          */
+          // bool is_on = false;
+          // target_led->current_values_as_binary(&is_on);
+          // ESP_LOGD("button", "Button %d LED was %s", button, is_on ? "ON" : "OFF");
 
           // Get current color & brightness
-          float brightness = 0.0, red = 0.0, green = 0.0, blue = 0.0;
-          int[] color = target_led->get(led_index).get();
+          int *color = target_led->get(led_index).get();
           ESP_LOGD("button", "Button %d color was %f, %f, %f - %f", button, color[0], color[1], color[2]);
           //ESP_LOGD("button", "Button %d color was %f, %f, %f - %f", button, color.r, color.g, color.b);
 
