@@ -731,12 +731,12 @@ script:
           ESP_LOGD("button", "Button %d color was %f, %f, %f - %f", button, red, green, blue, brightness);
 
           // Turn on
-          target_led->turn_on();
           target_led->make_call()
             .set_rgb(
-              id(button_color)[0] / 100.0f,
-              id(button_color)[1] / 100.0f,
-              id(button_color)[2] / 100.0f
+            0.0, 0.0, 1.0
+              //id(button_color)[0] / 100.0f,
+              //id(button_color)[1] / 100.0f,
+              //id(button_color)[2] / 100.0f
             )
             .set_brightness(1.0)
             .set_transition_length(0.1)
