@@ -718,6 +718,7 @@ script:
               return;
           }
           ESP_LOGD("button", "resolved X %d to button %d", x, button);
+          target_led->dump_config();
 
           // Is light on?
           bool is_on = false;
@@ -732,8 +733,9 @@ script:
 
           // Turn on
           target_led->make_call()
-            .set_rgb(
-            0.0, 0.0, 1.0
+          .set_color(0.0, 1.0, 1.0)
+            //.set_rgb(
+            //0.0, 0.0, 1.0
               //id(button_color)[0] / 100.0f,
               //id(button_color)[1] / 100.0f,
               //id(button_color)[2] / 100.0f
@@ -742,8 +744,12 @@ script:
             .set_transition_length(0.1)
             .perform();
 
+//id(my_light).get_output()->set_pixel(0, 255, 0, 0);  // Set first LED to red
+//id(my_light).get_output()->schedule_show();  
+
           target_led->current_values_as_brightness(&brightness);
           target_led->current_values_as_rgb(&red, &green, &blue);
+          delay(1000);
           ESP_LOGD("button", "Button %d color now set to %f, %f, %f - %f", button, red, green, blue, brightness);
 
           // Set brightness and color (assuming you’re using effects or color-capable lights)
