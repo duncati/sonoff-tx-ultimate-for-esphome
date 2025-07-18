@@ -737,7 +737,7 @@ script:
               id(button_color)[1] / 100.0f,
               id(button_color)[2] / 100.0f
             )
-            .set_brightness()
+            .set_brightness(1.0)
             .set_transition_length()
             .perform();
 
