@@ -695,27 +695,27 @@ script:
           switch (x) {
             case 1:
             case 2:
-              target_led = id(leds_bottom_left).get_output();
+              target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_left).get_output());
               button = 1;
               led_index = 13;
               break;
             case 3:
             case 4:
             case 5:
-              target_led = id(leds_bottom_center_left).get_output();
+              target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_center_left).get_output());
               button = 2;
               led_index = 11;
               break;
             case 6:
             case 7:
             case 8:
-              target_led = id(leds_bottom_center_right).get_output();
+              target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_center_right).get_output());
               button = 3;
               led_index = 9;
               break;
             case 9:
             case 10:
-              target_led = id(leds_bottom_right).get_output();
+              target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_right).get_output());
               button = 4;
               led_index = 7;
               break;
