@@ -113,7 +113,7 @@ logger:
     light: INFO
     script: INFO
     switch: INFO
-    tx_ultimate_touch: INFO
+#    tx_ultimate_touch: INFO
     uart_debug: INFO
 
 dashboard_import:
@@ -687,7 +687,6 @@ script:
       x: int
     then:
       - lambda: |-
-          ESP_LOGD("tx_ultimate_touch.on_press", "BUTTON_PRESSED %d", x);
           int button;
           light::LightState* target_led = nullptr;
 
@@ -718,19 +717,18 @@ script:
               ESP_LOGW("script", "Unexpected X: %d", x);
               return;
           }
-          // FIXME: logging these on "script" doesn't work for some reason
-          ESP_LOGD("tx_ultimate_touch.on_press", "resolved X %d to button %d", x, button);
+          ESP_LOGD("button", "resolved X %d to button %d", x, button);
 
           // Is light on?
           bool is_on = false;
           target_led->current_values_as_binary(&is_on);
-          ESP_LOGD("tx_ultimate_touch.on_press", "Button %d LED was %s", button, is_on ? "ON" : "OFF");
+          ESP_LOGD("button", "Button %d LED was %s", button, is_on ? "ON" : "OFF");
 
           // Get current color & brightness
           float brightness = 0.0, red = 0.0, green = 0.0, blue = 0.0;
           target_led->current_values_as_brightness(&brightness);
           target_led->current_values_as_rgb(&red, &green, &blue);
-          ESP_LOGD("tx_ultimate_touch.on_press", "Button %d color was %f, %f, %f - %f", button, red, green, blue, brightness);
+          ESP_LOGD("button", "Button %d color was %f, %f, %f - %f", button, red, green, blue, brightness);
 
           // Turn on
           target_led->turn_on();
@@ -744,6 +742,10 @@ script:
             .set_transition_length(0.1)
             .perform();
 
+          target_led->current_values_as_brightness(&brightness);
+          target_led->current_values_as_rgb(&red, &green, &blue);
+          ESP_LOGD("button", "Button %d color now set to %f, %f, %f - %f", button, red, green, blue, brightness);
+
           // Set brightness and color (assuming you’re using effects or color-capable lights)
           target_led->make_call()
             .set_brightness(1.0)
@@ -751,6 +753,7 @@ script:
 
           // Delay and dim down
           delay(1000);
+          ESP_LOGD("button", "Dimming button %d", button);
           target_led->make_call()
             .set_brightness(0.2)
             .set_transition_length(1.0)
