@@ -621,7 +621,7 @@ tx_ultimate_touch:
     - lambda: |-
         ESP_LOGD("tx_ultimate_touch.on_press", "Touch Position: %d / State: %d", touch.x, touch.state);
         int button = 0;
-        id(button_pressed) -> execute(button, touch.x);
+        id(button_pressed)->execute(button, touch.x);
 
   on_release:
     - script.execute:
