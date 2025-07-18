@@ -688,30 +688,36 @@ script:
     then:
       - lambda: |-
           int button;
-          light::LightState* target_led = nullptr;
+          //light::LightState* target_led = nullptr;
+          light::AddressableLight* target_led = nullptr;
+          int led_index;
 
           switch (x) {
             case 1:
             case 2:
-              target_led = id(leds_bottom_left);
+              target_led = id(leds_bottom_left).get_output();
               button = 1;
+              led_index = 13;
               break;
             case 3:
             case 4:
             case 5:
-              target_led = id(leds_bottom_center_left);
+              target_led = id(leds_bottom_center_left).get_output();
               button = 2;
+              led_index = 11;
               break;
             case 6:
             case 7:
             case 8:
-              target_led = id(leds_bottom_center_right);
+              target_led = id(leds_bottom_center_right).get_output();
               button = 3;
+              led_index = 9;
               break;
             case 9:
             case 10:
-              target_led = id(leds_bottom_right);
+              target_led = id(leds_bottom_right).get_output();
               button = 4;
+              led_index = 7;
               break;
             default:
               ESP_LOGW("script", "Unexpected X: %d", x);
@@ -727,31 +733,17 @@ script:
 
           // Get current color & brightness
           float brightness = 0.0, red = 0.0, green = 0.0, blue = 0.0;
-          target_led->current_values_as_brightness(&brightness);
-          target_led->current_values_as_rgb(&red, &green, &blue);
-          ESP_LOGD("button", "Button %d color was %f, %f, %f - %f", button, red, green, blue, brightness);
+          auto color = target_led->get_pixel(led_index);
+          ESP_LOGD("button", "Button %d color was %f, %f, %f - %f", button, color.r, color.g, color.b);
 
           // Turn on
-          target_led->make_call()
-          .set_color(0.0, 1.0, 1.0)
-            //.set_rgb(
-            //0.0, 0.0, 1.0
-              //id(button_color)[0] / 100.0f,
-              //id(button_color)[1] / 100.0f,
-              //id(button_color)[2] / 100.0f
-            )
-            .set_brightness(1.0)
-            .set_transition_length(0.1)
-            .perform();
+          target_led->set_pixel(led_index, id(button_color)[0], id(button_color)[1], id(button_color)[2]);
+          target_led->schedule_show();
 
           //id(my_light).get_output()->set_pixel(0, 255, 0, 0);  // Set first LED to red
           //id(my_light).get_output()->schedule_show();  
 
-          target_led->current_values_as_brightness(&brightness);
-          target_led->current_values_as_rgb(&red, &green, &blue);
-          delay(1000);
-          ESP_LOGD("button", "Button %d color now set to %f, %f, %f - %f", button, red, green, blue, brightness);
-
+          /*
           // Set brightness and color (assuming you’re using effects or color-capable lights)
           target_led->make_call()
             .set_brightness(1.0)
@@ -769,6 +761,7 @@ script:
             .set_rgb(red, green, blue)
             .set_brightness(brightness)
             .perform();
+          */
 
   - id: refresh_nightlight
     mode: restart
