@@ -196,7 +196,8 @@ binary_sensor:
       - binary_sensor.template.publish:
           id: touchfield_1
           state: OFF
-      - script.execute: refresh_led_default
+#     - script.execute: refresh_led_default
+      - script.execute: button_press
     on_release:
       - lambda: |-
           uint32_t long_press_duration = millis() - id(button_press_start_time)[0];
@@ -218,7 +219,8 @@ binary_sensor:
       - binary_sensor.template.publish:
           id: touchfield_2
           state: OFF
-      - script.execute: refresh_led_default
+#     - script.execute: refresh_led_default
+      - script.execute: button_press
     on_release:
       - lambda: |-
           uint32_t long_press_duration = millis() - id(button_press_start_time)[1];
@@ -240,7 +242,8 @@ binary_sensor:
       - binary_sensor.template.publish:
           id: touchfield_3
           state: OFF
-      - script.execute: refresh_led_default
+#     - script.execute: refresh_led_default
+      - script.execute: button_press
     on_release:
       - lambda: |-
           uint32_t long_press_duration = millis() - id(button_press_start_time)[2];
@@ -262,7 +265,8 @@ binary_sensor:
       - binary_sensor.template.publish:
           id: touchfield_4
           state: OFF
-      - script.execute: refresh_led_default
+#     - script.execute: refresh_led_default
+      - script.execute: button_press
     on_release:
       - lambda: |-
           uint32_t long_press_duration = millis() - id(button_press_start_time)[3];
@@ -681,6 +685,63 @@ sun:
 
 
 script:
+  - id: button_pressed
+    mode: restart
+    parameters:
+      button: int
+    then:
+      - lambda: |-
+          light::LightState* target_led = nullptr;
+
+          switch (button) {
+            case 1:
+              target_led = id(leds_bottom_left);
+              break;
+            case 2:
+              target_led = id(leds_bottom_center_left);
+              break;
+            case 3:
+              target_led = id(leds_bottom_center_right);
+              break;
+            case 4:
+              target_led = id(leds_bottom_right);
+              break;
+            default:
+              ESP_LOGW("script", "Invalid button: %d", button);
+              return;
+          }
+
+          // Is light on?
+          bool is_on = false;
+          target_led->current_values_as_binary(&is_on);
+          ESP_LOGD("script", "LED was %s", is_on ? "ON" : "OFF");
+
+          // Get current color & brightness
+          float brightness = 0.0, red = 0.0, green = 0.0, blue = 0.0;
+          target_led->current_values_as_brightness(&brightness);
+          target_led->current_values_as_rgb(&red, &green, &blue);
+
+          // Turn on
+          target_led->turn_on();
+          target_led->make_call()
+            .set_rgb(
+              id(button_color)[0] / 100.0f,
+              id(button_color)[1] / 100.0f,
+              id(button_color)[2] / 100.0f
+            )
+            .set_brightness()
+            .set_transition_length()
+            .perform();
+
+          // Set brightness and color (assuming you’re using effects or color-capable lights)
+          target_led->make_call().set_brightness(1.0).perform();
+
+          // Delay and dim down
+          delay(1000);
+          target_led->make_call().set_brightness(0.2).perform();
+          // Restore original light state
+          target_led->make_call().set_rgb(red, green, blue).set_brightness(brightness).perform();
+
   - id: refresh_nightlight
     mode: restart
     then:
