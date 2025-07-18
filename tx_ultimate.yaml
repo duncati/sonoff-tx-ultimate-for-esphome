@@ -726,8 +726,8 @@ script:
           ESP_LOGD("button", "resolved X %d to button %d", x, button);
           target_led->dump_config();
 
-          /*
           // Is light on?
+          /*
           bool is_on = false;
           target_led->current_values_as_binary(&is_on);
           ESP_LOGD("button", "Button %d LED was %s", button, is_on ? "ON" : "OFF");
@@ -739,7 +739,7 @@ script:
           ESP_LOGD("button", "Button %d color was %f, %f, %f - %f", button, color.r, color.g, color.b);
 
           // Turn on
-          target_led->set_pixel(led_index, id(button_color)[0], id(button_color)[1], id(button_color)[2]);
+          target_led->get(led_index).set(id(button_color)[0], id(button_color)[1], id(button_color)[2]);
           target_led->schedule_show();
 
           //id(my_light).get_output()->set_pixel(0, 255, 0, 0);  // Set first LED to red
