@@ -689,7 +689,7 @@ script:
       - lambda: |-
           int button;
           //light::LightState* target_led = nullptr;
-          auto target_led = nullptr;
+          auto target_led;
           int led_index;
 
           switch (x) {
