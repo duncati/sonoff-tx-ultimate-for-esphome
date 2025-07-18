@@ -199,7 +199,6 @@ binary_sensor:
 #     - script.execute: refresh_led_default
       - script.execute:
           id: button_pressed
-          button: 1
           x: 2
     on_release:
       - lambda: |-
@@ -225,7 +224,6 @@ binary_sensor:
 #     - script.execute: refresh_led_default
       - script.execute:
           id: button_pressed
-          button: 2
           x: 4
     on_release:
       - lambda: |-
@@ -251,7 +249,6 @@ binary_sensor:
 #     - script.execute: refresh_led_default
       - script.execute:
           id: button_pressed
-          button: 3
           x: 6
     on_release:
       - lambda: |-
@@ -277,7 +274,6 @@ binary_sensor:
 #     - script.execute: refresh_led_default
       - script.execute:
           id: button_pressed
-          button: 4
           x: 8
     on_release:
       - lambda: |-
@@ -620,8 +616,7 @@ tx_ultimate_touch:
 #   - script.execute: led_on_touch
     - lambda: |-
         ESP_LOGD("tx_ultimate_touch.on_press", "Touch Position: %d / State: %d", touch.x, touch.state);
-        int button = 0;
-        id(button_pressed)->execute(button, touch.x);
+        id(button_pressed)->execute(touch.x);
 
   on_release:
     - script.execute:
@@ -702,54 +697,46 @@ script:
   - id: button_pressed
     mode: restart
     parameters:
-      button: int
       x: int
     then:
       - lambda: |-
+          ESP_LOGD("tx_ultimate_touch.on_press", "BUTTON_PRESSED %d", x);
+          ESP_LOGD("script", "BUTTON_PRESSED SCRIPT %d", x);
+          int button;
           light::LightState* target_led = nullptr;
 
           switch (x) {
             case 1:
             case 2:
+              target_led = id(leds_bottom_left);
               button = 1;
               break;
             case 3:
             case 4:
             case 5:
+              target_led = id(leds_bottom_center_left);
               button = 2;
               break;
             case 6:
             case 7:
             case 8:
+              target_led = id(leds_bottom_center_right);
               button = 3;
               break;
-            default:
+            case 9:
+            case 10:
+              target_led = id(leds_bottom_right);
               button = 4;
               break;
-          }
-
-          switch (button) {
-            case 1:
-              target_led = id(leds_bottom_left);
-              break;
-            case 2:
-              target_led = id(leds_bottom_center_left);
-              break;
-            case 3:
-              target_led = id(leds_bottom_center_right);
-              break;
-            case 4:
-              target_led = id(leds_bottom_right);
-              break;
             default:
-              ESP_LOGW("script", "Invalid button: %d", button);
+              ESP_LOGW("script", "Unexpected X: %d", x);
               return;
           }
 
           // Is light on?
           bool is_on = false;
           target_led->current_values_as_binary(&is_on);
-          ESP_LOGD("script", "LED was %s", is_on ? "ON" : "OFF");
+          ESP_LOGD("script", "Button %d LED was %s", button, is_on ? "ON" : "OFF");
 
           // Get current color & brightness
           float brightness = 0.0, red = 0.0, green = 0.0, blue = 0.0;
