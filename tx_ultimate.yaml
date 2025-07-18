@@ -197,7 +197,7 @@ binary_sensor:
           id: touchfield_1
           state: OFF
 #     - script.execute: refresh_led_default
-      - script.execute: button_press
+      - script.execute: button_pressed
     on_release:
       - lambda: |-
           uint32_t long_press_duration = millis() - id(button_press_start_time)[0];
@@ -220,7 +220,7 @@ binary_sensor:
           id: touchfield_2
           state: OFF
 #     - script.execute: refresh_led_default
-      - script.execute: button_press
+      - script.execute: button_pressed
     on_release:
       - lambda: |-
           uint32_t long_press_duration = millis() - id(button_press_start_time)[1];
@@ -243,7 +243,7 @@ binary_sensor:
           id: touchfield_3
           state: OFF
 #     - script.execute: refresh_led_default
-      - script.execute: button_press
+      - script.execute: button_pressed
     on_release:
       - lambda: |-
           uint32_t long_press_duration = millis() - id(button_press_start_time)[2];
@@ -266,7 +266,7 @@ binary_sensor:
           id: touchfield_4
           state: OFF
 #     - script.execute: refresh_led_default
-      - script.execute: button_press
+      - script.execute: button_pressed
     on_release:
       - lambda: |-
           uint32_t long_press_duration = millis() - id(button_press_start_time)[3];
