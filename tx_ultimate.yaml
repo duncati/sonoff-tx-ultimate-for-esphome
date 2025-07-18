@@ -735,7 +735,7 @@ script:
 
           // Get current color & brightness
           float brightness = 0.0, red = 0.0, green = 0.0, blue = 0.0;
-          auto color = target_led->at(led_index);
+          auto color = target_led->get(led_index).get();
           ESP_LOGD("button", "Button %d color was %f, %f, %f - %f", button, color.r, color.g, color.b);
 
           // Turn on
