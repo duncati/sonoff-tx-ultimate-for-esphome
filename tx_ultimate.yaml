@@ -178,7 +178,6 @@ globals:
     initial_value: '{0, 0, 0, 0}'
 
 
-
 binary_sensor:
   - platform: template
     name: "Touchfield 1"
@@ -197,9 +196,6 @@ binary_sensor:
           id: touchfield_1
           state: OFF
 #     - script.execute: refresh_led_default
-      - script.execute:
-          id: button_pressed
-          x: 2
     on_release:
       - lambda: |-
           uint32_t long_press_duration = millis() - id(button_press_start_time)[0];
@@ -222,9 +218,6 @@ binary_sensor:
           id: touchfield_2
           state: OFF
 #     - script.execute: refresh_led_default
-      - script.execute:
-          id: button_pressed
-          x: 4
     on_release:
       - lambda: |-
           uint32_t long_press_duration = millis() - id(button_press_start_time)[1];
@@ -247,9 +240,6 @@ binary_sensor:
           id: touchfield_3
           state: OFF
 #     - script.execute: refresh_led_default
-      - script.execute:
-          id: button_pressed
-          x: 6
     on_release:
       - lambda: |-
           uint32_t long_press_duration = millis() - id(button_press_start_time)[2];
@@ -272,9 +262,6 @@ binary_sensor:
           id: touchfield_4
           state: OFF
 #     - script.execute: refresh_led_default
-      - script.execute:
-          id: button_pressed
-          x: 8
     on_release:
       - lambda: |-
           uint32_t long_press_duration = millis() - id(button_press_start_time)[3];
@@ -701,7 +688,6 @@ script:
     then:
       - lambda: |-
           ESP_LOGD("tx_ultimate_touch.on_press", "BUTTON_PRESSED %d", x);
-          ESP_LOGD("script", "BUTTON_PRESSED SCRIPT %d", x);
           int button;
           light::LightState* target_led = nullptr;
 
@@ -732,16 +718,19 @@ script:
               ESP_LOGW("script", "Unexpected X: %d", x);
               return;
           }
+          // FIXME: logging these on "script" doesn't work for some reason
+          ESP_LOGD("tx_ultimate_touch.on_press", "resolved X %d to button %d", x, button);
 
           // Is light on?
           bool is_on = false;
           target_led->current_values_as_binary(&is_on);
-          ESP_LOGD("script", "Button %d LED was %s", button, is_on ? "ON" : "OFF");
+          ESP_LOGD("tx_ultimate_touch.on_press", "Button %d LED was %s", button, is_on ? "ON" : "OFF");
 
           // Get current color & brightness
           float brightness = 0.0, red = 0.0, green = 0.0, blue = 0.0;
           target_led->current_values_as_brightness(&brightness);
           target_led->current_values_as_rgb(&red, &green, &blue);
+          ESP_LOGD("tx_ultimate_touch.on_press", "Button %d color was %f, %f, %f - %f", button, red, green, blue, brightness);
 
           // Turn on
           target_led->turn_on();
@@ -756,13 +745,21 @@ script:
             .perform();
 
           // Set brightness and color (assuming you’re using effects or color-capable lights)
-          target_led->make_call().set_brightness(1.0).perform();
+          target_led->make_call()
+            .set_brightness(1.0)
+            .perform();
 
           // Delay and dim down
           delay(1000);
-          target_led->make_call().set_brightness(0.2).perform();
+          target_led->make_call()
+            .set_brightness(0.2)
+            .set_transition_length(1.0)
+            .perform();
           // Restore original light state
-          target_led->make_call().set_rgb(red, green, blue).set_brightness(brightness).perform();
+          target_led->make_call()
+            .set_rgb(red, green, blue)
+            .set_brightness(brightness)
+            .perform();
 
   - id: refresh_nightlight
     mode: restart
