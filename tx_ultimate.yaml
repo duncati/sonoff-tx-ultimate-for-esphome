@@ -200,6 +200,7 @@ binary_sensor:
       - script.execute:
           id: button_pressed
           button: 1
+          x: 2
     on_release:
       - lambda: |-
           uint32_t long_press_duration = millis() - id(button_press_start_time)[0];
@@ -225,6 +226,7 @@ binary_sensor:
       - script.execute:
           id: button_pressed
           button: 2
+          x: 4
     on_release:
       - lambda: |-
           uint32_t long_press_duration = millis() - id(button_press_start_time)[1];
@@ -250,6 +252,7 @@ binary_sensor:
       - script.execute:
           id: button_pressed
           button: 3
+          x: 6
     on_release:
       - lambda: |-
           uint32_t long_press_duration = millis() - id(button_press_start_time)[2];
@@ -275,6 +278,7 @@ binary_sensor:
       - script.execute:
           id: button_pressed
           button: 4
+          x: 8
     on_release:
       - lambda: |-
           uint32_t long_press_duration = millis() - id(button_press_start_time)[3];
@@ -613,7 +617,10 @@ tx_ultimate_touch:
   uart: my_uart
 
   on_press:
-    - script.execute: led_on_touch
+#   - script.execute: led_on_touch
+    - script.execute:
+        id: button_pressed
+        x: touch.x
     - lambda: >
         ESP_LOGD("tx_ultimate_touch.on_press", "Touch Position: %d / State: %d", touch.x, touch.state);
 
@@ -697,9 +704,30 @@ script:
     mode: restart
     parameters:
       button: int
+      x: int
     then:
       - lambda: |-
           light::LightState* target_led = nullptr;
+
+          switch (x) {
+            case 1:
+            case 2:
+              button = 1;
+              break;
+            case 3:
+            case 4:
+            case 5:
+              button = 2;
+              break;
+            case 6:
+            case 7:
+            case 8:
+              button = 3;
+              break;
+            default:
+              button = 4;
+              break;
+          }
 
           switch (button) {
             case 1:
