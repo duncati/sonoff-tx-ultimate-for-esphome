@@ -744,8 +744,8 @@ script:
             .set_transition_length(0.1)
             .perform();
 
-//id(my_light).get_output()->set_pixel(0, 255, 0, 0);  // Set first LED to red
-//id(my_light).get_output()->schedule_show();  
+          //id(my_light).get_output()->set_pixel(0, 255, 0, 0);  // Set first LED to red
+          //id(my_light).get_output()->schedule_show();  
 
           target_led->current_values_as_brightness(&brightness);
           target_led->current_values_as_rgb(&red, &green, &blue);
