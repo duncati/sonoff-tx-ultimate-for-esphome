@@ -688,7 +688,8 @@ script:
     then:
       - lambda: |-
           int button;
-          esphome::light::AddressableLight *target_led = static_cast<esphome::light::AddressableLight *>(id(leds).get_output());
+          esphome::light::LightState* leds = id(leds);
+          esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(leds).get_output());
           int led_index;
 
           switch (x) {
@@ -743,7 +744,7 @@ script:
           // Delay and dim down
           delay(1000);
           ESP_LOGD("button", "Dimming button %d", button);
-          target_led->start_transition_(Color(0, 0, 0), 1, true);
+          leds->start_transition_(Color(0, 0, 0), 1, true);
           target_led->schedule_show();
 
           target_led->get(led_index).set(original_color);
