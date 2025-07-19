@@ -176,12 +176,15 @@ globals:
     type: uint32_t[4]
     restore_value: no
     initial_value: '{0, 0, 0, 0}'
-  - id: original_color
+  - id: original_led_color
     type: esphome::Color
     initial_value: 'esp_home::Color(0, 0, 0)'
-  - id: new_color
+  - id: new_led_color
     type: esphome::Color
     initial_value: 'esp_home::Color(0, 0, 0)'
+  - id: led_index
+    type: int
+    initial_value: 0
 
 
 binary_sensor:
@@ -695,7 +698,6 @@ script:
       - lambda: |-
           int button;
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(leds).get_output());
-          int led_index;
 
           switch (x) {
             case 1:
@@ -741,17 +743,21 @@ script:
 
           // Get current color & brightness
           //esphome::Color original_color = target_led->get(led_index).get();
+          esphome::Color original_color = id(original_led_color);
           original_color = target_led->get(led_index).get();
           ESP_LOGD("button", "Button %d color was %f, %f, %f - %f", button, original_color.r, original_color.g, original_color.b);
 
           // Turn on
           //esphome::Color new_color = Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]);
+          esphome::Color new_color = id(new_led_color);
           new_color = Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]);
           target_led->get(led_index).set(new_color);
           target_led->schedule_show();
       - delay: 1s
       - lambda: |-
-          new_color = Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]);
+          esphome::Color original_color = id(original_led_color);
+          esphome::Color new_color = id(new_led_color);
+          //new_color = Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]);
           ESP_LOGD("button", "Dimming button %d", button);
           // fade the color back into original_color
           for (float factor = 0.8f; factor > 0.0f; factor -= 0.2f) {
