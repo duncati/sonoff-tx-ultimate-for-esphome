@@ -184,7 +184,7 @@ globals:
     initial_value: 'esp_home::Color(0, 0, 0)'
   - id: led_index
     type: int
-    initial_value: 0
+    initial_value: '0'
 
 
 binary_sensor:
