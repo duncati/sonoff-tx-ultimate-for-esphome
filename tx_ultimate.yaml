@@ -687,9 +687,12 @@ script:
       x: int
     then:
       - lambda: |-
+          ESP_LOGD("button", "1....");
           int button;
           esphome::light::LightState* leds = id(leds);
+          ESP_LOGD("button", "2....");
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(leds).get_output());
+          ESP_LOGD("button", "3....");
           int led_index;
 
           switch (x) {
@@ -723,7 +726,9 @@ script:
               ESP_LOGW("script", "Unexpected X: %d", x);
               return;
           }
+          ESP_LOGD("button", "4....");
           ESP_LOGD("button", "resolved X %d to button %d", x, button);
+          target_led->dump_config();
 
           /*
           // Is light on?
