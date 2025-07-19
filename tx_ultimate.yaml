@@ -767,6 +767,7 @@ script:
           target_led->schedule_show();
       - delay: 1s
       - lambda: |-
+          int fuckyou = 1;
         /*
           //esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(target_led_led));
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
