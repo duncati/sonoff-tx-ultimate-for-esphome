@@ -688,7 +688,6 @@ script:
     then:
       - lambda: |-
           int button;
-          /*
           esphome::light::LightState* leds = id(leds);
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(leds).get_output());
           int led_index;
@@ -727,6 +726,7 @@ script:
           ESP_LOGD("button", "resolved X %d to button %d", x, button);
           target_led->dump_config();
 
+          /*
           // Is light on?
           // bool is_on = false;
           // target_led->current_values_as_binary(&is_on);
