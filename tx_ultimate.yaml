@@ -689,7 +689,6 @@ script:
       - lambda: |-
           ESP_LOGD("button", "1....");
           int button;
-          esphome::light::LightState* leds = id(leds);
           ESP_LOGD("button", "2....");
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(leds).get_output());
           ESP_LOGD("button", "3....");
@@ -698,27 +697,27 @@ script:
           switch (x) {
             case 1:
             case 2:
-              //target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_left).get_output());
+              target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_left).get_output());
               button = 1;
               led_index = 13;
               break;
             case 3:
             case 4:
             case 5:
-              //target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_center_left).get_output());
+              target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_center_left).get_output());
               button = 2;
               led_index = 11;
               break;
             case 6:
             case 7:
             case 8:
-              //target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_center_right).get_output());
+              target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_center_right).get_output());
               button = 3;
               led_index = 9;
               break;
             case 9:
             case 10:
-              //target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_right).get_output());
+              target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_right).get_output());
               button = 4;
               led_index = 7;
               break;
@@ -730,7 +729,6 @@ script:
           ESP_LOGD("button", "resolved X %d to button %d", x, button);
           target_led->dump_config();
 
-          /*
           // Is light on?
           // bool is_on = false;
           // target_led->current_values_as_binary(&is_on);
@@ -744,12 +742,12 @@ script:
           esphome::Color new_color = Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]);
           target_led->get(led_index).set(new_color);
           target_led->schedule_show();
-          /* 
 
           // Set brightness and color (assuming you’re using effects or color-capable lights)
           // Delay and dim down
           delay(1000);
           ESP_LOGD("button", "Dimming button %d", button);
+          // fade the color back into original_color
           for (float factor = 0.8f; factor > 0.0f; factor -= 0.2f) {
             uint8_t r = new_color.r * factor;
             uint8_t g = new_color.g * factor;
@@ -760,8 +758,9 @@ script:
             delay(100);
           }
 
-          target_led->get(led_index).set(original_color);
-          target_led->schedule_show();
+          /* 
+          //target_led->get(led_index).set(original_color);
+          //target_led->schedule_show();
           */
 
   - id: refresh_nightlight
