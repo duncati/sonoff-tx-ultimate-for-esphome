@@ -184,7 +184,7 @@ globals:
     initial_value: '0'
   - id: target_led_led
     type: esphome::light::AddressableLight*
-    initial_value: 'null'
+    initial_value: 'nullptr'
 
 
 binary_sensor:
