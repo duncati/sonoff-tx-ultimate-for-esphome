@@ -746,7 +746,7 @@ script:
           //esphome::Color original_color = target_led->get(id(led_index)).get();
           esphome::Color original_color = id(original_led_color);
           original_color = target_led->get(id(led_index)).get();
-          ESP_LOGD("button", "Button %d color was %f, %f, %f", button, original_color.r, original_color.g, original_color.b);
+          ESP_LOGD("button", "Button %d color was %d, %d, %d", button, original_color.r, original_color.g, original_color.b);
 
           // Turn on
           target_led->get(id(led_index)).set(Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]));
@@ -759,10 +759,11 @@ script:
           esphome::Color original_color = id(original_led_color);
           ESP_LOGD("button", "Dimming led_index %d", id(led_index));
           // fade the color back into original_color
+          int r=0, g=0, b=0;
           for (float factor = 0.8f; factor > 0.0f; factor -= 0.2f) {
-            uint8_t r = new_color.r * factor;
-            uint8_t g = new_color.g * factor;
-            uint8_t b = new_color.b * factor;
+            r = new_color.r * factor;
+            g = new_color.g * factor;
+            b = new_color.b * factor;
 
             target_led->get(id(led_index)).set(Color(r, g, b));
             target_led->schedule_show();
