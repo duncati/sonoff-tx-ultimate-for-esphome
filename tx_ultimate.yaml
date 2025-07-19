@@ -705,9 +705,13 @@ script:
       x: int
     then:
       - lambda: |-
+          ESP_LOGD("button", "1....");
           int button;
+          ESP_LOGD("button", "2....");
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
+          ESP_LOGD("button", "3....");
           id(target_led_led) = target_led;
+          ESP_LOGD("button", "4....");
 
           switch (x) {
             case 1:
@@ -740,6 +744,7 @@ script:
               ESP_LOGW("script", "Unexpected X: %d", x);
               return;
           }
+          ESP_LOGD("button", "5....");
           // 1 to button 1 led top right
           // 3 to button 2 led top center left
           // 6 to button 3 led left center top
