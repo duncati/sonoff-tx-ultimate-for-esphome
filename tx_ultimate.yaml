@@ -744,8 +744,15 @@ script:
           // Delay and dim down
           delay(1000);
           ESP_LOGD("button", "Dimming button %d", button);
-          leds->start_transition_(Color(0, 0, 0), 1, true);
-          target_led->schedule_show();
+          for (float factor = 0.8f; factor > 0.0f; factor -= 0.2f) {
+            uint8_t r = new_color.r * factor;
+            uint8_t g = new_color.g * factor;
+            uint8_t b = new_color.b * factor;
+
+            target_led->get(led_index).set(Color(r, g, b);
+            leds->schedule_show();
+            delay(100);
+          }
 
           target_led->get(led_index).set(original_color);
           target_led->schedule_show();
