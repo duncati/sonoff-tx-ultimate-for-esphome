@@ -176,6 +176,12 @@ globals:
     type: uint32_t[4]
     restore_value: no
     initial_value: '{0, 0, 0, 0}'
+  - id: original_color
+    type: esphome::Color
+    initial_value: 'esp_home::Color(0, 0, 0)'
+  - id: new_color
+    type: esphome::Color
+    initial_value: 'esp_home::Color(0, 0, 0)'
 
 
 binary_sensor:
@@ -687,11 +693,8 @@ script:
       x: int
     then:
       - lambda: |-
-          ESP_LOGD("button", "1....");
           int button;
-          ESP_LOGD("button", "2....");
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(leds).get_output());
-          ESP_LOGD("button", "3....");
           int led_index;
 
           switch (x) {
@@ -699,33 +702,36 @@ script:
             case 2:
               target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_left).get_output());
               button = 1;
-              led_index = 13;
+              led_index = 4;
               break;
             case 3:
             case 4:
             case 5:
               target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_center_left).get_output());
               button = 2;
-              led_index = 11;
+              led_index = 3;
               break;
             case 6:
             case 7:
             case 8:
               target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_center_right).get_output());
               button = 3;
-              led_index = 9;
+              led_index = 2;
               break;
             case 9:
             case 10:
               target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_right).get_output());
               button = 4;
-              led_index = 7;
+              led_index = 1;
               break;
             default:
               ESP_LOGW("script", "Unexpected X: %d", x);
               return;
           }
-          ESP_LOGD("button", "4....");
+          // 1 to button 1 led top right
+          // 3 to button 2 led top center left
+          // 6 to button 3 led left center top
+          // 10 to button 4 led left center bottom
           ESP_LOGD("button", "resolved X %d to button %d", x, button);
 
           // Is light on?
@@ -734,18 +740,18 @@ script:
           // ESP_LOGD("button", "Button %d LED was %s", button, is_on ? "ON" : "OFF");
 
           // Get current color & brightness
-          esphome::Color original_color = target_led->get(led_index).get();
+          //esphome::Color original_color = target_led->get(led_index).get();
+          original_color = target_led->get(led_index).get();
           ESP_LOGD("button", "Button %d color was %f, %f, %f - %f", button, original_color.r, original_color.g, original_color.b);
 
           // Turn on
-          esphome::Color new_color = Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]);
+          //esphome::Color new_color = Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]);
+          new_color = Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]);
           target_led->get(led_index).set(new_color);
           target_led->schedule_show();
-
-          /*
-          // Set brightness and color (assuming you’re using effects or color-capable lights)
-          // Delay and dim down
-          delay(1000);
+      - delay: 1s
+      - lambda: |-
+          new_color = Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]);
           ESP_LOGD("button", "Dimming button %d", button);
           // fade the color back into original_color
           for (float factor = 0.8f; factor > 0.0f; factor -= 0.2f) {
@@ -757,7 +763,6 @@ script:
             target_led->schedule_show();
             delay(100);
           }
-          */
 
           /* 
           //target_led->get(led_index).set(original_color);
