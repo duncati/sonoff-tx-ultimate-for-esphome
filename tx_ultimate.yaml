@@ -185,6 +185,9 @@ globals:
   - id: led_index
     type: int
     initial_value: '0'
+  - id: target_led_led
+    type: esphome::light::AddressableLight*
+    initial_value: 'null'
 
 
 binary_sensor:
@@ -698,6 +701,7 @@ script:
       - lambda: |-
           int button;
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(leds).get_output());
+          id(target_led_led) = target_led;
 
           switch (x) {
             case 1:
@@ -758,7 +762,7 @@ script:
           esphome::Color original_color = id(original_led_color);
           esphome::Color new_color = id(new_led_color);
           //new_color = Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]);
-          ESP_LOGD("button", "Dimming button %d", button);
+          ESP_LOGD("button", "Dimming led_index %d", led_index);
           // fade the color back into original_color
           for (float factor = 0.8f; factor > 0.0f; factor -= 0.2f) {
             uint8_t r = new_color.r * factor;
