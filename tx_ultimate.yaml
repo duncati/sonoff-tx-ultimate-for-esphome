@@ -749,8 +749,8 @@ script:
             uint8_t g = new_color.g * factor;
             uint8_t b = new_color.b * factor;
 
-            target_led->get(led_index).set(Color(r, g, b);
-            leds->schedule_show();
+            target_led->get(led_index).set(Color(r, g, b));
+            target_led->schedule_show();
             delay(100);
           }
 
