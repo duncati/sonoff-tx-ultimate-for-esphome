@@ -557,6 +557,15 @@ light:
         to: 6
 
   - platform: partition
+    name: "All LEDs"
+    id: all_leds
+    internal: true
+    segments:
+      - id: leds
+        from: 0
+        to: 27
+
+  - platform: partition
     name: "LEDs Top"
     id: leds_top
     internal: true
@@ -697,7 +706,7 @@ script:
     then:
       - lambda: |-
           int button;
-          esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(leds).get_output());
+          esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
           id(target_led_led) = target_led;
 
           switch (x) {
@@ -758,7 +767,8 @@ script:
           target_led->schedule_show();
       - delay: 1s
       - lambda: |-
-          esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(target_led_led));
+          //esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(target_led_led));
+          esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
           int r = id(button_color)[0];
           int g = id(button_color)[1];
           int b = id(button_color)[2];
