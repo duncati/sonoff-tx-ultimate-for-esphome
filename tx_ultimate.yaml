@@ -724,7 +724,6 @@ script:
               return;
           }
           ESP_LOGD("button", "resolved X %d to button %d", x, button);
-          target_led->dump_config();
 
           /*
           // Is light on?
