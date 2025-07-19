@@ -740,7 +740,7 @@ script:
           esphome::Color new_color = Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]);
           target_led->get(led_index).set(new_color);
           target_led->schedule_show();
-          /* */
+          /* 
 
           // Set brightness and color (assuming you’re using effects or color-capable lights)
           // Delay and dim down
