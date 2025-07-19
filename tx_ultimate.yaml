@@ -178,7 +178,7 @@ globals:
     initial_value: '{0, 0, 0, 0}'
   - id: original_led_color
     type: esphome::Color
-    initial_value: 'esp_home::Color(0, 0, 0)'
+    initial_value: 'esphome::Color(0, 0, 0)'
   - id: led_index
     type: int
     initial_value: '0'
