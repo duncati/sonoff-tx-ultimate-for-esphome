@@ -757,8 +757,7 @@ script:
           target_led->schedule_show();
       - delay: 1s
       - lambda: |-
-          esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(leds).get_output());
-          id(target_led_led) = target_led;
+          esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(target_led_led));
           int r = id(button_color)[0];
           int g = id(button_color)[1];
           int b = id(button_color)[2];
