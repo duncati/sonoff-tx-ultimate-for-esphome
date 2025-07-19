@@ -727,7 +727,6 @@ script:
           }
           ESP_LOGD("button", "4....");
           ESP_LOGD("button", "resolved X %d to button %d", x, button);
-          target_led->dump_config();
 
           // Is light on?
           // bool is_on = false;
@@ -743,6 +742,7 @@ script:
           target_led->get(led_index).set(new_color);
           target_led->schedule_show();
 
+          /*
           // Set brightness and color (assuming you’re using effects or color-capable lights)
           // Delay and dim down
           delay(1000);
@@ -757,6 +757,7 @@ script:
             target_led->schedule_show();
             delay(100);
           }
+          */
 
           /* 
           //target_led->get(led_index).set(original_color);
