@@ -742,6 +742,7 @@ script:
           // target_led->current_values_as_binary(&is_on);
           // ESP_LOGD("button", "Button %d LED was %s", button, is_on ? "ON" : "OFF");
 
+          led_index = 0;
           // Get current color & brightness
           //esphome::Color original_color = target_led->get(id(led_index)).get();
           esphome::Color original_color = id(original_led_color);
