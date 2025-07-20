@@ -441,11 +441,6 @@ light:
       then:
         - script.execute: refresh_led_default
 
-  - platform: addressable_light
-    name: "fuck chatgpt"
-    id: leds
-    output: led_output
-
   - platform: partition
     name: "LEDs Button right"
     id: leds_button_right
@@ -710,7 +705,7 @@ script:
       x: int
     then:
       - lambda: |-
-          id(led_output)[7].set(ESPColor(0, 255, 0));
+          it[7] = ESPColor(0, 255, 0);
 
   - id: button_pressed2
     mode: restart
