@@ -807,6 +807,8 @@ script:
           ESP_LOGD("button", "resolved X %d to button %d at led %d", x, button, led_index);
           id(original_led_color) = target_led->get(led_index).get();
           ESP_LOGD("button", "Button %d color was %d, %d, %d", button, id(original_led_color).r, id(original_led_color).g, id(original_led_color).b);
+          target_led->get(led_index).set(esphome::Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]));
+          target_led->schedule_show();
           id(recursive_button_pressed)->execute(0, led_index);
 
   - id: recursive_button_pressed
@@ -821,7 +823,7 @@ script:
           then:
             - delay: 2s
           else:
-            - delay: 150ms
+            - delay: 50ms
       - lambda: |-
           ESP_LOGD("button", "Dimming led_index %d back to %d, %d, %d", led_index, id(original_led_color).r, id(original_led_color).g, id(original_led_color).b);
           // fade to original_color
