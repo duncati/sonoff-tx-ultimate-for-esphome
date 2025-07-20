@@ -754,9 +754,7 @@ script:
           // 6 to button 3 led left center top
           // 10 to button 4 led left center bottom
           // it get's stuck here:
-          ESP_LOGD("button", "resolved X %d", x);
-          ESP_LOGD("button", "to button %d", button);
-          /*
+          ESP_LOGD("button", "resolved X %d to button %d", x, button);
 
           // Is light on?
           // bool is_on = false;
@@ -764,11 +762,13 @@ script:
           // ESP_LOGD("button", "Button %d LED was %s", button, is_on ? "ON" : "OFF");
 
           led_index = 0;
+          /*
           // Get current color & brightness
           //esphome::Color original_color = target_led->get(id(led_index)).get();
           esphome::Color original_color = id(original_led_color);
           original_color = target_led->get(id(led_index)).get();
           ESP_LOGD("button", "Button %d color was %d, %d, %d", button, original_color.r, original_color.g, original_color.b);
+          */
 
           // Turn on
           int r = id(button_color)[0];
@@ -777,7 +777,6 @@ script:
           esphome::Color new_color = esphome::Color(r, g, b);
           target_led->get(id(led_index)).set(new_color);
           target_led->schedule_show();
-          */
       - delay: 1s
       - lambda: |-
           int fuckyou = 1;
