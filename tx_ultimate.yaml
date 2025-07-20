@@ -441,6 +441,11 @@ light:
       then:
         - script.execute: refresh_led_default
 
+  - platform: addressable_light
+    name: "fuck chatgpt"
+    id: leds
+    output: led_output
+
   - platform: partition
     name: "LEDs Button right"
     id: leds_button_right
@@ -705,8 +710,7 @@ script:
       x: int
     then:
       - lambda: |-
-          auto *strip = static_cast<esphome::light::AddressableLight *>(id(leds));
-          (*strip)[7] = ESPColor(0, 255, 0);  // set LED 7 to green
+          id(led_output)[7].set(ESPColor(0, 255, 0));
 
   - id: button_pressed2
     mode: restart
