@@ -705,7 +705,8 @@ script:
       x: int
     then:
       - lambda: |-
-          id(leds)[7].set(ESPColor(0, 255, 0));
+          auto *strip = static_cast<esphome::light::AddressableLight *>(id(leds));
+          (*strip)[7] = ESPColor(0, 255, 0);  // set LED 7 to green
 
   - id: button_pressed2
     mode: restart
