@@ -780,7 +780,7 @@ script:
 
             target_led->get(id(led_index)).set(esphome::Color(r1, g1, b1));
             target_led->schedule_show();
-            esphome::delay(100);
+            delay(100);
           }
 
           /* 
