@@ -762,7 +762,7 @@ script:
           // 3 to button 2 led top center left
           // 6 to button 3 led left center top
           // 10 to button 4 led left center bottom
-// stuck here?!?
+          // it get's stuck here:
           ESP_LOGD("button", "resolved X %d to button %d", x, button);
 
           // Is light on?
