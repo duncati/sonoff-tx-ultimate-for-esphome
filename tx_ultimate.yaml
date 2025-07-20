@@ -769,7 +769,7 @@ script:
           target_led->schedule_show();
 
   - id: button_pressed
-    mode: restart
+    mode: parallel
     parameters:
       x: int
     then:
@@ -812,7 +812,7 @@ script:
           id(recursive_button_pressed)->execute(0, led_index);
 
   - id: recursive_button_pressed
-    mode: restart
+    mode: parallel
     parameters:
       iteration: int
       led_index: int
@@ -821,7 +821,7 @@ script:
           condition:
             lambda: 'return iteration == 0;'
           then:
-            - delay: 2s
+            - delay: 1s
           else:
             - delay: 50ms
       - lambda: |-
@@ -835,7 +835,7 @@ script:
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
           target_led->get(led_index).set(esphome::Color(r1, g1, b1));
           target_led->schedule_show();
-          if (iteration<10) {
+          if (iteration<=10) {
             id(recursive_button_pressed)->execute(iteration+1, led_index);
           }
 
