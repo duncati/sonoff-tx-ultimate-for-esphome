@@ -717,31 +717,23 @@ script:
           switch (x) {
             case 1:
             case 2:
-              ESP_LOGD("button", "4.1....");
-              //target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_left).get_output());
-              ESP_LOGD("button", "4.2....");
               button = 1;
-              ESP_LOGD("button", "4.3....");
               id(led_index) = 4;
-              ESP_LOGD("button", "4.4....");
               break;
             case 3:
             case 4:
             case 5:
-              //target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_center_left).get_output());
               button = 2;
               id(led_index) = 3;
               break;
             case 6:
             case 7:
             case 8:
-              //target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_center_right).get_output());
               button = 3;
               id(led_index) = 2;
               break;
             case 9:
             case 10:
-              //target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_right).get_output());
               button = 4;
               id(led_index) = 1;
               break;
@@ -754,17 +746,14 @@ script:
           // 3 to button 2 led top center left
           // 6 to button 3 led left center top
           // 10 to button 4 led left center bottom
-          ESP_LOGD("button", "resolved X %d", x);
-          // it get's stuck here:
-          ESP_LOGD("button", "to button %d", button);
-          ESP_LOGD("button", "at led %d", id(led_index));
+          ESP_LOGD("button", "resolved X %d to button %d at led %d", x, button, id(led_index));
 
           // Is light on?
           // bool is_on = false;
           // target_led->current_values_as_binary(&is_on);
           // ESP_LOGD("button", "Button %d LED was %s", button, is_on ? "ON" : "OFF");
 
-          id(led_index) = 0;
+          id(led_index) = 10;
           /*
           // Get current color & brightness
           //esphome::Color original_color = target_led->get(id(led_index)).get();
@@ -784,8 +773,6 @@ script:
       - delay: 1s
       - lambda: |-
           int fuckyou = 1;
-          /*
-          //esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(target_led_led));
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
           int r = id(button_color)[0];
           int g = id(button_color)[1];
@@ -799,7 +786,6 @@ script:
           );
           */
 
-          /*
           ESP_LOGD("button", "Dimming led_index %d", id(led_index));
           // fade the color back into original_color
           int r1=0, g1=0, b1=0;
@@ -812,7 +798,6 @@ script:
             target_led->schedule_show();
             delay(100);
           }
-          */
 
           /* 
           //target_led->get(id(led_index)).set(original_color);
