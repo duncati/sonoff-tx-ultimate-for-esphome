@@ -708,24 +708,24 @@ script:
             case 1:
             case 2:
               button = 1;
-              id(led_index) = 7;
+              id(led_index) = 12;
               break;
             case 3:
             case 4:
             case 5:
               button = 2;
-              id(led_index) = 9;
+              id(led_index) = 10;
               break;
             case 6:
             case 7:
             case 8:
               button = 3;
-              id(led_index) = 11;
+              id(led_index) = 8;
               break;
             case 9:
             case 10:
               button = 4;
-              id(led_index) = 13;
+              id(led_index) = 6;
               break;
             default:
               ESP_LOGW("script", "Unexpected X: %d", x);
@@ -738,13 +738,9 @@ script:
           // target_led->current_values_as_binary(&is_on);
           // ESP_LOGD("button", "Button %d LED was %s", button, is_on ? "ON" : "OFF");
 
-          /*
           // Get current color & brightness
-          //esphome::Color original_color = target_led->get(id(led_index)).get();
-          esphome::Color original_color = id(original_led_color);
-          original_color = target_led->get(id(led_index)).get();
-          ESP_LOGD("button", "Button %d color was %d, %d, %d", button, original_color.r, original_color.g, original_color.b);
-          */
+          id(original_led_color) = target_led->get(id(led_index)).get();
+          ESP_LOGD("button", "Button %d color was %d, %d, %d", button, id(original_led_color).r, id(original_led_color).g, id(original_led_color).b);
 
           // Turn on
           int r = id(button_color)[0];
@@ -756,7 +752,6 @@ script:
           target_led->schedule_show();
       - delay: 1s
       - lambda: |-
-          int fuckyou = 1;
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
           int r = id(button_color)[0];
           int g = id(button_color)[1];
