@@ -13,7 +13,7 @@ substitutions:
   button_on_time: 500ms
 
   button_brightness: "0.7"
-  button_color: "{0,0,100}"
+  button_color: "{0,0,200}"
 
   nightlight: "on"
   nightlight_brightness: "0.2"
@@ -836,10 +836,9 @@ script:
           ESP_LOGD("button", "Dimming led_index %d to %d, %d, %d", led_index, r1, g1, b1);
           target_led->get(led_index).set(esphome::Color(r1, g1, b1));
           target_led->schedule_show();
-          if (iteration<=10) {
+          if (iteration<10) {
             id(recursive_button_pressed)->execute(iteration+1, led_index);
           }
-
 
   - id: refresh_nightlight
     mode: restart
