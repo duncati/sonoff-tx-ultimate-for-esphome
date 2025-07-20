@@ -710,6 +710,7 @@ script:
           ESP_LOGD("button", "2....");
           esphome::light::AddressableLight* target_led = nullptr;
           ESP_LOGD("button", "3....");
+          target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
           id(target_led_led) = target_led;
           ESP_LOGD("button", "4....");
 
@@ -717,7 +718,7 @@ script:
             case 1:
             case 2:
               ESP_LOGD("button", "4.1....");
-              target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_left).get_output());
+              //target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_left).get_output());
               ESP_LOGD("button", "4.2....");
               button = 1;
               ESP_LOGD("button", "4.3....");
@@ -727,20 +728,20 @@ script:
             case 3:
             case 4:
             case 5:
-              target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_center_left).get_output());
+              //target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_center_left).get_output());
               button = 2;
               id(led_index) = 3;
               break;
             case 6:
             case 7:
             case 8:
-              target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_center_right).get_output());
+              //target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_center_right).get_output());
               button = 3;
               id(led_index) = 2;
               break;
             case 9:
             case 10:
-              target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_right).get_output());
+              //target_led = static_cast<esphome::light::AddressableLight *>(id(leds_bottom_right).get_output());
               button = 4;
               id(led_index) = 1;
               break;
@@ -754,7 +755,8 @@ script:
           // 6 to button 3 led left center top
           // 10 to button 4 led left center bottom
           // it get's stuck here:
-          ESP_LOGD("button", "resolved X %d to button %d", x, button);
+          ESP_LOGD("button", "resolved X %d", x);
+          ESP_LOGD("button", "to button %d", button);
 
           // Is light on?
           // bool is_on = false;
