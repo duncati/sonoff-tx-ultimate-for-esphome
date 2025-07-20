@@ -705,16 +705,8 @@ script:
       x: int
     then:
       - lambda: |-
-          it[7] = ESPColor(0, 255, 0);
-
-  - id: button_pressed2
-    mode: restart
-    parameters:
-      x: int
-    then:
-      - lambda: |-
           ESP_LOGD("button", "1....");
-          int button;
+          int button = 0;
           ESP_LOGD("button", "2....");
           esphome::light::AddressableLight* target_led = nullptr;
           ESP_LOGD("button", "3....");
