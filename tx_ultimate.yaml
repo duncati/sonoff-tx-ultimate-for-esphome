@@ -754,7 +754,9 @@ script:
           // 6 to button 3 led left center top
           // 10 to button 4 led left center bottom
           // it get's stuck here:
-          ESP_LOGD("button", "resolved X %d to button %d", x, button);
+          ESP_LOGD("button", "resolved X %d", x);
+          ESP_LOGD("button", "to button %d", button);
+          /*
 
           // Is light on?
           // bool is_on = false;
@@ -775,6 +777,7 @@ script:
           esphome::Color new_color = esphome::Color(r, g, b);
           target_led->get(id(led_index)).set(new_color);
           target_led->schedule_show();
+          */
       - delay: 1s
       - lambda: |-
           int fuckyou = 1;
