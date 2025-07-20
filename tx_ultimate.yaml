@@ -705,8 +705,8 @@ script:
       x: int
     then:
       - lambda: |-
-        id(leds).set_led_color(7, ESPColor(0, 255, 0));
-        id(leds).update();
+          id(leds).set_led_color(7, ESPColor(0, 255, 0));
+          id(leds).update();
 
   - id: button_pressed2
     mode: restart
