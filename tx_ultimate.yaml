@@ -695,7 +695,6 @@ sun:
 
 
 script:
-
   - id: get_led_and_button_at_x
     mode: restart
     parameters:
@@ -732,8 +731,9 @@ script:
               default:
                 ESP_LOGW("script", "Unexpected X: %d", x);
                 return;
-            } else if (${relay_count}==3) {
-              switch (x) {
+              }
+          } else if (${relay_count}==3) {
+            switch (x) {
               case 1:
               case 2:
               case 3:
@@ -758,7 +758,7 @@ script:
                 return;
             }
           } else if (${relay_count}==2) {
-              switch (x) {
+            switch (x) {
               case 1:
               case 2:
               case 3:
@@ -778,13 +778,13 @@ script:
               default:
                 ESP_LOGW("script", "Unexpected X: %d", x);
                 return;
-            } else {
-              button = 1;
-              led_index = 9;
             }
-            result[0] = led_index;
-            result[1] = button;
+          } else {
+            button = 1;
+            led_index = 9;
           }
+          result[0] = led_index;
+          result[1] = button;
 
   - id: button_pressed_old
     mode: restart
