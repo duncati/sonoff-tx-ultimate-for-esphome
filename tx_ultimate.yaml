@@ -178,11 +178,11 @@ globals:
     type: esphome::Color[4]
     restore_value: no
     initial_value: '{ esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0) }'
-  - id: button
+  - id: g_button
     type: int
     restore_value: no
     initial_value: '0'
-  - id: led_index
+  - id: g_led_index
     type: int
     restore_value: no
     initial_value: '0'
@@ -598,13 +598,13 @@ tx_ultimate_touch:
 
   on_release:
     - lambda: |-
-        uint32_t long_press_duration = millis() - id(button_press_start_time)[id(button)-1];
-        ESP_LOGD("button", "Button %d held for %u ms", id(button), long_press_duration);
+        uint32_t long_press_duration = millis() - id(button_press_start_time)[id(g_button)-1];
+        ESP_LOGD("button", "Button %d held for %u ms", id(g_button), long_press_duration);
     - script.execute:
         id: recursive_button_pressed
         iteration: 0
-        led_index: id(led_index)
-        button: id(button)
+        led_index: id(g_led_index)
+        button: id(g_button)
     - script.execute:
         id: handle_release
         pos: !lambda "return touch.x;"
@@ -811,8 +811,8 @@ script:
           id(original_led_color)[button-1] = original_color;
           target_led->get(led_index).set(esphome::Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]));
           target_led->schedule_show();
-          id(button) = button;
-          id(led_index) = led_index;
+          id(g_button) = button;
+          id(g_led_index) = led_index;
           id(button_press_start_time)[button-1] = millis();
           ESP_LOGD("button", "Button %d pressed at %u", button, millis());
           //id(recursive_button_pressed)->execute(0, led_index, button);
