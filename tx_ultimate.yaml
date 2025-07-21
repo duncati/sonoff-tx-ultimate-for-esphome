@@ -865,7 +865,7 @@ script:
     then:
       - lambda: |-
           std:vector<int> result{0, 0};
-          id(get_led_and_button_at_x)->execute(0, result);
+          id(get_led_and_button_at_x)->execute(x, result);
           int led_index = result[0];
           int button = result[1];
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
