@@ -141,8 +141,6 @@ external_components:
       ref: main
     components: [tx_ultimate_touch]
 
-
-
 globals:
   - id: nightlight_color
     type: int [3]
@@ -178,9 +176,15 @@ globals:
     initial_value: '{0, 0, 0, 0}'
   - id: original_led_color
     type: esphome::Color[4]
+    restore_value: no
     initial_value: '{ esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0) }'
+  - id: button
+    type: int
+    restore_value: no
+    initial_value: '0'
   - id: led_index
     type: int
+    restore_value: no
     initial_value: '0'
 
 binary_sensor:
@@ -188,9 +192,6 @@ binary_sensor:
     name: "Touchfield 1"
     id: touchfield_1
     on_press:
-      - lambda: |-
-          id(button_press_start_time)[0] = millis();
-          ESP_LOGD("button", "Button 1 on_press at %u", millis());
       - if:
           condition:
             lambda: "return ${toggle_relay_1_on_touch};"
@@ -201,18 +202,11 @@ binary_sensor:
           id: touchfield_1
           state: OFF
 #     - script.execute: refresh_led_default
-    on_release:
-      - lambda: |-
-          uint32_t long_press_duration = millis() - id(button_press_start_time)[0];
-          ESP_LOGD("button", "Button 1 held for %u ms", long_press_duration);
 
   - platform: template
     name: "Touchfield 2"
     id: touchfield_2
     on_press:
-      - lambda: |-
-          id(button_press_start_time)[1] = millis();
-          ESP_LOGD("button", "Button 2 on_press at %u", millis());
       - if:
           condition:
             lambda: "return ${toggle_relay_2_on_touch};"
@@ -223,18 +217,11 @@ binary_sensor:
           id: touchfield_2
           state: OFF
 #     - script.execute: refresh_led_default
-    on_release:
-      - lambda: |-
-          uint32_t long_press_duration = millis() - id(button_press_start_time)[1];
-          ESP_LOGD("button", "Button 2 held for %u ms", long_press_duration);
 
   - platform: template
     name: "Touchfield 3"
     id: touchfield_3
     on_press:
-      - lambda: |-
-          id(button_press_start_time)[2] = millis();
-          ESP_LOGD("button", "Button 3 on_press at %u", millis());
       - if:
           condition:
             lambda: "return ${toggle_relay_3_on_touch};"
@@ -245,18 +232,11 @@ binary_sensor:
           id: touchfield_3
           state: OFF
 #     - script.execute: refresh_led_default
-    on_release:
-      - lambda: |-
-          uint32_t long_press_duration = millis() - id(button_press_start_time)[2];
-          ESP_LOGD("button", "Button 3 held for %u ms", long_press_duration);
 
   - platform: template
     name: "Touchfield 4"
     id: touchfield_4
     on_press:
-      - lambda: |-
-          id(button_press_start_time)[3] = millis();
-          ESP_LOGD("button", "Button 4 on_press at %u", millis());
       - if:
           condition:
             lambda: "return ${toggle_relay_4_on_touch};"
@@ -267,10 +247,6 @@ binary_sensor:
           id: touchfield_4
           state: OFF
 #     - script.execute: refresh_led_default
-    on_release:
-      - lambda: |-
-          uint32_t long_press_duration = millis() - id(button_press_start_time)[3];
-          ESP_LOGD("button", "Button 4 held for %u ms", long_press_duration);
 
   - platform: template
     name: "Swipe left"
@@ -618,13 +594,22 @@ tx_ultimate_touch:
     - lambda: |-
         ESP_LOGD("tx_ultimate_touch.on_press", "Touch Position: %d / State: %d", touch.x, touch.state);
         id(button_pressed)->execute(touch.x);
+#   - switch.turn_on: vibra
 
   on_release:
+    - lambda: |-
+        uint32_t long_press_duration = millis() - id(button_press_start_time)[id(button)-1];
+        ESP_LOGD("button", "Button %d held for %u ms", id(button), long_press_duration);
     - script.execute:
         id: handle_release
         pos: !lambda "return touch.x;"
+    - script.execute:
+        id: recursive_button_pressed
+          iteration: 0
+          led_index: id(led_index)
+          button: id(button)
 
-    - switch.turn_on: vibra
+#   - switch.turn_on: vibra
 
     - lambda: >
         ESP_LOGD("tx_ultimate_touch.on_release", "Release Position: %d / State: %d", touch.x, touch.state);
@@ -701,7 +686,6 @@ script:
     mode: restart
     parameters:
       x: int
-      result: int[]
     then:
       - lambda: |-
           int button = 0;
@@ -783,8 +767,6 @@ script:
             button = 1;
             led_index = 9;
           }
-          result[0] = led_index;
-          result[1] = button;
           ESP_LOGD("button", "in new method: resolved X %d to button %d at led %d", x, button, led_index);
 
   - id: button_pressed
@@ -829,7 +811,11 @@ script:
           id(original_led_color)[button-1] = original_color;
           target_led->get(led_index).set(esphome::Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]));
           target_led->schedule_show();
-          id(recursive_button_pressed)->execute(0, led_index, button);
+          id(button) = button;
+          id(led_index) = led_index;
+          id(button_press_start_time)[button-1] = millis();
+          ESP_LOGD("button", "Button %d pressed at %u", button, millis());
+          //id(recursive_button_pressed)->execute(0, led_index, button);
 
   - id: recursive_button_pressed
     mode: parallel
@@ -848,7 +834,6 @@ script:
       - lambda: |-
           auto original_color = id(original_led_color)[button-1];
           ESP_LOGD("button", "Button %d color was %d, %d, %d", button, original_color.r, original_color.g, original_color.b);
-          //ESP_LOGD("button", "Dimming led_index %d back to %d, %d, %d", led_index, original_color.r, original_color.g, original_color.b);
           // fade to original_color
           int r1=0, g1=0, b1=0;
           float factor = iteration * 0.1f;
