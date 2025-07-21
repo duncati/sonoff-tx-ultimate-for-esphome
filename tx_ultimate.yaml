@@ -67,7 +67,7 @@ esphome:
   name: ${name}
   friendly_name: ${friendly_name}
   includes:
-    - util.h
+    - ../includes/util.h
   project:
     name: smarthomeyourself.tx_ultimate
     version: "1.0"
