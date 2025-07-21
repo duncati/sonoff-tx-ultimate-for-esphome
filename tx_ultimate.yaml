@@ -594,20 +594,20 @@ tx_ultimate_touch:
     - lambda: |-
         ESP_LOGD("tx_ultimate_touch.on_press", "Touch Position: %d / State: %d", touch.x, touch.state);
         id(button_pressed)->execute(touch.x);
-#   - switch.turn_on: vibra
+    - switch.turn_on: vibra
 
   on_release:
     - lambda: |-
         uint32_t long_press_duration = millis() - id(button_press_start_time)[id(button)-1];
         ESP_LOGD("button", "Button %d held for %u ms", id(button), long_press_duration);
     - script.execute:
+        id: recursive_button_pressed
+        iteration: 0
+        led_index: id(led_index)
+        button: id(button)
+    - script.execute:
         id: handle_release
         pos: !lambda "return touch.x;"
-    - script.execute:
-        id: recursive_button_pressed
-          iteration: 0
-          led_index: id(led_index)
-          button: id(button)
 
 #   - switch.turn_on: vibra
 
