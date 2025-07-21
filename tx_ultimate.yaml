@@ -29,6 +29,7 @@ substitutions:
   long_press_brightness: "1"
   long_press_color: "{100,0,0}"
   long_press_effect: ""
+  long_press_time: "1500"
 
   multi_touch_brightness: "1"
   multi_touch_color: "{0,0,0}"
@@ -600,11 +601,10 @@ tx_ultimate_touch:
     - lambda: |-
         uint32_t long_press_duration = millis() - id(button_press_start_time)[id(g_button)-1];
         ESP_LOGD("button", "Button %d held for %u ms", id(g_button), long_press_duration);
-    - script.execute:
-        id: recursive_button_pressed
-        iteration: 0
-        led_index: id(g_led_index)
-        button: id(g_button)
+        if (long_press_duration >= {long_press_time}) {
+          id(long_press).publish_state(true);
+        }
+        id(recursive_button_pressed)->execute(0, id(g_led_index), id(g_button));
     - script.execute:
         id: handle_release
         pos: !lambda "return touch.x;"
@@ -775,8 +775,8 @@ script:
       x: int
     then:
       - lambda: |-
-          int led_index = 0;
           int button = 0;
+          int led_index = 0;
           switch (x) {
             case 1:
             case 2:
