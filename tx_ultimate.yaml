@@ -283,7 +283,7 @@ binary_sensor:
     name: "Long Press"
     id: long_press
     on_press:
-      - delay: ${button_on_time}
+#     - delay: ${button_on_time}
       - binary_sensor.template.publish:
           id: long_press
           state: OFF
@@ -594,7 +594,7 @@ tx_ultimate_touch:
 #   - script.execute: led_on_touch
     - lambda: |-
         ESP_LOGD("tx_ultimate_touch.on_press", "Touch Position: %d / State: %d", touch.x, touch.state);
-        id(button_pressed)->execute(touch.x);
+        id(led_on_button_press)->execute(touch.x);
     - switch.turn_on: vibra
 
   on_release:
@@ -603,8 +603,9 @@ tx_ultimate_touch:
         ESP_LOGD("button", "Button %d held for %u ms", id(g_button), long_press_duration);
         if (long_press_duration >= ${long_press_time}) {
           id(long_press).publish_state(true);
+          ESP_LOGD("button", "Button %d long press!!!", id(g_button));
         }
-        id(recursive_button_pressed)->execute(0, id(g_led_index), id(g_button));
+        id(led_dim_button_release)->execute(0, id(g_led_index), id(g_button));
     - script.execute:
         id: handle_release
         pos: !lambda "return touch.x;"
@@ -769,7 +770,7 @@ script:
           }
           ESP_LOGD("button", "in new method: resolved X %d to button %d at led %d", x, button, led_index);
 
-  - id: button_pressed
+  - id: led_on_button_press
     mode: parallel
     parameters:
       x: int
@@ -815,9 +816,9 @@ script:
           id(g_led_index) = led_index;
           id(button_press_start_time)[button-1] = millis();
           ESP_LOGD("button", "Button %d pressed at %u", button, millis());
-          //id(recursive_button_pressed)->execute(0, led_index, button);
+          //id(led_dim_button_release)->execute(0, led_index, button);
 
-  - id: recursive_button_pressed
+  - id: led_dim_button_release
     mode: parallel
     parameters:
       iteration: int
@@ -833,7 +834,7 @@ script:
             - delay: 50ms
       - lambda: |-
           auto original_color = id(original_led_color)[button-1];
-          ESP_LOGD("button", "Button %d color was %d, %d, %d", button, original_color.r, original_color.g, original_color.b);
+          //ESP_LOGD("button", "Button %d color was %d, %d, %d", button, original_color.r, original_color.g, original_color.b);
           // fade to original_color
           int r1=0, g1=0, b1=0;
           float factor = iteration * 0.1f;
@@ -841,11 +842,11 @@ script:
           g1 = id(button_color)[1]*(1.0-factor) + original_color.g*factor;
           b1 = id(button_color)[2]*(1.0-factor) + original_color.b*factor;
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-          ESP_LOGD("button", "Dimming led_index %d to %d, %d, %d", led_index, r1, g1, b1);
+          //ESP_LOGD("button", "Dimming led_index %d to %d, %d, %d", led_index, r1, g1, b1);
           target_led->get(led_index).set(esphome::Color(r1, g1, b1));
           target_led->schedule_show();
           if (iteration<10) {
-            id(recursive_button_pressed)->execute(iteration+1, led_index, button);
+            id(led_dim_button_release)->execute(iteration+1, led_index, button);
           }
 
   - id: refresh_nightlight
@@ -1126,24 +1127,54 @@ script:
   - id: led_on_swipe_left
     mode: restart
     then:
-      - light.turn_on:
-          id: leds_top
-          brightness: ${swipe_left_brightness}
-          red: !lambda "return id(swipe_left_color)[0]/100.0;"
-          green: !lambda "return id(swipe_left_color)[1]/100.0;"
-          blue:  !lambda "return id(swipe_left_color)[2]/100.0;"
-          effect: ${swipe_left_effect}
+      - script.execute: led_on_button_press(9)
+      - delay: 50ms
+      - script.execute: led_on_button_press(6)
+      - delay: 50ms
+      - script.execute: led_on_button_press(4)
+      - delay: 50ms
+      - script.execute: led_on_button_press(2)
+      - delay: 50ms
+      - script.execute: led_dim_button_release(0, 9, 4)
+      - delay: 50ms
+      - script.execute: led_dim_button_release(0, 6, 3)
+      - delay: 50ms
+      - script.execute: led_dim_button_release(0, 4, 2)
+      - delay: 50ms
+      - script.execute: led_dim_button_release(0, 2, 1)
+#     - light.turn_on:
+#         id: leds_top
+#         brightness: ${swipe_left_brightness}
+#         red: !lambda "return id(swipe_left_color)[0]/100.0;"
+#         green: !lambda "return id(swipe_left_color)[1]/100.0;"
+#         blue:  !lambda "return id(swipe_left_color)[2]/100.0;"
+#         effect: ${swipe_left_effect}
 
   - id: led_on_swipe_right
     mode: restart
     then:
-      - light.turn_on:
-          id: leds_top
-          brightness: ${swipe_right_brightness}
-          red: !lambda "return id(swipe_right_color)[0]/100.0;"
-          green: !lambda "return id(swipe_right_color)[1]/100.0;"
-          blue:  !lambda "return id(swipe_right_color)[2]/100.0;"
-          effect: ${swipe_right_effect}
+      - script.execute: led_on_button_press(2)
+      - delay: 50ms
+      - script.execute: led_on_button_press(4)
+      - delay: 50ms
+      - script.execute: led_on_button_press(6)
+      - delay: 50ms
+      - script.execute: led_on_button_press(9)
+      - delay: 50ms
+      - script.execute: led_dim_button_release(0, 2, 1)
+      - delay: 50ms
+      - script.execute: led_dim_button_release(0, 4, 2)
+      - delay: 50ms
+      - script.execute: led_dim_button_release(0, 6, 3)
+      - delay: 50ms
+      - script.execute: led_dim_button_release(0, 9, 4)
+#     - light.turn_on:
+#         id: leds_top
+#         brightness: ${swipe_right_brightness}
+#         red: !lambda "return id(swipe_right_color)[0]/100.0;"
+#         green: !lambda "return id(swipe_right_color)[1]/100.0;"
+#         blue:  !lambda "return id(swipe_right_color)[2]/100.0;"
+#         effect: ${swipe_right_effect}
 
   - id: led_on_full_touch
     mode: restart
