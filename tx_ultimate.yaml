@@ -1127,41 +1127,41 @@ script:
   - id: led_on_swipe_left
     mode: restart
     then:
-      - script.execute
+      - script.execute:
         id: led_on_button_press
         x: 9
       - delay: 50ms
-      - script.execute
+      - script.execute:
         id: led_on_button_press
         x: 6
       - delay: 50ms
-      - script.execute
+      - script.execute:
         id: led_on_button_press
         x: 4
       - delay: 50ms
-      - script.execute
+      - script.execute:
         id: led_on_button_press
         x: 2
       - delay: 50ms
-      - script.execute
+      - script.execute:
         id: led_dim_button_release
         iteration: 0
         led_index: 9
         button: 4
       - delay: 50ms
-      - script.execute
+      - script.execute:
         id: led_dim_button_release
         iteration: 0
         led_index: 6
         button: 3
       - delay: 50ms
-      - script.execute
+      - script.execute:
         id: led_dim_button_release
         iteration: 0
         led_index: 4
         button: 2
       - delay: 50ms
-      - script.execute
+      - script.execute:
         id: led_dim_button_release
         iteration: 0
         led_index: 2
@@ -1177,41 +1177,41 @@ script:
   - id: led_on_swipe_right
     mode: restart
     then:
-      - script.execute
+      - script.execute:
         id: led_on_button_press
         x: 2
       - delay: 50ms
-      - script.execute
+      - script.execute:
         id: led_on_button_press
         x: 4
       - delay: 50ms
-      - script.execute
+      - script.execute:
         id: led_on_button_press
         x: 6
       - delay: 50ms
-      - script.execute
+      - script.execute:
         id: led_on_button_press
         x: 9
       - delay: 50ms
-      - script.execute
+      - script.execute:
         id: led_dim_button_release
         iteration: 0
         led_index: 2
         button: 1
       - delay: 50ms
-      - script.execute
+      - script.execute:
         id: led_dim_button_release
         iteration: 0
         led_index: 4
         button: 2
       - delay: 50ms
-      - script.execute
+      - script.execute:
         id: led_dim_button_release
         iteration: 0
         led_index: 6
         button: 3
       - delay: 50ms
-      - script.execute
+      - script.execute:
         id: led_dim_button_release
         iteration: 0
         led_index: 9
