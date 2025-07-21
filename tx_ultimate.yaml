@@ -177,7 +177,7 @@ globals:
     restore_value: no
     initial_value: '{0, 0, 0, 0}'
   - id: original_led_color
-    type: esphome::Color
+    type: esphome::Color[4]
     initial_value: 'esphome::Color(0, 0, 0)'
   - id: led_index
     type: int
@@ -785,78 +785,7 @@ script:
           }
           result[0] = led_index;
           result[1] = button;
-
-  - id: button_pressed_old
-    mode: restart
-    parameters:
-      x: int
-    then:
-      - lambda: |-
-          int button = 0;
-          esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-          switch (x) {
-            case 1:
-            case 2:
-              button = 1;
-              id(led_index) = 12;
-              break;
-            case 3:
-            case 4:
-            case 5:
-              button = 2;
-              id(led_index) = 10;
-              break;
-            case 6:
-            case 7:
-            case 8:
-              button = 3;
-              id(led_index) = 8;
-              break;
-            case 9:
-            case 10:
-              button = 4;
-              id(led_index) = 6;
-              break;
-            default:
-              ESP_LOGW("script", "Unexpected X: %d", x);
-              return;
-          }
-          ESP_LOGD("button", "resolved X %d to button %d at led %d", x, button, id(led_index));
-          // Is light on?
-          // bool is_on = false;
-          // target_led->current_values_as_binary(&is_on);
-          // ESP_LOGD("button", "Button %d LED was %s", button, is_on ? "ON" : "OFF");
-          // Get current color & brightness
-          id(original_led_color) = target_led->get(id(led_index)).get();
-          ESP_LOGD("button", "Button %d color was %d, %d, %d", button, id(original_led_color).r, id(original_led_color).g, id(original_led_color).b);
-          // Turn on
-          int r = id(button_color)[0];
-          int g = id(button_color)[1];
-          int b = id(button_color)[2];
-          esphome::Color new_color = esphome::Color(r, g, b);
-          ESP_LOGD("button", "Set %d to %d, %d, %d", id(led_index), r, g, b);
-          target_led->get(id(led_index)).set(new_color);
-          target_led->schedule_show();
-      - delay: 1s
-      - lambda: |-
-          //make this part of the script recursive
-          esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-          int r = id(button_color)[0];
-          int g = id(button_color)[1];
-          int b = id(button_color)[2];
-          ESP_LOGD("button", "Dimming led_index %d back to %d", id(led_index), id(original_led_color).r, id(original_led_color).g, id(original_led_color).b);
-          // fade the color back into original_color
-          int r1=0, g1=0, b1=0;
-          for (float factor = 0.8f; factor > 0.0f; factor -= 0.2f) {
-            r1 = r*factor + id(original_led_color).r*(1.0-factor);
-            g1 = g*factor + id(original_led_color).g*(1.0-factor);
-            b1 = b*factor + id(original_led_color).b*(1.0-factor);
-            target_led->get(id(led_index)).set(esphome::Color(r1, g1, b1));
-            target_led->schedule_show();
-            delay(100);
-          }
-          target_led->get(id(led_index)).set(id(original_led_color));
-          target_led->schedule_show();
+          ESP_LOGD("button", "in new method: resolved X %d to button %d at led %d", x, button, led_index);
 
   - id: button_pressed
     mode: parallel
@@ -899,17 +828,19 @@ script:
           }
           */
           ESP_LOGD("button", "resolved X %d to button %d at led %d", x, button, led_index);
-          id(original_led_color) = target_led->get(led_index).get();
-          ESP_LOGD("button", "Button %d color was %d, %d, %d", button, id(original_led_color).r, id(original_led_color).g, id(original_led_color).b);
+          auto original_color = target_led->get(led_index).get();
+          ESP_LOGD("button", "Button %d color was %d, %d, %d", button, original_color.r, original_color.g, original_color.b);
+          id(original_led_color)[button-1] = original_color;
           target_led->get(led_index).set(esphome::Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]));
           target_led->schedule_show();
-          id(recursive_button_pressed)->execute(0, led_index);
+          id(recursive_button_pressed)->execute(0, led_index, button);
 
   - id: recursive_button_pressed
     mode: parallel
     parameters:
       iteration: int
       led_index: int
+      button: int
     then:
       - if:
           condition:
@@ -919,19 +850,21 @@ script:
           else:
             - delay: 50ms
       - lambda: |-
-          //ESP_LOGD("button", "Dimming led_index %d back to %d, %d, %d", led_index, id(original_led_color).r, id(original_led_color).g, id(original_led_color).b);
+          auto original_color = id(original_led_color)[button-1];
+          ESP_LOGD("button", "Button %d color was %d, %d, %d", button, original_color.r, original_color.g, original_color.b);
+          //ESP_LOGD("button", "Dimming led_index %d back to %d, %d, %d", led_index, original_color.r, original_color.g, original_color.b);
           // fade to original_color
           int r1=0, g1=0, b1=0;
           float factor = iteration * 0.1f;
-          r1 = id(button_color)[0]*(1.0-factor) + id(original_led_color).r*factor;
-          g1 = id(button_color)[1]*(1.0-factor) + id(original_led_color).g*factor;
-          b1 = id(button_color)[2]*(1.0-factor) + id(original_led_color).b*factor;
+          r1 = id(button_color)[0]*(1.0-factor) + original_color.r*factor;
+          g1 = id(button_color)[1]*(1.0-factor) + original_color.g*factor;
+          b1 = id(button_color)[2]*(1.0-factor) + original_color.b*factor;
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
           ESP_LOGD("button", "Dimming led_index %d to %d, %d, %d", led_index, r1, g1, b1);
           target_led->get(led_index).set(esphome::Color(r1, g1, b1));
           target_led->schedule_show();
           if (iteration<10) {
-            id(recursive_button_pressed)->execute(iteration+1, led_index);
+            id(recursive_button_pressed)->execute(iteration+1, led_index, button);
           }
 
   - id: refresh_nightlight
