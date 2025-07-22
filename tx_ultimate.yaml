@@ -70,6 +70,8 @@ esphome:
   project:
     name: smarthomeyourself.tx_ultimate
     version: "1.0"
+  includes:
+    - my_util.h
 
   on_boot:
     priority: -100
@@ -604,6 +606,7 @@ tx_ultimate_touch:
         if (long_press_duration >= ${long_press_time}) {
           id(long_press).publish_state(true);
           ESP_LOGD("button", "Button %d long press!!!", id(g_button));
+          id(vibra).turn_on();
         }
         id(led_dim_button_release)->execute(0, id(g_led_index), id(g_button));
     - script.execute:
@@ -805,7 +808,7 @@ script:
               ESP_LOGW("script", "Unexpected X: %d", x);
               return;
           }
-          ESP_LOGD("button", "resolved X %d to button %d at led %d", x, button, led_index);
+          ESP_LOGD("button", "resolved X %d to button %d at LED %d", x, button, led_index);
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
           auto original_color = target_led->get(led_index).get();
           ESP_LOGD("button", "Button %d color was %d, %d, %d", button, original_color.r, original_color.g, original_color.b);
@@ -815,7 +818,6 @@ script:
           id(g_button) = button;
           id(g_led_index) = led_index;
           id(button_press_start_time)[button-1] = millis();
-          ESP_LOGD("button", "Button %d pressed at %u", button, millis());
           //id(led_dim_button_release)->execute(0, led_index, button);
 
   - id: led_dim_button_release
@@ -827,7 +829,11 @@ script:
     then:
       - if:
           condition:
-            lambda: 'return iteration == 0;'
+            lambda: |-
+              if (iteration == 0) {
+                ESP_LOGD("button", "Dimming button %d at LED %d", button, led_index);
+              }
+              return iteration == 0;
           then:
             - delay: 1s
           else:
