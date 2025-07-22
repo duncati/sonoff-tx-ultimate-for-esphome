@@ -686,7 +686,7 @@ sun:
 script:
 # this script doesn't work because pass by reference return in result array doesn't work
 # this code could be moved into a .h include if I knew how :/
-  - id: get_led_and_button_at_x
+  - id: get_led_and_button_at_x_backup
     mode: restart
     parameters:
       x: int
