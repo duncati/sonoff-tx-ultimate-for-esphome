@@ -182,14 +182,6 @@ globals:
     type: esphome::Color[4]
     restore_value: no
     initial_value: '{ esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0) }'
-  - id: g_button
-    type: int
-    restore_value: no
-    initial_value: '0'
-  - id: g_led_index
-    type: int
-    restore_value: no
-    initial_value: '0'
 
 binary_sensor:
   - platform: template
@@ -602,14 +594,17 @@ tx_ultimate_touch:
 
   on_release:
     - lambda: |-
-        uint32_t long_press_duration = millis() - id(button_press_start_time)[id(g_button)-1];
-        ESP_LOGD("button", "Button %d held for %u ms", id(g_button), long_press_duration);
+        auto led_and_button  = get_led_and_button_at_x(x, ${relay_count});
+        int led_index = led_and_button[0];
+        int button = led_and_button[1];
+        uint32_t long_press_duration = millis() - id(button_press_start_time)[button-1];
+        ESP_LOGD("button", "Button %d held for %u ms", button, long_press_duration);
         if (long_press_duration >= ${long_press_time}) {
           id(long_press).publish_state(true);
-          ESP_LOGD("button", "Button %d long press!!!", id(g_button));
+          ESP_LOGD("button", "Button %d long press!!!", button);
           id(vibra).turn_on();
         }
-        id(led_dim_button_release)->execute(0, id(g_led_index), id(g_button));
+        id(led_dim_button_release)->execute(0, led_index, button);
     - script.execute:
         id: handle_release
         pos: !lambda "return touch.x;"
@@ -780,47 +775,18 @@ script:
       x: int
     then:
       - lambda: |-
-          int button = 0;
-          int led_index = 0;
-          switch (x) {
-            case 1:
-            case 2:
-              button = 1;
-              led_index = 12;
-              break;
-            case 3:
-            case 4:
-            case 5:
-              button = 2;
-              led_index = 10;
-              break;
-            case 6:
-            case 7:
-            case 8:
-              button = 3;
-              led_index = 8;
-              break;
-            case 9:
-            case 10:
-              button = 4;
-              led_index = 6;
-              break;
-            default:
-              ESP_LOGW("script", "Unexpected X: %d", x);
-              return;
-          }
           auto led_and_button  = get_led_and_button_at_x(x, ${relay_count});
-          ESP_LOGD("button", "resolved X %d to button %d at LED %d =? %d -- %d", x, button, led_index, led_and_button[0], led_and_button[1]);
+          int led_index = led_and_button[0];
+          int button = led_and_button[1];
+
+          ESP_LOGD("button", "resolved X %d to button %d at LED %d", x, button);
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
           auto original_color = target_led->get(led_index).get();
           ESP_LOGD("button", "Button %d color was %d, %d, %d", button, original_color.r, original_color.g, original_color.b);
           id(original_led_color)[button-1] = original_color;
           target_led->get(led_index).set(esphome::Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]));
           target_led->schedule_show();
-          id(g_button) = button;
-          id(g_led_index) = led_index;
           id(button_press_start_time)[button-1] = millis();
-          //id(led_dim_button_release)->execute(0, led_index, button);
 
   - id: led_dim_button_release
     mode: parallel
