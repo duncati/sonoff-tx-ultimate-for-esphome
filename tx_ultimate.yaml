@@ -810,7 +810,7 @@ script:
               return;
           }
           int l = get_led_and_button_at_x(x, ${relay_count});
-          ESP_LOGD("button", "resolved X %d to button %d at LED %d =? %d", x, button, led_index, %d);
+          ESP_LOGD("button", "resolved X %d to button %d at LED %d =? %d", x, button, led_index, l);
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
           auto original_color = target_led->get(led_index).get();
           ESP_LOGD("button", "Button %d color was %d, %d, %d", button, original_color.r, original_color.g, original_color.b);
