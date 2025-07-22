@@ -809,8 +809,8 @@ script:
               ESP_LOGW("script", "Unexpected X: %d", x);
               return;
           }
-          int l = get_led_and_button_at_x(x, ${relay_count});
-          ESP_LOGD("button", "resolved X %d to button %d at LED %d =? %d", x, button, led_index, l);
+          auto led_and_button  = get_led_and_button_at_x(x, ${relay_count});
+          ESP_LOGD("button", "resolved X %d to button %d at LED %d =? %d -- %d", x, button, led_index, led_and_button[0], led_and_button[1]);
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
           auto original_color = target_led->get(led_index).get();
           ESP_LOGD("button", "Button %d color was %d, %d, %d", button, original_color.r, original_color.g, original_color.b);
