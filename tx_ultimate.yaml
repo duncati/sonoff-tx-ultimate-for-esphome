@@ -1098,6 +1098,7 @@ script:
       - delay: 6s
       - script.execute: refresh_led_default
 
+# TODO dim the right LEDs based on the relay_count
   - id: led_on_swipe_left
     mode: restart
     then:

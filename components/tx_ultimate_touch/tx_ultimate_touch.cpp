@@ -193,10 +193,11 @@ namespace esphome
         TouchPoint TxUltimateTouch::get_touch_point(int bytes[])
         {
             TouchPoint tp;
-            int size = sizeof(bytes) / sizeof(bytes[0]);
 
-            ESP_LOGW("main", "Tx Ultimate Touch get_touch_point: different len=%d, 0=%d, 1=%d, 2=%d, 3=%d, 4=%d, 5=%d",
-         size, bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]);
+            ESP_LOGW("main", "Tx Ultimate Touch get_touch_point: 0=%d 1=%d 2=%d 3=%d 4=%d 5=%d 6=%d 7=%d 8=%d 9=%d 10=%d 11=%d 12=%d 13=%d 14=%d",
+         bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5],
+         bytes[6], bytes[7], bytes[8], bytes[9], bytes[10], bytes[11],
+         bytes[12], bytes[13], bytes[14]);
 
             tp.x = get_x_touch_position(bytes);
             tp.state = get_touch_state(bytes);
