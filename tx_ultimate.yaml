@@ -284,7 +284,7 @@ binary_sensor:
       - script.execute: refresh_led_default
 
   - platform: template
-    name: "Long Press"
+    name: "Long Press 1"
     id: long_press_1
     on_press:
 #     - delay: ${button_on_time}
@@ -294,7 +294,7 @@ binary_sensor:
       - script.execute: refresh_led_default
 
   - platform: template
-    name: "Long Press"
+    name: "Long Press 2"
     id: long_press_2
     on_press:
 #     - delay: ${button_on_time}
@@ -304,7 +304,7 @@ binary_sensor:
       - script.execute: refresh_led_default
 
   - platform: template
-    name: "Long Press"
+    name: "Long Press 3"
     id: long_press_3
     on_press:
 #     - delay: ${button_on_time}
@@ -314,7 +314,7 @@ binary_sensor:
       - script.execute: refresh_led_default
 
   - platform: template
-    name: "Long Press"
+    name: "Long Press 4"
     id: long_press_4
     on_press:
 #     - delay: ${button_on_time}
