@@ -680,95 +680,6 @@ sun:
 
 
 script:
-# this script doesn't work because pass by reference return in result array doesn't work
-# this code could be moved into a .h include if I knew how :/
-  - id: get_led_and_button_at_x_backup
-    mode: restart
-    parameters:
-      x: int
-    then:
-      - lambda: |-
-          int button = 0;
-          int led_index = 0;
-          if (${relay_count}==4) {
-            switch (x) {
-              case 1:
-              case 2:
-                  button = 1;
-                  led_index = 12;
-                  break;
-              case 3:
-              case 4:
-              case 5:
-                  button = 2;
-                  led_index = 10;
-                  break;
-              case 6:
-              case 7:
-              case 8:
-                  button = 3;
-                  led_index = 8;
-                  break;
-              case 9:
-              case 10:
-                  button = 4;
-                  led_index = 6;
-                  break;
-              default:
-                ESP_LOGW("script", "Unexpected X: %d", x);
-                return;
-              }
-          } else if (${relay_count}==3) {
-            switch (x) {
-              case 1:
-              case 2:
-              case 3:
-                  button = 1;
-                  led_index = 11;
-                  break;
-              case 4:
-              case 5:
-                  led_index = 9;
-                  break;
-              case 7:
-              case 8:
-              case 9:
-              case 10:
-                  button = 3;
-                  led_index = 7;
-                  break;
-              default:
-                ESP_LOGW("script", "Unexpected X: %d", x);
-                return;
-            }
-          } else if (${relay_count}==2) {
-            switch (x) {
-              case 1:
-              case 2:
-              case 3:
-              case 4:
-              case 5:
-                  button = 1;
-                  led_index = 11;
-                  break;
-              case 6:
-              case 7:
-              case 8:
-              case 9:
-              case 10:
-                  button = 2;
-                  led_index = 7;
-                  break;
-              default:
-                ESP_LOGW("script", "Unexpected X: %d", x);
-                return;
-            }
-          } else {
-            button = 1;
-            led_index = 9;
-          }
-          ESP_LOGD("button", "in new method: resolved X %d to button %d at led %d", x, button, led_index);
-
   - id: led_on_button_press
     mode: parallel
     parameters:
@@ -779,10 +690,9 @@ script:
           int led_index = led_and_button[0];
           int button = led_and_button[1];
 
-          ESP_LOGD("button", "resolved X %d to button %d at LED %d", x, button);
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
           auto original_color = target_led->get(led_index).get();
-          ESP_LOGD("button", "Button %d color was %d, %d, %d", button, original_color.r, original_color.g, original_color.b);
+          ESP_LOGD("button", "resolved X %d to button %d at LED %d, color was %d %d %d", x, button, led_index, original_color.r, original_color.g, original_color.b);
           id(original_led_color)[button-1] = original_color;
           target_led->get(led_index).set(esphome::Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]));
           target_led->schedule_show();
@@ -1102,6 +1012,8 @@ script:
   - id: led_on_swipe_left
     mode: restart
     then:
+      - script.stop: led_on_button_press
+      - script.stop: led_dim_button_release
       - script.execute:
           id: led_on_button_press
           x: 9
@@ -1152,6 +1064,8 @@ script:
   - id: led_on_swipe_right
     mode: restart
     then:
+      - script.stop: led_on_button_press
+      - script.stop: led_dim_button_release
       - script.execute:
           id: led_on_button_press
           x: 2
