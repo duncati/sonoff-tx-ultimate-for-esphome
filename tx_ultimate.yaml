@@ -733,7 +733,7 @@ script:
                 target_led->get(led_index).set(esphome::Color(r1, g1, b1));
                 target_led->schedule_show();
             - delay: 50ms
-        - lambda: 'id(button_press_start_time)[button-1] = 0;'
+      - lambda: 'id(button_press_start_time)[button-1] = 0;'
 
   - id: refresh_nightlight
     mode: restart
