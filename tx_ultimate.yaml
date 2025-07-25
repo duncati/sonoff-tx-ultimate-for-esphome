@@ -604,7 +604,12 @@ tx_ultimate_touch:
           ESP_LOGD("button", "Button %d long pressed", button);
           id(vibra).turn_on();
         }
-        id(led_dim_button_release)->execute(led_index, button);
+        switch(button) {
+          case 1: id(led_dim_button_1)->execute(led_index); break;
+          case 2: id(led_dim_button_2)->execute(led_index); break;
+          case 3: id(led_dim_button_3)->execute(led_index); break;
+          case 4: id(led_dim_button_4)->execute(led_index); break;
+        }
     - script.execute:
         id: handle_release
         pos: !lambda "return touch.x;"
@@ -704,36 +709,93 @@ script:
           target_led->get(led_index).set(esphome::Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]));
           target_led->schedule_show();
 
-  - id: led_dim_button_release
-    mode: parallel
+  - id: led_dim_button_1
+    mode: restart
     parameters:
       led_index: int
-      button: int
     then:
-      - lambda: |-
-          ESP_LOGD("button", "Dimming button %d at LED %d to %d %d %d", button, led_index, 
-            id(original_led_color)[button-1].r,
-            id(original_led_color)[button-1].g,
-            id(original_led_color)[button-1].b);
       - delay: 1s
-      - lambda: 'ESP_LOGD("button", "Awaken button %d", button);'
       - repeat:
           count: 10
           then:
             - lambda: |-
-                auto original_color = id(original_led_color)[button-1];
-                // fade to original_color
-                int r1=0, g1=0, b1=0;
-                float factor = (iteration-1) * 0.1f;
-                r1 = id(button_color)[0]*(1.0-factor) + original_color.r*factor;
-                g1 = id(button_color)[1]*(1.0-factor) + original_color.g*factor;
-                b1 = id(button_color)[2]*(1.0-factor) + original_color.b*factor;
+                auto original_color = id(original_led_color)[0];
+                float factor = iteration * 0.1f;
+                int r = id(button_color)[0]*(1.0-factor) + original_color.r*factor;
+                int g = id(button_color)[1]*(1.0-factor) + original_color.g*factor;
+                int b = id(button_color)[2]*(1.0-factor) + original_color.b*factor;
                 esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-                ESP_LOGD("button", "Dimming button %d iteration %d (LED %d) to %d, %d, %d", button, iteration, led_index, r1, g1, b1);
-                target_led->get(led_index).set(esphome::Color(r1, g1, b1));
+                ESP_LOGD("button", "Dimming button 1 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
+                target_led->get(led_index).set(esphome::Color(r, g, b));
                 target_led->schedule_show();
             - delay: 50ms
-      - lambda: 'id(button_press_start_time)[button-1] = 0;'
+      - lambda: 'id(button_press_start_time)[0] = 0;'
+
+  - id: led_dim_button_2
+    mode: restart
+    parameters:
+      led_index: int
+    then:
+      - delay: 1s
+      - repeat:
+          count: 10
+          then:
+            - lambda: |-
+                auto original_color = id(original_led_color)[1];
+                float factor = iteration * 0.1f;
+                int r = id(button_color)[0]*(1.0-factor) + original_color.r*factor;
+                int g = id(button_color)[1]*(1.0-factor) + original_color.g*factor;
+                int b = id(button_color)[2]*(1.0-factor) + original_color.b*factor;
+                esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
+                ESP_LOGD("button", "Dimming button 2 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
+                target_led->get(led_index).set(esphome::Color(r, g, b));
+                target_led->schedule_show();
+            - delay: 50ms
+      - lambda: 'id(button_press_start_time)[1] = 0;'
+
+  - id: led_dim_button_3
+    mode: restart
+    parameters:
+      led_index: int
+    then:
+      - delay: 1s
+      - repeat:
+          count: 10
+          then:
+            - lambda: |-
+                auto original_color = id(original_led_color)[2];
+                float factor = iteration * 0.1f;
+                int r = id(button_color)[0]*(1.0-factor) + original_color.r*factor;
+                int g = id(button_color)[1]*(1.0-factor) + original_color.g*factor;
+                int b = id(button_color)[2]*(1.0-factor) + original_color.b*factor;
+                esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
+                ESP_LOGD("button", "Dimming button 3 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
+                target_led->get(led_index).set(esphome::Color(r, g, b));
+                target_led->schedule_show();
+            - delay: 50ms
+      - lambda: 'id(button_press_start_time)[2] = 0;'
+
+  - id: led_dim_button_4
+    mode: restart
+    parameters:
+      led_index: int
+    then:
+      - delay: 1s
+      - repeat:
+          count: 10
+          then:
+            - lambda: |-
+                auto original_color = id(original_led_color)[3];
+                float factor = iteration * 0.1f;
+                int r = id(button_color)[0]*(1.0-factor) + original_color.r*factor;
+                int g = id(button_color)[1]*(1.0-factor) + original_color.g*factor;
+                int b = id(button_color)[2]*(1.0-factor) + original_color.b*factor;
+                esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
+                ESP_LOGD("button", "Dimming button 4 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
+                target_led->get(led_index).set(esphome::Color(r, g, b));
+                target_led->schedule_show();
+            - delay: 50ms
+      - lambda: 'id(button_press_start_time)[3] = 0;'
 
   - id: refresh_nightlight
     mode: restart
@@ -1015,7 +1077,10 @@ script:
     mode: restart
     then:
       - script.stop: led_on_button_press
-      - script.stop: led_dim_button_release
+      - script.stop: led_dim_button_1
+      - script.stop: led_dim_button_2
+      - script.stop: led_dim_button_3
+      - script.stop: led_dim_button_4
       - script.execute:
           id: led_on_button_press
           x: 9
@@ -1033,24 +1098,20 @@ script:
           x: 2
       - delay: 50ms
       - script.execute:
-          id: led_dim_button_release
+          id: led_dim_button_4
           led_index: 6
-          button: 4
       - delay: 50ms
       - script.execute:
-          id: led_dim_button_release
+          id: led_dim_button_3
           led_index: 8
-          button: 3
       - delay: 50ms
       - script.execute:
-          id: led_dim_button_release
+          id: led_dim_button_2
           led_index: 10
-          button: 2
       - delay: 50ms
       - script.execute:
-          id: led_dim_button_release
+          id: led_dim_button_1
           led_index: 12
-          button: 1
 #     - light.turn_on:
 #         id: leds_top
 #         brightness: ${swipe_left_brightness}
@@ -1063,7 +1124,10 @@ script:
     mode: restart
     then:
       - script.stop: led_on_button_press
-      - script.stop: led_dim_button_release
+      - script.stop: led_dim_button_1
+      - script.stop: led_dim_button_2
+      - script.stop: led_dim_button_3
+      - script.stop: led_dim_button_4
       - script.execute:
           id: led_on_button_press
           x: 2
@@ -1081,24 +1145,20 @@ script:
           x: 9
       - delay: 50ms
       - script.execute:
-          id: led_dim_button_release
+          id: led_dim_button_1
           led_index: 12
-          button: 1
       - delay: 50ms
       - script.execute:
-          id: led_dim_button_release
+          id: led_dim_button_2
           led_index: 10
-          button: 2
       - delay: 50ms
       - script.execute:
-          id: led_dim_button_release
+          id: led_dim_button_3
           led_index: 8
-          button: 3
       - delay: 50ms
       - script.execute:
-          id: led_dim_button_release
+          id: led_dim_button_4
           led_index: 6
-          button: 4
 #     - light.turn_on:
 #         id: leds_top
 #         brightness: ${swipe_right_brightness}
