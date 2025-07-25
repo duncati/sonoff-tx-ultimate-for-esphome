@@ -716,6 +716,7 @@ script:
             id(original_led_color)[button-1].g,
             id(original_led_color)[button-1].b);
       - delay: 1s
+      - lambda: 'ESP_LOGD("button", "Awaken button %d", button);'
       - repeat:
           count: 10
           then:
