@@ -1033,25 +1033,25 @@ script:
       - script.execute:
           id: led_dim_button_release
           iteration: 0
-          led_index: 9
+          led_index: 6
           button: 4
       - delay: 50ms
       - script.execute:
           id: led_dim_button_release
           iteration: 0
-          led_index: 6
+          led_index: 8
           button: 3
       - delay: 50ms
       - script.execute:
           id: led_dim_button_release
           iteration: 0
-          led_index: 4
+          led_index: 10
           button: 2
       - delay: 50ms
       - script.execute:
           id: led_dim_button_release
           iteration: 0
-          led_index: 2
+          led_index: 12
           button: 1
 #     - light.turn_on:
 #         id: leds_top
@@ -1085,25 +1085,25 @@ script:
       - script.execute:
           id: led_dim_button_release
           iteration: 0
-          led_index: 2
+          led_index: 12
           button: 1
       - delay: 50ms
       - script.execute:
           id: led_dim_button_release
           iteration: 0
-          led_index: 4
+          led_index: 10
           button: 2
       - delay: 50ms
       - script.execute:
           id: led_dim_button_release
           iteration: 0
-          led_index: 6
+          led_index: 8
           button: 3
       - delay: 50ms
       - script.execute:
           id: led_dim_button_release
           iteration: 0
-          led_index: 9
+          led_index: 6
           button: 4
 #     - light.turn_on:
 #         id: leds_top
