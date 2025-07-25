@@ -598,7 +598,6 @@ tx_ultimate_touch:
         int led_index = led_and_button[0];
         int button = led_and_button[1];
         auto button_press_duration = millis() - id(button_press_start_time)[button-1];
-        id(button_press_start_time)[button-1] = 0;
         ESP_LOGD("button", "Button %d held for %u ms", button, button_press_duration);
         if (button_press_duration >= ${long_press_time}) {
           id(long_press).publish_state(true);
@@ -743,6 +742,8 @@ script:
           target_led->schedule_show();
           if (iteration<10) {
             id(led_dim_button_release)->execute(iteration+1, led_index, button);
+          } else {
+            id(button_press_start_time)[button-1] = 0;
           }
 
   - id: refresh_nightlight
