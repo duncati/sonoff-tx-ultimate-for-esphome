@@ -597,11 +597,13 @@ tx_ultimate_touch:
         auto led_and_button  = get_led_and_button_at_x(touch.x, ${relay_count});
         int led_index = led_and_button[0];
         int button = led_and_button[1];
-        uint32_t long_press_duration = millis() - id(button_press_start_time)[button-1];
-        ESP_LOGD("button", "Button %d held for %u ms", button, long_press_duration);
-        if (long_press_duration >= ${long_press_time}) {
+        auto button_press_duration = millis() - id(button_press_start_time)[button-1];
+        id(button_press_start_time)[button-1] = 0;
+        ESP_LOGD("button", "Button %d held for %u ms", button, button_press_duration);
+        if (button_press_duration >= ${long_press_time}) {
           id(long_press).publish_state(true);
-          ESP_LOGD("button", "Button %d long press!!!", button);
+          ESP_LOGD("button", "Button %d long pressed", button);
+          // TODO send long press event to HA
           id(vibra).turn_on();
         }
         id(led_dim_button_release)->execute(0, led_index, button);
@@ -689,14 +691,20 @@ script:
           auto led_and_button  = get_led_and_button_at_x(x, ${relay_count});
           int led_index = led_and_button[0];
           int button = led_and_button[1];
-
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-          auto original_color = target_led->get(led_index).get();
-          ESP_LOGD("button", "resolved X %d to button %d at LED %d, color was %d %d %d", x, button, led_index, original_color.r, original_color.g, original_color.b);
-          id(original_led_color)[button-1] = original_color;
+
+          if (id(button_press_start_time)[button-1] == 0) {
+            // this button has been pressed twice in a row, don't alter original_color
+            auto original_color = target_led->get(led_index).get();
+            ESP_LOGD("button", "resolved X %d to button %d at LED %d, color was %d %d %d", x, button, led_index, original_color.r, original_color.g, original_color.b);
+            id(original_led_color)[button-1] = original_color;
+          } else {
+            ESP_LOGD("button", "resolved X %d to button %d at LED %d, button pressed before fade completed", x, button, led_index);
+          }
+          id(button_press_start_time)[button-1] = millis();
+
           target_led->get(led_index).set(esphome::Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]));
           target_led->schedule_show();
-          id(button_press_start_time)[button-1] = millis();
 
   - id: led_dim_button_release
     mode: parallel
