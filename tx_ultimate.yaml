@@ -285,11 +285,41 @@ binary_sensor:
 
   - platform: template
     name: "Long Press"
-    id: long_press
+    id: long_press_1
     on_press:
 #     - delay: ${button_on_time}
       - binary_sensor.template.publish:
-          id: long_press
+          id: long_press_1
+          state: OFF
+      - script.execute: refresh_led_default
+
+  - platform: template
+    name: "Long Press"
+    id: long_press_2
+    on_press:
+#     - delay: ${button_on_time}
+      - binary_sensor.template.publish:
+          id: long_press_2
+          state: OFF
+      - script.execute: refresh_led_default
+
+  - platform: template
+    name: "Long Press"
+    id: long_press_3
+    on_press:
+#     - delay: ${button_on_time}
+      - binary_sensor.template.publish:
+          id: long_press_3
+          state: OFF
+      - script.execute: refresh_led_default
+
+  - platform: template
+    name: "Long Press"
+    id: long_press_4
+    on_press:
+#     - delay: ${button_on_time}
+      - binary_sensor.template.publish:
+          id: long_press_4
           state: OFF
       - script.execute: refresh_led_default
 
