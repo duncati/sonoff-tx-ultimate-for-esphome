@@ -98,7 +98,16 @@ esphome:
           id: swipe_right
           state: OFF
       - binary_sensor.template.publish:
-          id: long_press
+          id: long_press_1
+          state: OFF
+      - binary_sensor.template.publish:
+          id: long_press_2
+          state: OFF
+      - binary_sensor.template.publish:
+          id: long_press_3
+          state: OFF
+      - binary_sensor.template.publish:
+          id: long_press_4
           state: OFF
       - script.execute: refresh_led_default
       - script.execute: refresh_nightlight
@@ -600,8 +609,13 @@ tx_ultimate_touch:
         auto button_press_duration = millis() - id(button_press_start_time)[button-1];
         //ESP_LOGD("button", "Button %d held for %u ms", button, button_press_duration);
         if (button_press_duration >= ${long_press_time}) {
-          id(long_press).publish_state(true);
           ESP_LOGD("button", "Button %d long pressed", button);
+          switch(button) {
+            case 1: id(long_press_1).publish_state(true); break;
+            case 2: id(long_press_2).publish_state(true); break;
+            case 3: id(long_press_3).publish_state(true); break;
+            case 4: id(long_press_4).publish_state(true); break;
+          }
           id(vibra).turn_on();
         }
         switch(button) {
