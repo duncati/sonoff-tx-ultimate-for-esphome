@@ -588,7 +588,7 @@ tx_ultimate_touch:
   on_press:
 #   - script.execute: led_on_touch
     - lambda: |-
-        ESP_LOGD("tx_ultimate_touch.on_press", "Touch Position: %d / State: %d", touch.x, touch.state);
+        ESP_LOGW("tx_ultimate_touch.on_press", "Touch Position: %d / State: %d", touch.x, touch.state);
         id(led_on_button_press)->execute(touch.x);
     - switch.turn_on: vibra
 
@@ -598,7 +598,7 @@ tx_ultimate_touch:
         int led_index = led_and_button[0];
         int button = led_and_button[1];
         auto button_press_duration = millis() - id(button_press_start_time)[button-1];
-        ESP_LOGD("button", "Button %d held for %u ms", button, button_press_duration);
+        //ESP_LOGD("button", "Button %d held for %u ms", button, button_press_duration);
         if (button_press_duration >= ${long_press_time}) {
           id(long_press).publish_state(true);
           ESP_LOGD("button", "Button %d long pressed", button);
@@ -735,7 +735,7 @@ script:
           g1 = id(button_color)[1]*(1.0-factor) + original_color.g*factor;
           b1 = id(button_color)[2]*(1.0-factor) + original_color.b*factor;
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-          //ESP_LOGD("button", "Dimming button %d (LED %d) to %d, %d, %d", button, led_index, r1, g1, b1);
+          ESP_LOGD("button", "Dimming button %d iteration (LED %d) to %d, %d, %d", button, iteration, led_index, r1, g1, b1);
           target_led->get(led_index).set(esphome::Color(r1, g1, b1));
           target_led->schedule_show();
           if (iteration<10) {
