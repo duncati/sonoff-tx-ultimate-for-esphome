@@ -624,11 +624,14 @@ script:
           target_led->schedule_show();
       - delay: ${long_press_time}ms
       - lambda: |-
-          // this might cause an edge case where the button is pressed, released, is dimming,
+          // this causes an edge case where the button is pressed, released, is dimming,
           // then pressed again - and that being a long hold -- adding another global variable
           // instead of overusing button_press_start_time would likely help
+          // it also can kick in during the dim transition
           if (millis() - id(button_press_start_time)[button-1] > ${long_press_time}) {
             esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
+            auto color = esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]);
+            ESP_LOGI("button", "long press color: %d %d %d", color.r, color,g, color.b);
             target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
             target_led->schedule_show();
           }
@@ -674,7 +677,7 @@ script:
                 int g = id(button_color)[1]*(1.0-factor) + original_color.g*factor;
                 int b = id(button_color)[2]*(1.0-factor) + original_color.b*factor;
                 esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-                ESP_LOGD("button", "Dimming button 2 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
+                //ESP_LOGD("button", "Dimming button 2 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
                 target_led->get(led_index).set(esphome::Color(r, g, b));
                 target_led->schedule_show();
             - delay: 50ms
@@ -696,7 +699,7 @@ script:
                 int g = id(button_color)[1]*(1.0-factor) + original_color.g*factor;
                 int b = id(button_color)[2]*(1.0-factor) + original_color.b*factor;
                 esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-                ESP_LOGD("button", "Dimming button 3 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
+                //ESP_LOGD("button", "Dimming button 3 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
                 target_led->get(led_index).set(esphome::Color(r, g, b));
                 target_led->schedule_show();
             - delay: 50ms
@@ -718,7 +721,7 @@ script:
                 int g = id(button_color)[1]*(1.0-factor) + original_color.g*factor;
                 int b = id(button_color)[2]*(1.0-factor) + original_color.b*factor;
                 esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-                ESP_LOGD("button", "Dimming button 4 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
+                //ESP_LOGD("button", "Dimming button 4 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
                 target_led->get(led_index).set(esphome::Color(r, g, b));
                 target_led->schedule_show();
             - delay: 50ms
@@ -813,13 +816,6 @@ script:
       - script.execute:
           id: led_dim_button_1
           led_index: 12
-#     - light.turn_on:
-#         id: leds_top
-#         brightness: ${swipe_left_brightness}
-#         red: !lambda "return id(swipe_left_color)[0]/100.0;"
-#         green: !lambda "return id(swipe_left_color)[1]/100.0;"
-#         blue:  !lambda "return id(swipe_left_color)[2]/100.0;"
-#         effect: ${swipe_left_effect}
 
   - id: led_on_swipe_right
     mode: restart
@@ -864,13 +860,6 @@ script:
       - script.execute:
           id: led_dim_button_4
           led_index: 6
-#     - light.turn_on:
-#         id: leds_top
-#         brightness: ${swipe_right_brightness}
-#         red: !lambda "return id(swipe_right_color)[0]/100.0;"
-#         green: !lambda "return id(swipe_right_color)[1]/100.0;"
-#         blue:  !lambda "return id(swipe_right_color)[2]/100.0;"
-#         effect: ${swipe_right_effect}
 
   - id: led_on_full_touch
     mode: restart
@@ -882,6 +871,8 @@ script:
           green: !lambda "return id(multi_touch_color)[1]/100.0;"
           blue:  !lambda "return id(multi_touch_color)[2]/100.0;"
           effect: ${multi_touch_effect}
+      - delay: 5s
+      - light.turn_off: leds_top
 
   - id: led_on_long_touch
     mode: restart
@@ -893,5 +884,5 @@ script:
           green: !lambda "return id(very_long_press_color)[1]/100.0;"
           blue:  !lambda "return id(very_long_press_color)[2]/100.0;"
           effect: ${very_long_press_effect}
-      - delay: 2s
+      - delay: 5s
       - light.turn_off: leds_top
