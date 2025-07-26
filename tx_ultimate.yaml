@@ -627,7 +627,8 @@ tx_ultimate_touch:
 #   - script.execute: led_on_touch
     - lambda: |-
         ESP_LOGW("tx_ultimate_touch.on_press", "Touch Position: %d / State: %d", touch.x, touch.state);
-        id(led_on_button_press)->execute(touch.x);
+        auto led_and_button  = get_led_and_button_at_x(x, ${relay_count});
+        id(led_on_button_press)->execute(led_and_button[0], led_and_button[1])
     - switch.turn_on: vibra
 
   on_release:
@@ -731,12 +732,10 @@ script:
   - id: led_on_button_press
     mode: parallel
     parameters:
-      x: int
+      led_index: int
+      button: int
     then:
       - lambda: |-
-          auto led_and_button  = get_led_and_button_at_x(x, ${relay_count});
-          int led_index = led_and_button[0];
-          int button = led_and_button[1];
           esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
 
           if (id(button_press_start_time)[button-1] == 0) {
@@ -756,9 +755,7 @@ script:
           // this might cause an edge case where the button is pressed, released, is dimming,
           // then pressed again - and that being a long hold -- adding another global variable
           // instead of overusing button_press_start_time would likely help
-          if (millis() - id(button_press_start_time) > ${long_press_time}) {
-            auto led_and_button  = get_led_and_button_at_x(x, ${relay_count});
-            int led_index = led_and_button[0];
+          if (millis() - id(button_press_start_time)[button-1] > ${long_press_time}) {
             esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
             target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
             target_led->schedule_show();
@@ -1142,19 +1139,23 @@ script:
       - script.stop: led_dim_button_4
       - script.execute:
           id: led_on_button_press
-          x: 9
+          button: 4
+          led_index: 6
       - delay: 50ms
       - script.execute:
           id: led_on_button_press
-          x: 6
+          button: 3
+          led_index: 8
       - delay: 50ms
       - script.execute:
           id: led_on_button_press
-          x: 4
+          button: 2
+          led_index: 10
       - delay: 50ms
       - script.execute:
           id: led_on_button_press
-          x: 2
+          button: 1
+          led_index: 12
       - delay: 50ms
       - script.execute:
           id: led_dim_button_4
@@ -1189,19 +1190,23 @@ script:
       - script.stop: led_dim_button_4
       - script.execute:
           id: led_on_button_press
-          x: 2
+          button: 1
+          led_index: 12
       - delay: 50ms
       - script.execute:
           id: led_on_button_press
-          x: 4
+          button: 2
+          led_index: 10
       - delay: 50ms
       - script.execute:
           id: led_on_button_press
-          x: 6
+          button: 3
+          led_index: 8
       - delay: 50ms
       - script.execute:
           id: led_on_button_press
-          x: 9
+          button: 4
+          led_index: 6
       - delay: 50ms
       - script.execute:
           id: led_dim_button_1
