@@ -500,7 +500,7 @@ tx_ultimate_touch:
     - switch.turn_on: vibra
 
   on_release:
-    - lambda: 'ESP_LOGI("on_release stopping on_button_press");'
+    - lambda: 'ESP_LOGI("button", "on_release stopping on_button_press");'
     - script.stop: led_on_button_press
     - lambda: |-
         auto led_and_button = get_led_and_button_at_x(touch.x, ${button_count});
