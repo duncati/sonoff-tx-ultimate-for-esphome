@@ -756,7 +756,7 @@ script:
           // this might cause an edge case where the button is pressed, released, is dimming,
           // then pressed again - and that being a long hold -- adding another global variable
           // instead of overusing button_press_start_time would likely help
-          if (millis() - id(button_press_start_time) > id(long_press_time) {
+          if (millis() - id(button_press_start_time) > ${long_press_time}) {
             auto led_and_button  = get_led_and_button_at_x(x, ${relay_count});
             int led_index = led_and_button[0];
             esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
