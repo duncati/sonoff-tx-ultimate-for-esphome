@@ -630,9 +630,9 @@ script:
                 auto original_color = id(original_led_color)[0];
                 auto dim_color = (is_long_press) ? id(long_press_color) : id(touch_color);
                 float factor = iteration * 0.1f;
-                int r = id(dim_color)[0]*(1.0-factor) + original_color.r*factor;
-                int g = id(dim_color)[1]*(1.0-factor) + original_color.g*factor;
-                int b = id(dim_color)[2]*(1.0-factor) + original_color.b*factor;
+                int r = dim_color[0]*(1.0-factor) + original_color.r*factor;
+                int g = dim_color[1]*(1.0-factor) + original_color.g*factor;
+                int b = dim_color[2]*(1.0-factor) + original_color.b*factor;
                 esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
                 //ESP_LOGD("button", "Dimming button 1 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
                 target_led->get(led_index).set(esphome::Color(r, g, b));
