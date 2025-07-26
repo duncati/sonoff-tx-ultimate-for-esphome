@@ -890,4 +890,4 @@ script:
           blue:  !lambda "return id(very_long_press_color)[2]/100.0;"
           effect: ${very_long_press_effect}
       - delay: 2s
-        light.turn_off: leds_top
+      - light.turn_off: leds_top
