@@ -149,7 +149,6 @@ external_components:
   - source:
       type: git
       url: https://github.com/duncati/sonoff-tx-ultimate-for-esphome
-#     url: https://github.com/SmartHome-yourself/sonoff-tx-ultimate-for-esphome
       ref: main
     components: [tx_ultimate_touch]
 
@@ -623,6 +622,7 @@ script:
             esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
             target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
             target_led->schedule_show();
+            id(vibra).turn_on();
           }
 
 # The lovely ESPHome framework will stop execution of a script, even in parallel mode, if it's called
