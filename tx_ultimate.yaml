@@ -630,8 +630,10 @@ script:
           // it also can kick in during the dim transition
           if (millis() - id(button_press_start_time)[button-1] > ${long_press_time}) {
             esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-            auto color = esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]);
-            ESP_LOGI("button", "long press color: %d %d %d", color.r, color,g, color.b);
+            //auto color = esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]);
+            //ESP_LOGI("button", "long press color: %d %d %d", color.r, color,g, color.b);
+            ESP_LOGI("button", "long press color: %d %d %d", id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]);
+            //ESP_LOGI("button", "long press color: %d %d %d", color.r, color,g, color.b);
             target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
             target_led->schedule_show();
           }
