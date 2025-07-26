@@ -627,13 +627,13 @@ tx_ultimate_touch:
 #   - script.execute: led_on_touch
     - lambda: |-
         ESP_LOGW("tx_ultimate_touch.on_press", "Touch Position: %d / State: %d", touch.x, touch.state);
-        auto led_and_button  = get_led_and_button_at_x(touch.x, ${relay_count});
-        id(led_on_button_press)->execute(led_and_button[0], led_and_button[1])
+        auto led_and_button = get_led_and_button_at_x(touch.x, ${relay_count});
+        id(led_on_button_press)->execute(led_and_button[0], led_and_button[1]);
     - switch.turn_on: vibra
 
   on_release:
     - lambda: |-
-        auto led_and_button  = get_led_and_button_at_x(touch.x, ${relay_count});
+        auto led_and_button = get_led_and_button_at_x(touch.x, ${relay_count});
         int led_index = led_and_button[0];
         int button = led_and_button[1];
         auto button_press_duration = millis() - id(button_press_start_time)[button-1];
