@@ -170,6 +170,10 @@ globals:
     type: int [3]
     restore_value: no
     initial_value: ${long_press_color}
+  - id: very_long_press_color
+    type: int [3]
+    restore_value: no
+    initial_value: ${very_long_press_color}
   - id: multi_touch_color
     type: int [3]
     restore_value: no
