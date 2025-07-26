@@ -4,10 +4,10 @@ substitutions:
 
   button_count: "4"
 
-  toggle_relay_1_on_touch: "true"
-  toggle_relay_2_on_touch: "true"
-  toggle_relay_3_on_touch: "true"
-  toggle_relay_4_on_touch: "true"
+  toggle_relay_1_on_touch: "false"
+  toggle_relay_2_on_touch: "false"
+  toggle_relay_3_on_touch: "false"
+  toggle_relay_4_on_touch: "false"
 
   vibra_time: 150ms
   button_on_time: 500ms
@@ -500,6 +500,8 @@ tx_ultimate_touch:
     - switch.turn_on: vibra
 
   on_release:
+    - lambda: 'ESP_LOGI("on_release stopping on_button_press");'
+    - script.stop: led_on_button_press
     - lambda: |-
         auto led_and_button = get_led_and_button_at_x(touch.x, ${button_count});
         int led_index = led_and_button[0];
@@ -517,62 +519,47 @@ tx_ultimate_touch:
           id(vibra).turn_on();
         }
         switch(button) {
-          case 1: id(led_dim_button_1)->execute(led_index); break;
-          case 2: id(led_dim_button_2)->execute(led_index); break;
-          case 3: id(led_dim_button_3)->execute(led_index); break;
-          case 4: id(led_dim_button_4)->execute(led_index); break;
+          case 1: id(dim_led_at_button_1)->execute(led_index); break;
+          case 2: id(dim_led_at_button_2)->execute(led_index); break;
+          case 3: id(dim_led_at_button_3)->execute(led_index); break;
+          case 4: id(dim_led_at_button_4)->execute(led_index); break;
         }
-
-#   - switch.turn_on: vibra
-
     - lambda: >
         ESP_LOGW("tx_ultimate_touch.on_release", "Release Position: %d / State: %d", touch.x, touch.state);
 
   on_swipe_left:
     - script.execute: led_on_swipe_left
-
     - switch.turn_on: vibra
-
     - binary_sensor.template.publish:
         id: swipe_left
         state: ON
-
     - lambda: >
         ESP_LOGD("tx_ultimate_touch.on_swipe_left", "Swipe Left Position: %d / State: %d", touch.x, touch.state);
 
   on_swipe_right:
     - script.execute: led_on_swipe_right
-
     - switch.turn_on: vibra
-
     - binary_sensor.template.publish:
         id: swipe_right
         state: ON
-
     - lambda: >
         ESP_LOGD("tx_ultimate_touch.on_swipe_right", "Swipe Right Position: %d / State: %d", touch.x, touch.state);
 
   on_full_touch_release:
     - script.execute: led_on_full_touch
-
     - switch.turn_on: vibra
-
     - binary_sensor.template.publish:
         id: multi_touch
         state: ON
-
     - lambda: >
         ESP_LOGD("tx_ultimate_touch.on_full_touch_release", "Full Touch Release Position: %d / State: %d", touch.x, touch.state);
 
   on_long_touch_release:
     - script.execute: led_on_long_touch
-
     - switch.turn_on: vibra
-
     - binary_sensor.template.publish:
        id: very_long_press
        state: ON
-
     - lambda: >
         ESP_LOGD("tx_ultimate_touch.on_long_touch_release", "Long Touch Release Position: %d / State: %d", touch.x, touch.state);
 
@@ -591,7 +578,6 @@ time:
 sun:
   latitude: ${latitude}
   longitude: ${longitude}
-
 
 script:
   - id: led_on_button_press
@@ -615,12 +601,11 @@ script:
 
           target_led->get(led_index).set(esphome::Color(id(touch_color)[0], id(touch_color)[1], id(touch_color)[2]));
           target_led->schedule_show();
+# This script is stopped by on_release, so only if the button is held long enough 
+# will the long press color turn on.
       - delay: ${long_press_time}ms
       - lambda: |-
-          // this causes an edge case where the button is pressed, released, is dimming,
-          // then pressed again - and that being a long hold -- adding another global variable
-          // instead of overusing button_press_start_time would likely help
-          // it also can kick in during the dim transition
+          ESP_LOGI("button", "button %d possibly long pressed, not stopped", button);
           if (millis() - id(button_press_start_time)[button-1] > ${long_press_time}) {
             esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
             target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
@@ -631,7 +616,7 @@ script:
 # The lovely ESPHome framework will stop execution of a script, even in parallel mode, if it's called
 # again while the first execution is in a delay. The solution: duplicate this dim script for each
 # button so that it does not get called twice. Thanks, ESPHome!
-  - id: led_dim_button_1
+  - id: dim_led_at_button_1
     mode: restart
     parameters:
       led_index: int
@@ -653,7 +638,7 @@ script:
             - delay: ${dim_between_led_delay}
       - lambda: 'id(button_press_start_time)[0] = 0;'
 
-  - id: led_dim_button_2
+  - id: dim_led_at_button_2
     mode: restart
     parameters:
       led_index: int
@@ -675,7 +660,7 @@ script:
             - delay: ${dim_between_led_delay}
       - lambda: 'id(button_press_start_time)[1] = 0;'
 
-  - id: led_dim_button_3
+  - id: dim_led_at_button_3
     mode: restart
     parameters:
       led_index: int
@@ -697,7 +682,7 @@ script:
             - delay: ${dim_between_led_delay}
       - lambda: 'id(button_press_start_time)[2] = 0;'
 
-  - id: led_dim_button_4
+  - id: dim_led_at_button_4
     mode: restart
     parameters:
       led_index: int
@@ -751,10 +736,10 @@ script:
     mode: restart
     then:
       - script.stop: led_on_button_press
-      - script.stop: led_dim_button_1
-      - script.stop: led_dim_button_2
-      - script.stop: led_dim_button_3
-      - script.stop: led_dim_button_4
+      - script.stop: dim_led_at_button_1
+      - script.stop: dim_led_at_button_2
+      - script.stop: dim_led_at_button_3
+      - script.stop: dim_led_at_button_4
       - script.execute:
           id: led_on_button_press
           button: 4
@@ -776,29 +761,29 @@ script:
           led_index: 12
       - delay: ${swipe_between_led_delay}
       - script.execute:
-          id: led_dim_button_4
+          id: dim_led_at_button_4
           led_index: 6
       - delay: ${swipe_between_led_delay}
       - script.execute:
-          id: led_dim_button_3
+          id: dim_led_at_button_3
           led_index: 8
       - delay: ${swipe_between_led_delay}
       - script.execute:
-          id: led_dim_button_2
+          id: dim_led_at_button_2
           led_index: 10
       - delay: ${swipe_between_led_delay}
       - script.execute:
-          id: led_dim_button_1
+          id: dim_led_at_button_1
           led_index: 12
 
   - id: led_on_swipe_right
     mode: restart
     then:
       - script.stop: led_on_button_press
-      - script.stop: led_dim_button_1
-      - script.stop: led_dim_button_2
-      - script.stop: led_dim_button_3
-      - script.stop: led_dim_button_4
+      - script.stop: dim_led_at_button_1
+      - script.stop: dim_led_at_button_2
+      - script.stop: dim_led_at_button_3
+      - script.stop: dim_led_at_button_4
       - script.execute:
           id: led_on_button_press
           button: 1
@@ -820,19 +805,19 @@ script:
           led_index: 6
       - delay: ${swipe_between_led_delay}
       - script.execute:
-          id: led_dim_button_1
+          id: dim_led_at_button_1
           led_index: 12
       - delay: ${swipe_between_led_delay}
       - script.execute:
-          id: led_dim_button_2
+          id: dim_led_at_button_2
           led_index: 10
       - delay: ${swipe_between_led_delay}
       - script.execute:
-          id: led_dim_button_3
+          id: dim_led_at_button_3
           led_index: 8
       - delay: ${swipe_between_led_delay}
       - script.execute:
-          id: led_dim_button_4
+          id: dim_led_at_button_4
           led_index: 6
 
   - id: led_on_full_touch
