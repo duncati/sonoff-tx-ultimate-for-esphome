@@ -525,8 +525,6 @@ tx_ultimate_touch:
           case 3: id(led_dim_button_3)->execute(led_index); break;
           case 4: id(led_dim_button_4)->execute(led_index); break;
         }
-    - script.execute:
-        pos: !lambda "return touch.x;"
 
 #   - switch.turn_on: vibra
 
@@ -893,68 +891,3 @@ script:
           effect: ${very_long_press_effect}
       - delay: 2s
         light.turn_off: leds_top
-
-  - id: touch_led_marker
-    mode: restart
-    parameters:
-      state: int
-      pos: int
-    then:
-      - if:
-          condition:
-            lambda: "return state==1;"
-          then:
-            # RELEASE
-            - light.turn_off: leds
-
-          else:
-            - if:
-                condition:
-                  lambda: "return state==2;"
-                then:
-                  # TOUCH
-                  - light.turn_on:
-                      id: leds
-                      red: 1
-                      green: 0
-                      blue: 0
-                  - delay: 6s
-                  - light.turn_off: leds
-
-                else:
-                  - if:
-                      condition:
-                        lambda: "return state==11;"
-                      then:
-                        # FULL-TOUCH RELEASE
-                        - light.turn_on:
-                            id: leds
-                            effect: "Rainbow"
-                        - delay: 1s
-                        - light.turn_off: leds
-
-                      else:
-                        # SWIPE
-                        - if:
-                            condition:
-                              lambda: "return state==13;"
-                            then:
-                              # SWIPE LEFT
-                              - light.turn_on:
-                                  id: leds
-                                  red: 0
-                                  green: 1
-                                  blue: 0
-
-                        - if:
-                            condition:
-                              lambda: "return state==12;"
-                            then:
-                              # SWIPE RIGHT
-                              - light.turn_on:
-                                  id: leds
-                                  red: 0
-                                  green: 0
-                                  blue: 1
-                        - delay: 1s
-                        - light.turn_off: leds
