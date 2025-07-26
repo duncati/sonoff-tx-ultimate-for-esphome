@@ -751,7 +751,7 @@ script:
 
           target_led->get(led_index).set(esphome::Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]));
           target_led->schedule_show();
-      - delay: ${long_press_time}
+      - delay: ${long_press_time}ms
       - lambda: |-
           // this might cause an edge case where the button is pressed, released, is dimming,
           // then pressed again - and that being a long hold -- adding another global variable
