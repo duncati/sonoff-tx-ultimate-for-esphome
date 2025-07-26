@@ -27,7 +27,7 @@ substitutions:
   touch_effect: "Scan"
 
   long_press_brightness: "1"
-  long_press_color: "{100,0,0}"
+  long_press_color: "{100,0,100}"
   long_press_effect: ""
   long_press_time: "1500"
 
@@ -62,7 +62,6 @@ substitutions:
   audio_sdata_pin: GPIO15
 
   touchpanel_power_pin: GPIO5
-
 
 esphome:
   name: ${name}
@@ -752,7 +751,22 @@ script:
 
           target_led->get(led_index).set(esphome::Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]));
           target_led->schedule_show();
+      - delay: id(long_press_time)
+      - lambda: |-
+          // this might cause an edge case where the button is pressed, released, is dimming,
+          // then pressed again - and that being a long hold -- adding another global variable
+          // instead of overusing button_press_start_time would likely help
+          if (millis() - id(button_press_start_time) > id(long_press_time) {
+            auto led_and_button  = get_led_and_button_at_x(x, ${relay_count});
+            int led_index = led_and_button[0];
+            esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
+            target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
+            target_led->schedule_show();
+          }
 
+# The lovely ESPHome framework will stop execution of a script, even in parallel mode, if it's called
+# again while the first execution is in a delay. The solution: duplicate this dim script for each
+# button so that it does not get called twice. Thanks, ESPHome!
   - id: led_dim_button_1
     mode: restart
     parameters:
