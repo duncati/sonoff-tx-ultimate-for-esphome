@@ -526,7 +526,6 @@ tx_ultimate_touch:
           case 4: id(led_dim_button_4)->execute(led_index); break;
         }
     - script.execute:
-        id: handle_release
         pos: !lambda "return touch.x;"
 
 #   - switch.turn_on: vibra
@@ -882,7 +881,6 @@ script:
           blue:  !lambda "return id(multi_touch_color)[2]/100.0;"
           effect: ${multi_touch_effect}
 
-
   - id: led_on_long_touch
     mode: restart
     then:
@@ -894,95 +892,7 @@ script:
           blue:  !lambda "return id(very_long_press_color)[2]/100.0;"
           effect: ${very_long_press_effect}
       - delay: 2s
-        light.turn_off:
-          id: leds_top
-
-
-  - id: handle_release
-    mode: restart
-    parameters:
-      pos: int
-    then:
-      - if:
-          condition:
-            lambda: "return ${relay_count}==1;"
-          then:
-            - binary_sensor.template.publish:
-                id: touchfield_1
-                state: ON
-
-      - if:
-          condition:
-            lambda: "return ${relay_count}==2;"
-          then:
-            - if:
-                condition:
-                  lambda: "return pos <= 5;"
-                then:
-                  - binary_sensor.template.publish:
-                      id: touchfield_1
-                      state: ON
-
-                else:
-                  - binary_sensor.template.publish:
-                      id: touchfield_2
-                      state: ON
-
-      - if:
-          condition:
-            lambda: "return ${relay_count}==3;"
-          then:
-            - if:
-                condition:
-                  lambda: "return pos <= 3;"
-                then:
-                  - binary_sensor.template.publish:
-                      id: touchfield_1
-                      state: ON
-                else:
-                  - if:
-                      condition:
-                        lambda: "return pos <= 7;"
-                      then:
-                        - binary_sensor.template.publish:
-                            id: touchfield_2
-                            state: ON
-                      else:
-                        - binary_sensor.template.publish:
-                            id: touchfield_3
-                            state: ON
-
-      - if:
-          condition:
-            lambda: "return ${relay_count}==4;"
-          then:
-            - if:
-                condition:
-                  lambda: "return pos <= 2;"
-                then:
-                  - binary_sensor.template.publish:
-                      id: touchfield_1
-                      state: ON
-                else:
-                  - if:
-                      condition:
-                        lambda: "return pos <= 5;"
-                      then:
-                        - binary_sensor.template.publish:
-                            id: touchfield_2
-                            state: ON
-                      else:
-                        - if:
-                            condition:
-                              lambda: "return pos <= 8;"
-                            then:
-                              - binary_sensor.template.publish:
-                                  id: touchfield_3
-                                  state: ON
-                            else:
-                              - binary_sensor.template.publish:
-                                  id: touchfield_4
-                                  state: ON
+        light.turn_off: leds_top
 
   - id: touch_led_marker
     mode: restart
