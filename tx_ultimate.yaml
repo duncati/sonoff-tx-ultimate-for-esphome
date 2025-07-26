@@ -26,9 +26,11 @@ substitutions:
   touch_color: "{0,100,100}"
   touch_effect: "Scan"
 
-  long_press_brightness: "1"
-  long_press_color: "{100,0,100}"
-  long_press_effect: ""
+  very_long_press_brightness: "1"
+  very_long_press_color: "{0,100,0}"
+  very_long_press_effect: "Scan"
+
+  long_press_color: "{0,100,0}"
   long_press_time: "1500"
 
   multi_touch_brightness: "1"
@@ -107,6 +109,9 @@ esphome:
           state: OFF
       - binary_sensor.template.publish:
           id: long_press_4
+          state: OFF
+      - binary_sensor.template.publish:
+          id: very_long_press
           state: OFF
       - script.execute: refresh_nightlight
 
@@ -308,6 +313,15 @@ binary_sensor:
 #     - delay: ${button_on_time}
       - binary_sensor.template.publish:
           id: long_press_4
+          state: OFF
+
+  - platform: template
+    name: "Very Long Press"
+    id: very_long_press
+    on_press:
+#     - delay: ${button_on_time}
+      - binary_sensor.template.publish:
+          id: very_long_press
           state: OFF
 
 switch:
@@ -561,9 +575,9 @@ tx_ultimate_touch:
 
     - switch.turn_on: vibra
 
-#   - binary_sensor.template.publish:
-#       id: long_press
-#       state: ON
+   - binary_sensor.template.publish:
+       id: very_long_press
+       state: ON
 
     - lambda: >
         ESP_LOGD("tx_ultimate_touch.on_long_touch_release", "Long Touch Release Position: %d / State: %d", touch.x, touch.state);
@@ -869,17 +883,19 @@ script:
           effect: ${multi_touch_effect}
 
 
-# TODO kill this
   - id: led_on_long_touch
     mode: restart
     then:
       - light.turn_on:
           id: leds_top
-          brightness: ${long_press_brightness}
-          red: !lambda "return id(long_press_color)[0]/100.0;"
-          green: !lambda "return id(long_press_color)[1]/100.0;"
-          blue:  !lambda "return id(long_press_color)[2]/100.0;"
-          effect: ${long_press_effect}
+          brightness: ${very_long_press_brightness}
+          red: !lambda "return id(very_long_press_color)[0]/100.0;"
+          green: !lambda "return id(very_long_press_color)[1]/100.0;"
+          blue:  !lambda "return id(very_long_press_color)[2]/100.0;"
+          effect: ${very_long_press_effect}
+      - delay: 2s
+        light.turn_off:
+          id: leds_top
 
 
   - id: handle_release
