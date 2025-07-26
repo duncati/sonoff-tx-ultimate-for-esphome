@@ -741,10 +741,10 @@ script:
           if (id(button_press_start_time)[button-1] == 0) {
             // this button has been pressed twice in a row, don't alter original_color
             auto original_color = target_led->get(led_index).get();
-            ESP_LOGD("button", "resolved X %d to button %d at LED %d, color was %d %d %d", x, button, led_index, original_color.r, original_color.g, original_color.b);
+            ESP_LOGD("button", "button %d press at LED %d, color was %d %d %d", button, led_index, original_color.r, original_color.g, original_color.b);
             id(original_led_color)[button-1] = original_color;
           } else {
-            ESP_LOGI("button", "resolved X %d to button %d at LED %d, button pressed before fade completed", x, button, led_index);
+            ESP_LOGI("button", "button %d press at LED %d, button pressed before fade completed", button, led_index);
           }
           id(button_press_start_time)[button-1] = millis();
 
