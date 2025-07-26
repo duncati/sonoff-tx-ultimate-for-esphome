@@ -77,16 +77,16 @@ esphome:
     priority: -100
     then:
       - binary_sensor.template.publish:
-          id: touchfield_1
+          id: button_1
           state: OFF
       - binary_sensor.template.publish:
-          id: touchfield_2
+          id: button_2
           state: OFF
       - binary_sensor.template.publish:
-          id: touchfield_3
+          id: button_3
           state: OFF
       - binary_sensor.template.publish:
-          id: touchfield_4
+          id: button_4
           state: OFF
       - binary_sensor.template.publish:
           id: multi_touch
@@ -195,8 +195,8 @@ globals:
 
 binary_sensor:
   - platform: template
-    name: "Touchfield 1"
-    id: touchfield_1
+    name: "Button 1"
+    id: button_1
     on_press:
       - if:
           condition:
@@ -205,12 +205,12 @@ binary_sensor:
             - switch.toggle: relay_1
       - delay: ${button_on_time}
       - binary_sensor.template.publish:
-          id: touchfield_1
+          id: button_1
           state: OFF
 
   - platform: template
-    name: "Touchfield 2"
-    id: touchfield_2
+    name: "Button 2"
+    id: button_2
     on_press:
       - if:
           condition:
@@ -219,12 +219,12 @@ binary_sensor:
             - switch.toggle: relay_2
       - delay: ${button_on_time}
       - binary_sensor.template.publish:
-          id: touchfield_2
+          id: button_2
           state: OFF
 
   - platform: template
-    name: "Touchfield 3"
-    id: touchfield_3
+    name: "Button 3"
+    id: button_3
     on_press:
       - if:
           condition:
@@ -233,12 +233,12 @@ binary_sensor:
             - switch.toggle: relay_3
       - delay: ${button_on_time}
       - binary_sensor.template.publish:
-          id: touchfield_3
+          id: button_3
           state: OFF
 
   - platform: template
-    name: "Touchfield 4"
-    id: touchfield_4
+    name: "Button 4"
+    id: button_4
     on_press:
       - if:
           condition:
@@ -247,7 +247,7 @@ binary_sensor:
             - switch.toggle: relay_4
       - delay: ${button_on_time}
       - binary_sensor.template.publish:
-          id: touchfield_4
+          id: button_4
           state: OFF
 
   - platform: template
@@ -281,7 +281,7 @@ binary_sensor:
     name: "Long Press 1"
     id: long_press_1
     on_press:
-#     - delay: ${button_on_time}
+      - delay: ${button_on_time}
       - binary_sensor.template.publish:
           id: long_press_1
           state: OFF
@@ -290,7 +290,7 @@ binary_sensor:
     name: "Long Press 2"
     id: long_press_2
     on_press:
-#     - delay: ${button_on_time}
+      - delay: ${button_on_time}
       - binary_sensor.template.publish:
           id: long_press_2
           state: OFF
@@ -299,7 +299,7 @@ binary_sensor:
     name: "Long Press 3"
     id: long_press_3
     on_press:
-#     - delay: ${button_on_time}
+      - delay: ${button_on_time}
       - binary_sensor.template.publish:
           id: long_press_3
           state: OFF
@@ -308,7 +308,7 @@ binary_sensor:
     name: "Long Press 4"
     id: long_press_4
     on_press:
-#     - delay: ${button_on_time}
+      - delay: ${button_on_time}
       - binary_sensor.template.publish:
           id: long_press_4
           state: OFF
@@ -317,7 +317,7 @@ binary_sensor:
     name: "Very Long Press"
     id: very_long_press
     on_press:
-#     - delay: ${button_on_time}
+      - delay: ${button_on_time}
       - binary_sensor.template.publish:
           id: very_long_press
           state: OFF
@@ -513,12 +513,19 @@ tx_ultimate_touch:
           is_long_press = true;
           ESP_LOGD("button", "Button %d long pressed", button);
           switch(button) {
-            case 1: id(long_press_1).publish_state(true); break;
-            case 2: id(long_press_2).publish_state(true); break;
-            case 3: id(long_press_3).publish_state(true); break;
-            case 4: id(long_press_4).publish_state(true); break;
+            case 1: id(long_press_1).turn_on(); break;
+            case 2: id(long_press_2).turn_on(); break;
+            case 3: id(long_press_3).turn_on(); break;
+            case 4: id(long_press_4).turn_on(); break;
           }
           id(vibra).turn_on();
+        } else {
+          switch(button) {
+            case 1: id(button_1).turn_on(); break;
+            case 2: id(button_2).turn_on(); break;
+            case 3: id(button_3).turn_on(); break;
+            case 4: id(button_4).turn_on(); break;
+          }
         }
         switch(button) {
           case 1: id(dim_led_at_button_1)->execute(led_index, is_long_press); break;
@@ -563,7 +570,7 @@ tx_ultimate_touch:
        id: very_long_press
        state: ON
     - lambda: >
-        ESP_LOGD("tx_ultimate_touch.on_long_touch_release", "Long Touch Release Position: %d / State: %d", touch.x, touch.state);
+        ESP_LOGD("tx_ultimate_touch.on_long_touch_release", "Very Long Touch Release Position: %d / State: %d", touch.x, touch.state);
 
 time:
   - platform: homeassistant
@@ -610,7 +617,6 @@ script:
             esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
             target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
             target_led->schedule_show();
-            id(vibra).turn_on();
           }
 
 # The lovely ESPHome framework will stop execution of a script, even in parallel mode, if it's called
@@ -644,6 +650,7 @@ script:
     mode: restart
     parameters:
       led_index: int
+      is_long_press: bool
     then:
       - delay: 1s
       - repeat:
@@ -651,10 +658,11 @@ script:
           then:
             - lambda: |-
                 auto original_color = id(original_led_color)[1];
+                auto dim_color = (is_long_press) ? id(long_press_color) : id(touch_color);
                 float factor = iteration * 0.1f;
-                int r = id(touch_color)[0]*(1.0-factor) + original_color.r*factor;
-                int g = id(touch_color)[1]*(1.0-factor) + original_color.g*factor;
-                int b = id(touch_color)[2]*(1.0-factor) + original_color.b*factor;
+                int r = dim_color[0]*(1.0-factor) + original_color.r*factor;
+                int g = dim_color[1]*(1.0-factor) + original_color.g*factor;
+                int b = dim_color[2]*(1.0-factor) + original_color.b*factor;
                 esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
                 //ESP_LOGD("button", "Dimming button 2 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
                 target_led->get(led_index).set(esphome::Color(r, g, b));
@@ -666,6 +674,7 @@ script:
     mode: restart
     parameters:
       led_index: int
+      is_long_press: bool
     then:
       - delay: 1s
       - repeat:
@@ -673,10 +682,11 @@ script:
           then:
             - lambda: |-
                 auto original_color = id(original_led_color)[2];
+                auto dim_color = (is_long_press) ? id(long_press_color) : id(touch_color);
                 float factor = iteration * 0.1f;
-                int r = id(touch_color)[0]*(1.0-factor) + original_color.r*factor;
-                int g = id(touch_color)[1]*(1.0-factor) + original_color.g*factor;
-                int b = id(touch_color)[2]*(1.0-factor) + original_color.b*factor;
+                int r = dim_color[0]*(1.0-factor) + original_color.r*factor;
+                int g = dim_color[1]*(1.0-factor) + original_color.g*factor;
+                int b = dim_color[2]*(1.0-factor) + original_color.b*factor;
                 esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
                 //ESP_LOGD("button", "Dimming button 3 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
                 target_led->get(led_index).set(esphome::Color(r, g, b));
@@ -688,6 +698,7 @@ script:
     mode: restart
     parameters:
       led_index: int
+      is_long_press: bool
     then:
       - delay: 1s
       - repeat:
@@ -695,10 +706,11 @@ script:
           then:
             - lambda: |-
                 auto original_color = id(original_led_color)[3];
+                auto dim_color = (is_long_press) ? id(long_press_color) : id(touch_color);
                 float factor = iteration * 0.1f;
-                int r = id(touch_color)[0]*(1.0-factor) + original_color.r*factor;
-                int g = id(touch_color)[1]*(1.0-factor) + original_color.g*factor;
-                int b = id(touch_color)[2]*(1.0-factor) + original_color.b*factor;
+                int r = dim_color[0]*(1.0-factor) + original_color.r*factor;
+                int g = dim_color[1]*(1.0-factor) + original_color.g*factor;
+                int b = dim_color[2]*(1.0-factor) + original_color.b*factor;
                 esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
                 //ESP_LOGD("button", "Dimming button 4 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
                 target_led->get(led_index).set(esphome::Color(r, g, b));
