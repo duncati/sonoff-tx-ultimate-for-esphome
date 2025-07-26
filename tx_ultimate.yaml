@@ -529,9 +529,9 @@ tx_ultimate_touch:
         }
         switch(button) {
           case 1: id(dim_led_at_button_1)->execute(led_index, is_long_press); break;
-          case 2: id(dim_led_at_button_2)->execute(led_index); break;
-          case 3: id(dim_led_at_button_3)->execute(led_index); break;
-          case 4: id(dim_led_at_button_4)->execute(led_index); break;
+          case 2: id(dim_led_at_button_2)->execute(led_index, is_long_press); break;
+          case 3: id(dim_led_at_button_3)->execute(led_index, is_long_press); break;
+          case 4: id(dim_led_at_button_4)->execute(led_index, is_long_press); break;
         }
     - lambda: >
         ESP_LOGW("tx_ultimate_touch.on_release", "Release Position: %d / State: %d", touch.x, touch.state);
@@ -777,14 +777,17 @@ script:
       - script.execute:
           id: dim_led_at_button_4
           led_index: 6
+          is_long_press: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: dim_led_at_button_3
           led_index: 8
+          is_long_press: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: dim_led_at_button_2
           led_index: 10
+          is_long_press: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: dim_led_at_button_1
@@ -827,14 +830,17 @@ script:
       - script.execute:
           id: dim_led_at_button_2
           led_index: 10
+          is_long_press: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: dim_led_at_button_3
           led_index: 8
+          is_long_press: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: dim_led_at_button_4
           led_index: 6
+          is_long_press: false
 
   - id: led_on_full_touch
     mode: restart
