@@ -513,18 +513,18 @@ tx_ultimate_touch:
           is_long_press = true;
           ESP_LOGD("button", "Button %d long pressed", button);
           switch(button) {
-            case 1: id(long_press_1).turn_on(); break;
-            case 2: id(long_press_2).turn_on(); break;
-            case 3: id(long_press_3).turn_on(); break;
-            case 4: id(long_press_4).turn_on(); break;
+            case 1: id(long_press_1).publish_state(true); break;
+            case 2: id(long_press_2).publish_state(true); break;
+            case 3: id(long_press_3).publish_state(true); break;
+            case 4: id(long_press_4).publish_state(true); break;
           }
           id(vibra).turn_on();
         } else {
           switch(button) {
-            case 1: id(button_1).turn_on(); break;
-            case 2: id(button_2).turn_on(); break;
-            case 3: id(button_3).turn_on(); break;
-            case 4: id(button_4).turn_on(); break;
+            case 1: id(button_1).publish_state(true); break;
+            case 2: id(button_2).publish_state(true); break;
+            case 3: id(button_3).publish_state(true); break;
+            case 4: id(button_4).publish_state(true); break;
           }
         }
         switch(button) {
