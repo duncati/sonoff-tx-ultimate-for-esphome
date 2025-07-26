@@ -12,9 +12,6 @@ substitutions:
   vibra_time: 150ms
   button_on_time: 500ms
 
-  button_brightness: "0.7"
-  button_color: "{0,0,200}"
-
   nightlight: "on"
   nightlight_brightness: "0.2"
   nightlight_color: "{80,70,0}"
@@ -22,7 +19,6 @@ substitutions:
   latitude: "50.123456°"
   longitude: "5.654321°"
 
-  touch_brightness: "1"
   touch_color: "{0,100,100}"
   touch_effect: "Scan"
 
@@ -162,10 +158,6 @@ globals:
     type: int [3]
     restore_value: no
     initial_value: ${nightlight_color}
-  - id: button_color
-    type: int [3]
-    restore_value: no
-    initial_value: ${button_color}
   - id: long_press_color
     type: int [3]
     restore_value: no
@@ -499,7 +491,6 @@ tx_ultimate_touch:
   uart: my_uart
 
   on_press:
-#   - script.execute: led_on_touch
     - lambda: |-
         ESP_LOGW("tx_ultimate_touch.on_press", "Touch Position: %d / State: %d", touch.x, touch.state);
         auto led_and_button = get_led_and_button_at_x(touch.x, ${relay_count});
@@ -620,7 +611,7 @@ script:
           }
           id(button_press_start_time)[button-1] = millis();
 
-          target_led->get(led_index).set(esphome::Color(id(button_color)[0], id(button_color)[1], id(button_color)[2]));
+          target_led->get(led_index).set(esphome::Color(id(touch_color)[0], id(touch_color)[1], id(touch_color)[2]));
           target_led->schedule_show();
       - delay: ${long_press_time}ms
       - lambda: |-
@@ -630,10 +621,6 @@ script:
           // it also can kick in during the dim transition
           if (millis() - id(button_press_start_time)[button-1] > ${long_press_time}) {
             esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-            //auto color = esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]);
-            //ESP_LOGI("button", "long press color: %d %d %d", color.r, color,g, color.b);
-            ESP_LOGI("button", "long press color: %d %d %d", id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]);
-            //ESP_LOGI("button", "long press color: %d %d %d", color.r, color,g, color.b);
             target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
             target_led->schedule_show();
           }
@@ -653,9 +640,9 @@ script:
             - lambda: |-
                 auto original_color = id(original_led_color)[0];
                 float factor = iteration * 0.1f;
-                int r = id(button_color)[0]*(1.0-factor) + original_color.r*factor;
-                int g = id(button_color)[1]*(1.0-factor) + original_color.g*factor;
-                int b = id(button_color)[2]*(1.0-factor) + original_color.b*factor;
+                int r = id(touch_color)[0]*(1.0-factor) + original_color.r*factor;
+                int g = id(touch_color)[1]*(1.0-factor) + original_color.g*factor;
+                int b = id(touch_color)[2]*(1.0-factor) + original_color.b*factor;
                 esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
                 //ESP_LOGD("button", "Dimming button 1 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
                 target_led->get(led_index).set(esphome::Color(r, g, b));
@@ -675,9 +662,9 @@ script:
             - lambda: |-
                 auto original_color = id(original_led_color)[1];
                 float factor = iteration * 0.1f;
-                int r = id(button_color)[0]*(1.0-factor) + original_color.r*factor;
-                int g = id(button_color)[1]*(1.0-factor) + original_color.g*factor;
-                int b = id(button_color)[2]*(1.0-factor) + original_color.b*factor;
+                int r = id(touch_color)[0]*(1.0-factor) + original_color.r*factor;
+                int g = id(touch_color)[1]*(1.0-factor) + original_color.g*factor;
+                int b = id(touch_color)[2]*(1.0-factor) + original_color.b*factor;
                 esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
                 //ESP_LOGD("button", "Dimming button 2 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
                 target_led->get(led_index).set(esphome::Color(r, g, b));
@@ -697,9 +684,9 @@ script:
             - lambda: |-
                 auto original_color = id(original_led_color)[2];
                 float factor = iteration * 0.1f;
-                int r = id(button_color)[0]*(1.0-factor) + original_color.r*factor;
-                int g = id(button_color)[1]*(1.0-factor) + original_color.g*factor;
-                int b = id(button_color)[2]*(1.0-factor) + original_color.b*factor;
+                int r = id(touch_color)[0]*(1.0-factor) + original_color.r*factor;
+                int g = id(touch_color)[1]*(1.0-factor) + original_color.g*factor;
+                int b = id(touch_color)[2]*(1.0-factor) + original_color.b*factor;
                 esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
                 //ESP_LOGD("button", "Dimming button 3 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
                 target_led->get(led_index).set(esphome::Color(r, g, b));
@@ -719,9 +706,9 @@ script:
             - lambda: |-
                 auto original_color = id(original_led_color)[3];
                 float factor = iteration * 0.1f;
-                int r = id(button_color)[0]*(1.0-factor) + original_color.r*factor;
-                int g = id(button_color)[1]*(1.0-factor) + original_color.g*factor;
-                int b = id(button_color)[2]*(1.0-factor) + original_color.b*factor;
+                int r = id(touch_color)[0]*(1.0-factor) + original_color.r*factor;
+                int g = id(touch_color)[1]*(1.0-factor) + original_color.g*factor;
+                int b = id(touch_color)[2]*(1.0-factor) + original_color.b*factor;
                 esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
                 //ESP_LOGD("button", "Dimming button 4 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
                 target_led->get(led_index).set(esphome::Color(r, g, b));
@@ -755,23 +742,6 @@ script:
           red: !lambda "return id(nightlight_color)[0]/100.0;"
           green: !lambda "return id(nightlight_color)[1]/100.0;"
           blue:  !lambda "return id(nightlight_color)[2]/100.0;"
-
-  - id: led_on_release
-    mode: restart
-    then:
-      - light.turn_off:
-          id: leds_top
-
-  - id: led_on_touch
-    mode: restart
-    then:
-      - light.turn_on:
-          id: leds_top
-          brightness: ${touch_brightness}
-          red: !lambda "return id(touch_color)[0]/100.0;"
-          green: !lambda "return id(touch_color)[1]/100.0;"
-          blue:  !lambda "return id(touch_color)[2]/100.0;"
-          effect: ${touch_effect}
 
 # TODO dim the right LEDs based on the relay_count
 # make another util function to return the LED for a given button
