@@ -574,7 +574,7 @@ tx_ultimate_touch:
 
     - switch.turn_on: vibra
 
-   - binary_sensor.template.publish:
+    - binary_sensor.template.publish:
        id: very_long_press
        state: ON
 
