@@ -194,14 +194,9 @@ globals:
     restore_value: no
     initial_value: '{ esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0) }'
   - id: button_lookup
-    type: uint8_t[4][10]
+    type: byte[4][10]
     restore_value: no
-    initial_value: '{
-        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-        {1, 1, 1, 1, 1, 2, 2, 2, 2, 2},
-        {1, 1, 1, 2, 2, 2, 3, 3, 3, 3},
-        {1, 1, 2, 2, 2, 3, 3, 3, 4, 4}
-    };'
+    initial_value: '{{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 2, 2, 2, 2, 2}, {1, 1, 1, 2, 2, 2, 3, 3, 3, 3}, {1, 1, 2, 2, 2, 3, 3, 3, 4, 4}}};'
 
 text_sensor:
   - platform: template
