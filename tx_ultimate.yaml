@@ -27,7 +27,7 @@ substitutions:
   very_long_press_effect: "Scan"
 
   long_press_color: "{0,100,0}"
-  long_press_time: "1500"
+  long_press_time: "1000"
 
   multi_touch_brightness: "1"
   multi_touch_color: "{0,0,0}"
@@ -41,6 +41,7 @@ substitutions:
   swipe_right_color: "{100,0,70}"
   swipe_right_effect: ""
 
+  after_touch_dim_delay: 500ms
   swipe_between_led_delay: 50ms
   dim_between_led_delay: 50ms
 
@@ -192,6 +193,17 @@ globals:
     type: esphome::Color[4]
     restore_value: no
     initial_value: '{ esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0) }'
+
+text_sensor:
+  - platform: template
+    name: "Touch Color"
+    id: touch_color_string
+    initial_value: "0000FF"
+
+  - platform: template
+    name: "Long Press Color"
+    id: long_press_color_string
+    initial_value: "FF00FF"
 
 binary_sensor:
   - platform: template
@@ -628,7 +640,7 @@ script:
       led_index: int
       is_long_press: bool
     then:
-      - delay: 1s
+      - delay: ${after_touch_dim_delay}
       - repeat:
           count: 10
           then:
@@ -652,7 +664,7 @@ script:
       led_index: int
       is_long_press: bool
     then:
-      - delay: 1s
+      - delay: ${after_touch_dim_delay}
       - repeat:
           count: 10
           then:
@@ -676,7 +688,7 @@ script:
       led_index: int
       is_long_press: bool
     then:
-      - delay: 1s
+      - delay: ${after_touch_dim_delay}
       - repeat:
           count: 10
           then:
@@ -700,7 +712,7 @@ script:
       led_index: int
       is_long_press: bool
     then:
-      - delay: 1s
+      - delay: ${after_touch_dim_delay}
       - repeat:
           count: 10
           then:
@@ -852,6 +864,8 @@ script:
           green: !lambda "return id(multi_touch_color)[1]/100.0;"
           blue:  !lambda "return id(multi_touch_color)[2]/100.0;"
           effect: ${multi_touch_effect}
+# TODO fix this!! on multi release, I want to dim down anything that was pressed
+# but this dims down all of the buttons by first turning them on
       - script.execute:
           id: dim_led_at_button_1
           led_index: 12
