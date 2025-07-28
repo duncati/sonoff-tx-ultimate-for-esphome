@@ -193,6 +193,15 @@ globals:
     type: esphome::Color[4]
     restore_value: no
     initial_value: '{ esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0) }'
+  - id: button_lookup
+    type: uint8_t[4][10]
+    restore_value: no
+    initial_value: '{
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 2, 2, 2, 2, 2},
+        {1, 1, 1, 2, 2, 2, 3, 3, 3, 3},
+        {1, 1, 2, 2, 2, 3, 3, 3, 4, 4}
+    };'
 
 text_sensor:
   - platform: template
@@ -507,17 +516,32 @@ tx_ultimate_touch:
   on_press:
     - lambda: |-
         ESP_LOGW("tx_ultimate_touch.on_press", "Touch Position: %d / State: %d", touch.x, touch.state);
-        auto led_and_button = get_led_and_button_at_x(touch.x, ${button_count});
-        id(led_on_button_press)->execute(led_and_button[0], led_and_button[1]);
+        //auto led_and_button = get_led_and_button_at_x(touch.x, ${button_count});
+        //id(led_on_button_press)->execute(led_and_button[0], led_and_button[1]);
+        int button = button_lookup[${button_count}][touch.x];
+        int led = 1;
+        switch(${button_count}) {
+          4: led = 14 - 2*button; break;
+          3: led = 13 - 2*button; break;
+          2: led = 12 - 2*button; break;
+        }
+        id(led_on_button_press)->execute(led, button);
     - switch.turn_on: vibra
 
   on_release:
 #   - lambda: 'ESP_LOGI("button", "on_release stopping on_button_press");'
     - script.stop: led_on_button_press
     - lambda: |-
-        auto led_and_button = get_led_and_button_at_x(touch.x, ${button_count});
-        int led_index = led_and_button[0];
-        int button = led_and_button[1];
+        //auto led_and_button = get_led_and_button_at_x(touch.x, ${button_count});
+        //int led_index = led_and_button[0];
+        //int button = led_and_button[1];
+        int button = button_lookup[${button_count}][touch.x];
+        int led_index = 1;
+        switch(${button_count}) {
+          4: led_index = 14 - 2*button; break;
+          3: led_index = 13 - 2*button; break;
+          2: led_index = 12 - 2*button; break;
+        }
         auto button_press_duration = millis() - id(button_press_start_time)[button-1];
         //ESP_LOGD("button", "Button %d held for %u ms", button, button_press_duration);
         bool is_long_press = false;
