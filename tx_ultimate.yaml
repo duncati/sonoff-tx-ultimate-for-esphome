@@ -194,26 +194,26 @@ globals:
     restore_value: no
     initial_value: '{ esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0) }'
   - id: button_lookup
-    type: byte[4][10]
+    type: uint8_t[4][10]
     restore_value: no
     initial_value: '{{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 2, 2, 2, 2, 2}, {1, 1, 1, 2, 2, 2, 3, 3, 3, 3}, {1, 1, 2, 2, 2, 3, 3, 3, 4, 4}}}'
 
-text_sensor:
-  - platform: template
-    name: "Touch Color"
-    id: touch_color_string
-    on_value:
-      then:
-        - lambda: 'ESP_LOGI("main", "Setting touch color string to %s", x);'
-    lambda: 'return "0000FF";'
+#text_sensor:
+# - platform: template
+#   name: "Touch Color"
+#   id: touch_color_string
+#   on_value:
+#     then:
+#       - lambda: 'ESP_LOGI("main", "Setting touch color string to %s", x);'
+#   lambda: 'return "0000FF";'
 
-  - platform: template
-    name: "Long Press Color"
-    id: long_press_color_string
-    on_value:
-      then:
-        - lambda: 'ESP_LOGI("main", "Setting long press color string to %s", x);'
-    lambda: 'return "FF00FF";'
+# - platform: template
+#   name: "Long Press Color"
+#   id: long_press_color_string
+#   on_value:
+#     then:
+#       - lambda: 'ESP_LOGI("main", "Setting long press color string to %s", x);'
+#   lambda: 'return "FF00FF";'
 
 binary_sensor:
   - platform: template
@@ -519,14 +519,14 @@ tx_ultimate_touch:
         ESP_LOGW("tx_ultimate_touch.on_press", "Touch Position: %d / State: %d", touch.x, touch.state);
         //auto led_and_button = get_led_and_button_at_x(touch.x, ${button_count});
         //id(led_on_button_press)->execute(led_and_button[0], led_and_button[1]);
-        int button = id(button_lookup)[${button_count}][touch.x];
-        int led = 1;
+        auto button = id(button_lookup)[${button_count}][touch.x];
+        int bottom_led_index = 1;
         switch(${button_count}) {
-          4: led = 14 - 2*button; break;
-          3: led = 13 - 2*button; break;
-          2: led = 12 - 2*button; break;
+          case 4: bottom_led_index = 14 - 2*button; break;
+          case 3: bottom_led_index = 13 - 2*button; break;
+          case 2: bottom_led_index = 12 - 2*button; break;
         }
-        id(led_on_button_press)->execute(led, button);
+        id(led_on_button_press)->execute(bottom_led_index, button);
     - switch.turn_on: vibra
 
   on_release:
@@ -537,12 +537,6 @@ tx_ultimate_touch:
         //int led_index = led_and_button[0];
         //int button = led_and_button[1];
         int button = id(button_lookup)[${button_count}][touch.x];
-        int led_index = 1;
-        switch(${button_count}) {
-          4: led_index = 14 - 2*button; break;
-          3: led_index = 13 - 2*button; break;
-          2: led_index = 12 - 2*button; break;
-        }
         auto button_press_duration = millis() - id(button_press_start_time)[button-1];
         //ESP_LOGD("button", "Button %d held for %u ms", button, button_press_duration);
         bool is_long_press = false;
@@ -563,11 +557,17 @@ tx_ultimate_touch:
             case 4: id(button_4).publish_state(true); break;
           }
         }
+        int bottom_led_index = 1;
+        switch(${button_count}) {
+          case 4: bottom_led_index = 14 - 2*button; break;
+          case 3: bottom_led_index = 13 - 2*button; break;
+          case 2: bottom_led_index = 12 - 2*button; break;
+        }
         switch(button) {
-          case 1: id(dim_led_at_button_1)->execute(led_index, is_long_press); break;
-          case 2: id(dim_led_at_button_2)->execute(led_index, is_long_press); break;
-          case 3: id(dim_led_at_button_3)->execute(led_index, is_long_press); break;
-          case 4: id(dim_led_at_button_4)->execute(led_index, is_long_press); break;
+          case 1: id(dim_led_at_button_1)->execute(bottom_led_index, is_long_press); break;
+          case 2: id(dim_led_at_button_2)->execute(bottom_led_index, is_long_press); break;
+          case 3: id(dim_led_at_button_3)->execute(bottom_led_index, is_long_press); break;
+          case 4: id(dim_led_at_button_4)->execute(bottom_led_index, is_long_press); break;
         }
     - lambda: >
         ESP_LOGW("tx_ultimate_touch.on_release", "Release Position: %d / State: %d", touch.x, touch.state);
@@ -670,6 +670,15 @@ script:
           count: 10
           then:
             - lambda: |-
+              /* TODO consider moving led_index logic into these dim methods
+              especially for both top and bottom leds
+                int bottom_led_index = 1;
+                switch(${button_count}) {
+                  4: bottom_led_index = 14 - 2*button; break;
+                  3: bottom_led_index = 13 - 2*button; break;
+                  2: bottom_led_index = 12 - 2*button; break;
+                }
+                */
                 auto original_color = id(original_led_color)[0];
                 auto dim_color = (is_long_press) ? id(long_press_color) : id(touch_color);
                 float factor = iteration * 0.1f;
