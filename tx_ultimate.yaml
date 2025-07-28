@@ -196,7 +196,7 @@ globals:
   - id: button_lookup
     type: byte[4][10]
     restore_value: no
-    initial_value: '{{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 2, 2, 2, 2, 2}, {1, 1, 1, 2, 2, 2, 3, 3, 3, 3}, {1, 1, 2, 2, 2, 3, 3, 3, 4, 4}}};'
+    initial_value: '{{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 2, 2, 2, 2, 2}, {1, 1, 1, 2, 2, 2, 3, 3, 3, 3}, {1, 1, 2, 2, 2, 3, 3, 3, 4, 4}}}'
 
 text_sensor:
   - platform: template
@@ -513,7 +513,7 @@ tx_ultimate_touch:
         ESP_LOGW("tx_ultimate_touch.on_press", "Touch Position: %d / State: %d", touch.x, touch.state);
         //auto led_and_button = get_led_and_button_at_x(touch.x, ${button_count});
         //id(led_on_button_press)->execute(led_and_button[0], led_and_button[1]);
-        int button = button_lookup[${button_count}][touch.x];
+        int button = id(button_lookup)[${button_count}][touch.x];
         int led = 1;
         switch(${button_count}) {
           4: led = 14 - 2*button; break;
@@ -530,7 +530,7 @@ tx_ultimate_touch:
         //auto led_and_button = get_led_and_button_at_x(touch.x, ${button_count});
         //int led_index = led_and_button[0];
         //int button = led_and_button[1];
-        int button = button_lookup[${button_count}][touch.x];
+        int button = id(button_lookup)[${button_count}][touch.x];
         int led_index = 1;
         switch(${button_count}) {
           4: led_index = 14 - 2*button; break;
