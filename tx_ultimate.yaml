@@ -519,7 +519,8 @@ tx_ultimate_touch:
         ESP_LOGW("tx_ultimate_touch.on_press", "Touch Position: %d / State: %d", touch.x, touch.state);
         //auto led_and_button = get_led_and_button_at_x(touch.x, ${button_count});
         //id(led_on_button_press)->execute(led_and_button[0], led_and_button[1]);
-        auto button = id(button_lookup)[${button_count}][touch.x];
+        auto button = id(button_lookup)[${button_count}-1][touch.x-1];
+        ESP_LOGI("button", "translated %d x to button %d", touch.x, button);
         // TODO consider moving led_index logic into these dim_led_at methods
         // especially for both top and bottom leds
         int bottom_led_index = 1;
@@ -538,7 +539,7 @@ tx_ultimate_touch:
         //auto led_and_button = get_led_and_button_at_x(touch.x, ${button_count});
         //int led_index = led_and_button[0];
         //int button = led_and_button[1];
-        int button = id(button_lookup)[${button_count}][touch.x];
+        int button = id(button_lookup)[${button_count}-1][touch.x-1];
         auto button_press_duration = millis() - id(button_press_start_time)[button-1];
         //ESP_LOGD("button", "Button %d held for %u ms", button, button_press_duration);
         bool is_long_press = false;
