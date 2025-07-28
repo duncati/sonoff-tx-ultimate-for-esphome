@@ -204,8 +204,7 @@ text_sensor:
     id: touch_color_string
     on_value:
       then:
-        - lambda: |-
-          ESP_LOGI("main", "Setting touch color string to %s", x);
+        - lambda: 'ESP_LOGI("main", "Setting touch color string to %s", x);'
     lambda: 'return "0000FF";'
 
   - platform: template
@@ -213,8 +212,7 @@ text_sensor:
     id: long_press_color_string
     on_value:
       then:
-        - lambda: |-
-          ESP_LOGI("main", "Setting long press color string to %s", x);
+        - lambda: 'ESP_LOGI("main", "Setting long press color string to %s", x);'
     lambda: 'return "FF00FF";'
 
 binary_sensor:
