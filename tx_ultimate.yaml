@@ -623,26 +623,30 @@ script:
     then:
       - lambda: |-
           int led_index;
-          if (${button_led_feedback_bottom}) {
-            switch(${button_count}) {
-              case 4: led_index = 14 - 2*button; break;
-              case 3: led_index = 13 - 2*button; break;
-              case 2: led_index = 15 - 4*button; break;
-              case 1: led_index = 9; break;
+          if (id(button_press_start_time)[button-1] == 0) {
+            if (${button_led_feedback_bottom}) {
+              switch(${button_count}) {
+                case 4: led_index = 14 - 2*button; break;
+                case 3: led_index = 13 - 2*button; break;
+                case 2: led_index = 15 - 4*button; break;
+                case 1: led_index = 9; break;
+              }
+              id(led_on_button_press_internal)->execute(button, led_index);
             }
-            id(led_on_button_press_internal)->execute(button, led_index);
-          }
-          if (${button_led_feedback_top}) {
-            switch(${button_count}) {
-              case 4: led_index = 18 + 2*button; break;
-              case 3: led_index = 19 + 2*button; break;
-              case 2: led_index = 17 + 4*button; break;
-              case 1: led_index = 23; break;
+            if (${button_led_feedback_top}) {
+              switch(${button_count}) {
+                case 4: led_index = 18 + 2*button; break;
+                case 3: led_index = 19 + 2*button; break;
+                case 2: led_index = 17 + 4*button; break;
+                case 1: led_index = 23; break;
+              }
+              id(led_on_button_press_internal)->execute(button, led_index);
             }
-            id(led_on_button_press_internal)->execute(button, led_index);
+            id(button_press_start_time)[button-1] = millis();
+            static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
+          } else {
+            ESP_LOGI("button", "button %d press at LED %d, button pressed before fade completed", button, led_index);
           }
-          auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-          target_led->schedule_show();
 # This script is stopped by on_release, so only if the button is held long enough 
 # will the long press color turn on.
       - delay: ${long_press_time}ms
@@ -681,15 +685,9 @@ script:
     then:
       - lambda: |-
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-          if (id(button_press_start_time)[button-1] == 0) {
-            // this button has been pressed twice in a row, don't alter original_color
-            auto original_color = target_led->get(led_index).get();
-            ESP_LOGD("button", "button %d press at LED %d, color was %d %d %d", button, led_index, original_color.r, original_color.g, original_color.b);
-            id(original_led_color)[led_index-1] = original_color;
-          } else {
-            ESP_LOGI("button", "button %d press at LED %d, button pressed before fade completed", button, led_index);
-          }
-          id(button_press_start_time)[button-1] = millis();
+          auto original_color = target_led->get(led_index).get();
+          ESP_LOGD("button", "button %d press at LED %d, color was %d %d %d", button, led_index, original_color.r, original_color.g, original_color.b);
+          id(original_led_color)[led_index-1] = original_color;
           target_led->get(led_index).set(esphome::Color(id(touch_color)[0], id(touch_color)[1], id(touch_color)[2]));
 
   - id: dim_led_internal
