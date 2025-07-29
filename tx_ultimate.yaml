@@ -641,7 +641,7 @@ script:
             }
             id(led_on_button_press_internal)->execute(button, led_index);
           }
-          esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
+          auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
           target_led->schedule_show();
 # This script is stopped by on_release, so only if the button is held long enough 
 # will the long press color turn on.
@@ -680,7 +680,7 @@ script:
       led_index: int
     then:
       - lambda: |-
-          esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
+          auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
           if (id(button_press_start_time)[button-1] == 0) {
             // this button has been pressed twice in a row, don't alter original_color
             auto original_color = target_led->get(led_index).get();
@@ -691,7 +691,6 @@ script:
           }
           id(button_press_start_time)[button-1] = millis();
           target_led->get(led_index).set(esphome::Color(id(touch_color)[0], id(touch_color)[1], id(touch_color)[2]));
-
 
   - id: dim_led_internal
     mode: parallel
@@ -709,8 +708,9 @@ script:
             dim_color[1]*(1.0-factor) + original_color.g*factor,
             dim_color[2]*(1.0-factor) + original_color.b*factor
           );
-          esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-          target_led->get(led_index).set(color);
+          (id(all_leds).get_output())->get(led_index).set(color);
+          //esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
+          //target_led->get(led_index).set(color);
 
 # The lovely ESPHome framework will stop execution of a script, even in parallel mode, if it's called
 # again while the first execution is in a delay. The solution: duplicate this dim script for each
@@ -745,7 +745,7 @@ script:
                   }
                   id(dim_led_internal)->execute(iteration, led_index, is_long_press);
                 }
-                esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
+                auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
                 target_led->schedule_show();
             - delay: ${dim_between_led_delay}
       - lambda: 'id(button_press_start_time)[0] = 0;'
@@ -767,7 +767,7 @@ script:
                 int r = dim_color[0]*(1.0-factor) + original_color.r*factor;
                 int g = dim_color[1]*(1.0-factor) + original_color.g*factor;
                 int b = dim_color[2]*(1.0-factor) + original_color.b*factor;
-                esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
+                auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
                 //ESP_LOGD("button", "Dimming button 2 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
                 target_led->get(led_index).set(esphome::Color(r, g, b));
                 target_led->schedule_show();
