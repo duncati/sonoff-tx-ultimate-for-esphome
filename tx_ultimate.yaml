@@ -555,7 +555,7 @@ tx_ultimate_touch:
           case 2: bottom_led_index = 15 - 4*button; break;
         }
         switch(button) {
-          case 1: id(dim_led_at_button_1)->execute(bottom_led_index, is_long_press); break;
+          case 1: id(dim_led_at_button_1)->execute(is_long_press); break;
           case 2: id(dim_led_at_button_2)->execute(bottom_led_index, is_long_press); break;
           case 3: id(dim_led_at_button_3)->execute(bottom_led_index, is_long_press); break;
           case 4: id(dim_led_at_button_4)->execute(bottom_led_index, is_long_press); break;
@@ -696,6 +696,7 @@ script:
   - id: dim_led_internal
     mode: parallel
     parameters:
+      iteration: int
       led_index: int
       is_long_press: bool
     then:
@@ -717,7 +718,6 @@ script:
   - id: dim_led_at_button_1
     mode: restart
     parameters:
-      led_index: int
       is_long_press: bool
     then:
       - delay: ${after_touch_dim_delay}
@@ -734,7 +734,7 @@ script:
                     case 2: led_index = 15 - 4*button; break;
                     case 1: led_index = 9; break;
                   }
-                  id(dim_led_internal)->execute(led_index, is_long_press);
+                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
                 }
                 if (${button_led_feedback_top}) {
                   switch(${button_count}) {
@@ -743,7 +743,7 @@ script:
                     case 2: led_index = 17 + 4*button; break;
                     case 1: led_index = 23; break;
                   }
-                  id(dim_led_internal)->execute(led_index, is_long_press);
+                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
                 }
                 esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
                 target_led->schedule_show();
@@ -891,7 +891,6 @@ script:
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: dim_led_at_button_1
-          led_index: 12
           is_long_press: false
 
   - id: led_on_swipe_right
@@ -920,7 +919,6 @@ script:
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: dim_led_at_button_1
-          led_index: 12
           is_long_press: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
@@ -952,7 +950,6 @@ script:
 # but this dims down all of the buttons by first turning them on
       - script.execute:
           id: dim_led_at_button_1
-          led_index: 12
           is_long_press: false
       - script.execute:
           id: dim_led_at_button_2
