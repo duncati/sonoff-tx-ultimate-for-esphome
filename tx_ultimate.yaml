@@ -488,8 +488,6 @@ media_player:
     i2s_audio_id: audio_i2s
     i2s_comm_fmt: lsb
     mode: mono
-
-media_player:
   - platform: speaker
     name: "Sonoff TX Ultimate Local Speaker"
     speaker:
@@ -497,7 +495,6 @@ media_player:
       sample_rate: 16000Hz
       num_channels: 1
       format: WAV
-
     files:
       - id: light_on
         file: "sounds/on.wav" # Path to your audio file relative to your YAML file
