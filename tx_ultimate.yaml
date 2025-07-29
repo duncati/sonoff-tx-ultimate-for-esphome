@@ -9,6 +9,9 @@ substitutions:
   toggle_relay_3_on_touch: "false"
   toggle_relay_4_on_touch: "false"
 
+  button_led_feedback_top: "true"
+  button_led_feedback_bottom: "true"
+
   vibra_time: 150ms
   button_on_time: 500ms
 
@@ -188,9 +191,9 @@ globals:
     restore_value: no
     initial_value: '{0, 0, 0, 0}'
   - id: original_led_color
-    type: esphome::Color[4]
+    type: esphome::Color[28]
     restore_value: no
-    initial_value: '{ esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0) }'
+    initial_value: '{ esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), }'
   - id: button_lookup
     type: uint8_t[4][10]
     restore_value: no
@@ -624,21 +627,28 @@ script:
   - id: led_on_button_press
     mode: parallel
     parameters:
-      led_index: int
       button: int
     then:
       - lambda: |-
-          esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-          if (id(button_press_start_time)[button-1] == 0) {
-            // this button has been pressed twice in a row, don't alter original_color
-            auto original_color = target_led->get(led_index).get();
-            ESP_LOGD("button", "button %d press at LED %d, color was %d %d %d", button, led_index, original_color.r, original_color.g, original_color.b);
-            id(original_led_color)[button-1] = original_color;
-          } else {
-            ESP_LOGI("button", "button %d press at LED %d, button pressed before fade completed", button, led_index);
+          int led_index;
+          if (${button_led_feedback_bottom}) {
+            switch(${button_count}) {
+              case 4: led_index = 14 - 2*button; break;
+              case 3: led_index = 13 - 2*button; break;
+              case 2: led_index = 15 - 4*button; break;
+              case 1: led_index = 9; break;
+            }
+            id(led_on_button_press_internal)->execute(button, led_index);
           }
-          id(button_press_start_time)[button-1] = millis();
-          target_led->get(led_index).set(esphome::Color(id(touch_color)[0], id(touch_color)[1], id(touch_color)[2]));
+          if (${button_led_feedback_top}) {
+            switch(${button_count}) {
+              case 4: led_index = 18 + 2*button; break;
+              case 3: led_index = 19 + 2*button; break;
+              case 2: led_index = 17 + 4*button; break;
+              case 1: led_index = 23; break;
+            }
+            id(led_on_button_press_internal)->execute(button, led_index);
+          }
           target_led->schedule_show();
 # This script is stopped by on_release, so only if the button is held long enough 
 # will the long press color turn on.
@@ -651,6 +661,44 @@ script:
             target_led->schedule_show();
             id(vibra).turn_on();
           }
+
+  - id: led_on_button_press_internal
+    mode: parallel
+    parameters:
+      button: int
+      led_index: int
+    then:
+      - lambda: |-
+          esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
+          if (id(button_press_start_time)[button-1] == 0) {
+            // this button has been pressed twice in a row, don't alter original_color
+            auto original_color = target_led->get(led_index).get();
+            ESP_LOGD("button", "button %d press at LED %d, color was %d %d %d", button, led_index, original_color.r, original_color.g, original_color.b);
+            id(original_led_color)[led_index-1] = original_color;
+          } else {
+            ESP_LOGI("button", "button %d press at LED %d, button pressed before fade completed", button, led_index);
+          }
+          id(button_press_start_time)[button-1] = millis();
+          target_led->get(led_index).set(esphome::Color(id(touch_color)[0], id(touch_color)[1], id(touch_color)[2]));
+
+
+  - id: dim_led_internal
+    mode: parallel
+    parameters:
+      led_index: int
+      is_long_press: bool
+    then:
+      - lambda: |-
+          auto original_color = id(original_led_color)[led_index-1];
+          auto dim_color = (is_long_press) ? id(long_press_color) : id(touch_color);
+          float factor = iteration * 0.1f;
+          auto color = esphome::Color(
+            dim_color[0]*(1.0-factor) + original_color.r*factor,
+            dim_color[1]*(1.0-factor) + original_color.g*factor,
+            dim_color[2]*(1.0-factor) + original_color.b*factor
+          );
+          esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
+          target_led->get(led_index).set(color);
 
 # The lovely ESPHome framework will stop execution of a script, even in parallel mode, if it's called
 # again while the first execution is in a delay. The solution: duplicate this dim script for each
@@ -666,18 +714,30 @@ script:
           count: 10
           then:
             - lambda: |-
-                auto original_color = id(original_led_color)[0];
-                auto dim_color = (is_long_press) ? id(long_press_color) : id(touch_color);
-                float factor = iteration * 0.1f;
-                int r = dim_color[0]*(1.0-factor) + original_color.r*factor;
-                int g = dim_color[1]*(1.0-factor) + original_color.g*factor;
-                int b = dim_color[2]*(1.0-factor) + original_color.b*factor;
+                int button = 1;
+                int led_index;
+                if (${button_led_feedback_bottom}) {
+                  switch(${button_count}) {
+                    case 4: led_index = 14 - 2*button; break;
+                    case 3: led_index = 13 - 2*button; break;
+                    case 2: led_index = 15 - 4*button; break;
+                    case 1: led_index = 9; break;
+                  }
+                  id(dim_led_internal)->execute(led_index, is_long_press);
+                }
+                if (${button_led_feedback_top}) {
+                  switch(${button_count}) {
+                    case 4: led_index = 18 + 2*button; break;
+                    case 3: led_index = 19 + 2*button; break;
+                    case 2: led_index = 17 + 4*button; break;
+                    case 1: led_index = 23; break;
+                  }
+                  id(dim_led_internal)->execute(led_index, is_long_press);
+                }
                 esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-                //ESP_LOGD("button", "Dimming button 1 iteration %d (LED %d) to %d, %d, %d", iteration, led_index, r, g, b);
-                target_led->get(led_index).set(esphome::Color(r, g, b));
                 target_led->schedule_show();
             - delay: ${dim_between_led_delay}
-      - lambda: 'id(button_press_start_time)[0] = 0;'
+      - lambda: 'id(button_press_start_time)[button-1] = 0;'
 
   - id: dim_led_at_button_2
     mode: restart
@@ -690,7 +750,7 @@ script:
           count: 10
           then:
             - lambda: |-
-                auto original_color = id(original_led_color)[1];
+                auto original_color = id(original_led_color)[led_index-1];
                 auto dim_color = (is_long_press) ? id(long_press_color) : id(touch_color);
                 float factor = iteration * 0.1f;
                 int r = dim_color[0]*(1.0-factor) + original_color.r*factor;
@@ -714,7 +774,7 @@ script:
           count: 10
           then:
             - lambda: |-
-                auto original_color = id(original_led_color)[2];
+                auto original_color = id(original_led_color)[led_index-1];
                 auto dim_color = (is_long_press) ? id(long_press_color) : id(touch_color);
                 float factor = iteration * 0.1f;
                 int r = dim_color[0]*(1.0-factor) + original_color.r*factor;
@@ -738,7 +798,7 @@ script:
           count: 10
           then:
             - lambda: |-
-                auto original_color = id(original_led_color)[3];
+                auto original_color = id(original_led_color)[led_index-1];
                 auto dim_color = (is_long_press) ? id(long_press_color) : id(touch_color);
                 float factor = iteration * 0.1f;
                 int r = dim_color[0]*(1.0-factor) + original_color.r*factor;
@@ -790,22 +850,18 @@ script:
       - script.execute:
           id: led_on_button_press
           button: 4
-          led_index: 6
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: led_on_button_press
           button: 3
-          led_index: 8
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: led_on_button_press
           button: 2
-          led_index: 10
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: led_on_button_press
           button: 1
-          led_index: 12
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: dim_led_at_button_4
@@ -838,22 +894,18 @@ script:
       - script.execute:
           id: led_on_button_press
           button: 1
-          led_index: 12
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: led_on_button_press
           button: 2
-          led_index: 10
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: led_on_button_press
           button: 3
-          led_index: 8
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: led_on_button_press
           button: 4
-          led_index: 6
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: dim_led_at_button_1
