@@ -708,9 +708,9 @@ script:
             dim_color[1]*(1.0-factor) + original_color.g*factor,
             dim_color[2]*(1.0-factor) + original_color.b*factor
           );
-          (id(all_leds).get_output())->get(led_index).set(color);
-          //esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-          //target_led->get(led_index).set(color);
+          //(id(all_leds).get_output())->get(led_index).set(color);
+          auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
+          target_led->get(led_index).set(color);
 
 # The lovely ESPHome framework will stop execution of a script, even in parallel mode, if it's called
 # again while the first execution is in a delay. The solution: duplicate this dim script for each
