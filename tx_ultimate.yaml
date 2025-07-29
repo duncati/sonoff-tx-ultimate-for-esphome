@@ -548,17 +548,11 @@ tx_ultimate_touch:
             case 4: id(button_4).publish_state(true); break;
           }
         }
-        int bottom_led_index = 1;
-        switch(${button_count}) {
-          case 4: bottom_led_index = 14 - 2*button; break;
-          case 3: bottom_led_index = 13 - 2*button; break;
-          case 2: bottom_led_index = 15 - 4*button; break;
-        }
         switch(button) {
           case 1: id(dim_led_at_button_1)->execute(is_long_press); break;
-          case 2: id(dim_led_at_button_2)->execute(bottom_led_index, is_long_press); break;
-          case 3: id(dim_led_at_button_3)->execute(bottom_led_index, is_long_press); break;
-          case 4: id(dim_led_at_button_4)->execute(bottom_led_index, is_long_press); break;
+          case 2: id(dim_led_at_button_2)->execute(is_long_press); break;
+          case 3: id(dim_led_at_button_3)->execute(is_long_press); break;
+          case 4: id(dim_led_at_button_4)->execute(is_long_press); break;
         }
     - lambda: >
         ESP_LOGW("tx_ultimate_touch.on_release", "Release Position: %d / State: %d", touch.x, touch.state);
