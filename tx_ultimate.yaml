@@ -492,7 +492,7 @@ media_player:
     announcement_pipeline:
       speaker:
       id: audio_i2s
-      sample_rate: 16000Hz
+      sample_rate: 16000
       num_channels: 1
       format: WAV
     files:
