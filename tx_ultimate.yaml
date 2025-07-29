@@ -45,7 +45,7 @@ substitutions:
   swipe_right_effect: ""
 
   after_touch_dim_delay: 500ms
-  swipe_between_led_delay: 50ms
+  swipe_between_led_delay: 100ms
   dim_between_led_delay: 50ms
 
   relay_1_pin: GPIO18
