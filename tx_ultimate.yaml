@@ -748,7 +748,7 @@ script:
                 esphome::light::AddressableLight* target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
                 target_led->schedule_show();
             - delay: ${dim_between_led_delay}
-      - lambda: 'id(button_press_start_time)[button-1] = 0;'
+      - lambda: 'id(button_press_start_time)[0] = 0;'
 
   - id: dim_led_at_button_2
     mode: restart
