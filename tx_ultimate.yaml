@@ -489,8 +489,8 @@ media_player:
     i2s_comm_fmt: lsb
     mode: mono
   - platform: speaker
-    name: "Sonoff TX Ultimate Local Speaker"
-    speaker:
+    announcement_pipeline:
+      speaker:
       id: audio_i2s
       sample_rate: 16000Hz
       num_channels: 1
