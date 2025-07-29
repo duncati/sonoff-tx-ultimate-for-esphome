@@ -488,20 +488,6 @@ media_player:
     i2s_audio_id: audio_i2s
     i2s_comm_fmt: lsb
     mode: mono
-  - platform: speaker
-    name: ${friendly_name} Speaker
-    id: speaker_media_player
-    announcement_pipeline:
-      speaker: audio_speaker
-      id: audio_i2s
-      sample_rate: 16000
-      num_channels: 1
-      format: WAV
-    files:
-      - id: light_on
-        file: "sounds/on.wav" # Path to your audio file relative to your YAML file
-      - id: light_off
-        file: "sounds/off.wav"  # Another example file
 
 i2s_audio:
   id: audio_i2s
@@ -535,7 +521,6 @@ tx_ultimate_touch:
         auto button = id(button_lookup)[${button_count}-1][touch.x-1];
         ESP_LOGI("button", "translated %d x to button %d", touch.x, button);
         id(led_on_button_press)->execute(button);
-    - media_player.speaker.play_on_device_media_file: light_on
     - switch.turn_on: vibra
 
   on_release:
