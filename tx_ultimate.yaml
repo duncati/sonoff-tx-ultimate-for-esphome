@@ -701,7 +701,6 @@ script:
     parameters:
       button: int
     then:
-      - delay: ${after_touch_dim_delay}
       - repeat:
           count: 100
           then:
@@ -714,6 +713,7 @@ script:
                   id(button_bar_flipper)[button-1] = 1;
                 }
                 id(button_bar_brightness)[button-1]+=id(button_bar_flipper)[button-1];
+                auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
                 for (int i=0; i<bar_height; i++) {
                   target_led->get(13+i).set(esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]));
                   if (i==7) {
