@@ -724,7 +724,7 @@ script:
                 }
                 target_led->schedule_show();
                 id(vibra).turn_on();
-      - delay: ${dim_between_led_delay}
+            - delay: ${bar_delay}
 
   - id: led_on_button_press_internal
     mode: parallel
