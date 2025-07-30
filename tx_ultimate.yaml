@@ -192,7 +192,7 @@ globals:
   - id: bar_delay
     type: int
     restore_value: no
-    initial_value: 200
+    initial_value: ${bar_delay}
   - id: bar_color
     type: int [3]
     restore_value: no
