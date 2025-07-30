@@ -26,7 +26,7 @@ substitutions:
   touch_color: "{0,100,100}"
   touch_effect: "Scan"
 
-  bar_color: "{80,70,0}"
+  bar_color: "{255,150,0}"
   bar_delay: 300ms
 
   very_long_press_brightness: "1"
@@ -546,7 +546,6 @@ tx_ultimate_touch:
   on_release:
     - lambda: 'ESP_LOGI("button", "on_release stopping led_on_button_press and bar_go_up_and_down");'
     - script.stop: led_on_button_press
-    - script.stop: bars_go_up_and_down
     - lambda: |-
         int button = id(button_lookup)[${button_count}-1][touch.x-1];
         id(button_held)[button-1]=0;
@@ -718,7 +717,7 @@ script:
             - lambda: |-
                 if (id(button_held)[button-1] == 0) {
                   ESP_LOGI("button", "button %d no longer held in up and down", button);
-                  id(bars_go_up_and_down).stop();
+                  set_bar_height(0);
                   return;
                 }
                 int bar_height = id(button_bar_brightness)[button-1];
@@ -733,6 +732,9 @@ script:
                 id(short_vibration).execute();
             - delay: ${bar_delay}
 
+# TODO fix this:
+# 5s long presses don't call button_release so it doesn't turn off this bar stuff
+
   - id: set_bar_height
     mode: restart
     parameters:
@@ -740,38 +742,23 @@ script:
     then:
       - lambda: |-
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
-          // TODO there's gotta be a set LED range.... -- range(from, to)
           auto color = esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]);
           auto black = esphome::Color(0, 0, 0);
-          target_led->range(13, 13+height-1).set(color);
-          target_led->range(13+height-1, 20).set(black);
-          target_led->range(0, 5-height+1).set(color);
-          target_led->range(5-height+1, 6).set(black);
-          if (height==7) {
-            target_led->get(27).set(color);
-          } else {
+          if (height == 0) {
+            target_led->range(13, 20).set(black);
+            target_led->range(0, 6).set(black);
             target_led->get(27).set(black);
-          }
-
-          /*
-          for (int i=0; i<height; i++) {
-            target_led->get(13+i).set(color);
-            if (i==7) {
+          } else {
+            target_led->range(13, 13+height-1).set(color);
+            target_led->range(13+height-1, 20).set(black);
+            target_led->range(0, 5-height+1).set(color);
+            target_led->range(5-height+1, 6).set(black);
+            if (height==7) {
               target_led->get(27).set(color);
             } else {
-              target_led->get(5-i).set(color);
-            }
-          }
-          auto black = esphome::Color(0, 0, 0);
-          for (int i=height; i<7; i++) {
-            target_led->get(13+i).set(black);
-            if (i==7) {
               target_led->get(27).set(black);
-            } else {
-              target_led->get(5-i).set(black);
             }
           }
-          */
           target_led->schedule_show();
 
   - id: short_vibration
