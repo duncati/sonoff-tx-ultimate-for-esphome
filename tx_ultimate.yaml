@@ -540,9 +540,8 @@ tx_ultimate_touch:
 
   on_press:
     - lambda: |-
-        ESP_LOGW("tx_ultimate_touch.on_press", "Touch Position: %d / State: %d", touch.x, touch.state);
         auto button = id(button_lookup)[${button_count}-1][touch.x-1];
-        ESP_LOGI("button", "translated %d x to button %d", touch.x, button);
+        ESP_LOGW("tx_ultimate_touch.on_press", "Touch Position: %d, State: %d, Button: %d", touch.x, touch.state, button);
         id(led_on_button_press)->execute(button);
         id(button_held)[button-1]=1;
     - switch.turn_on: vibra
@@ -554,7 +553,7 @@ tx_ultimate_touch:
         int button = id(button_lookup)[${button_count}-1][touch.x-1];
         id(button_held)[button-1]=0;
         auto button_press_duration = millis() - id(button_press_start_time)[button-1];
-        //ESP_LOGD("button", "Button %d held for %u ms", button, button_press_duration);
+        ESP_LOGD("button", "Button %d released, held for %u ms", button, button_press_duration);
         bool is_long_press = false;
         if (button_press_duration >= ${long_press_time}) {
           is_long_press = true;
@@ -693,9 +692,10 @@ script:
               target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
             }
             target_led->schedule_show();
-            id(vibra).turn_on();
+            //id(vibra).turn_on();
             int bar_height = id(button_bar_brightness)[button-1];
             while (id(button_held)) {
+              ESP_LOGI("button", "button %d bar adjusting, height is %d", button, bar_height);
               if (bar_height == 7) {
                 id(button_bar_flipper)[button-1] = -1;
               } else if (bar_height == 0) {
@@ -711,7 +711,7 @@ script:
                 }
               }
               target_led->schedule_show();
-              id(vibra).turn_on();
+              //id(vibra).turn_on();
               delay(id(bar_delay));
             }
             id(button_bar_brightness)[button-1] = bar_height;
