@@ -400,15 +400,6 @@ switch:
       - switch.turn_off: vibra
 
   - platform: gpio
-    id: short_vibra
-    pin: ${vibra_motor_pin}
-    name: "${friendly_name} Short Vibration"
-    restore_mode: ALWAYS_OFF
-    on_turn_on:
-      - delay: ${short_vibra_time}
-      - switch.turn_off: short_vibra
-
-  - platform: gpio
     id: pa_power
     pin: ${pa_power_pin}
     name: "PA Power"
@@ -553,7 +544,7 @@ tx_ultimate_touch:
     - switch.turn_on: vibra
 
   on_release:
-#   - lambda: 'ESP_LOGI("button", "on_release stopping on_button_press");'
+    - lambda: 'ESP_LOGI("button", "on_release stopping led_on_button_press and bar_go_up_and_down");'
     - script.stop: led_on_button_press
     - script.stop: bars_go_up_and_down
     - lambda: |-
@@ -641,36 +632,6 @@ sun:
   longitude: ${longitude}
 
 script:
-  - id: bars_go_up_and_down
-    mode: restart
-    parameters:
-      button: int
-    then:
-      - repeat:
-          count: 100
-          then:
-            - lambda: |-
-                int bar_height = id(button_bar_brightness)[button-1];
-                ESP_LOGI("button", "button %d bar adjusting %d, height is %d", button, id(button_bar_flipper)[button-1], bar_height);
-                if (bar_height == 7) {
-                  id(button_bar_flipper)[button-1] = -1;
-                } else if (bar_height == 0) {
-                  id(button_bar_flipper)[button-1] = 1;
-                }
-                id(button_bar_brightness)[button-1]+=id(button_bar_flipper)[button-1];
-                auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
-                for (int i=0; i<bar_height; i++) {
-                  target_led->get(13+i).set(esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]));
-                  if (i==7) {
-                    target_led->get(27).set(esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]));
-                  } else {
-                    target_led->get(5-i).set(esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]));
-                  }
-                }
-                target_led->schedule_show();
-                id(short_vibra).turn_on();
-            - delay: ${bar_delay}
-
   - id: led_on_button_press
     mode: parallel
     parameters:
@@ -745,6 +706,47 @@ script:
           ESP_LOGD("button", "button %d press at LED %d, color was %d %d %d", button, led_index, original_color.r, original_color.g, original_color.b);
           id(original_led_color)[led_index-1] = original_color;
           target_led->get(led_index).set(esphome::Color(id(touch_color)[0], id(touch_color)[1], id(touch_color)[2]));
+
+  - id: bars_go_up_and_down
+    mode: restart
+    parameters:
+      button: int
+    then:
+      - repeat:
+          count: 100
+          then:
+            - lambda: |-
+                if (!id(button_held)[button-1]) {
+                  ESP_LOGI("button", "button %d no longer held in up and down", button);
+                  id(bars_go_up_and_down).stop();
+                  return;
+                }
+                int bar_height = id(button_bar_brightness)[button-1];
+                ESP_LOGI("button", "button %d bar adjusting %d, height is %d", button, id(button_bar_flipper)[button-1], bar_height);
+                if (bar_height == 7) {
+                  id(button_bar_flipper)[button-1] = -1;
+                } else if (bar_height == 0) {
+                  id(button_bar_flipper)[button-1] = 1;
+                }
+                id(button_bar_brightness)[button-1]+=id(button_bar_flipper)[button-1];
+                auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
+                for (int i=0; i<bar_height; i++) {
+                  target_led->get(13+i).set(esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]));
+                  if (i==7) {
+                    target_led->get(27).set(esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]));
+                  } else {
+                    target_led->get(5-i).set(esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]));
+                  }
+                }
+                target_led->schedule_show();
+                id(short_vibration).execute();
+            - delay: ${bar_delay}
+
+  - id: short_vibration
+    then:
+      - switch.turn_on: vibra
+      - delay: ${short_vibra_time}
+      - switch.turn_off: vibra
 
   - id: dim_led_internal
     mode: parallel
