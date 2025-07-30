@@ -545,7 +545,7 @@ tx_ultimate_touch:
   on_release:
 #   - lambda: 'ESP_LOGI("button", "on_release stopping on_button_press");'
     - script.stop: led_on_button_press
-    - script.stop: bars
+    - script.stop: my_bars
     - lambda: |-
         int button = id(button_lookup)[${button_count}-1][touch.x-1];
         id(button_held)[button-1]=0;
@@ -631,7 +631,7 @@ sun:
   longitude: ${longitude}
 
 script:
-  - id: bars
+  - id: my_bars
     mode: restart
     parameters:
       button: int
@@ -720,7 +720,7 @@ script:
             }
             target_led->schedule_show();
             id(vibra).turn_on();
-            id(bars)->execute(button);
+            id(my_bars)->execute(button);
           }
 
   - id: led_on_button_press_internal
