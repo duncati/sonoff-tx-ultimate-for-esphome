@@ -12,6 +12,7 @@ substitutions:
   button_led_feedback_top: "true"
   button_led_feedback_bottom: "true"
 
+  short_vibra_time: 50ms
   vibra_time: 150ms
   button_on_time: 500ms
 
@@ -399,6 +400,15 @@ switch:
       - switch.turn_off: vibra
 
   - platform: gpio
+    id: short_vibra
+    pin: ${vibra_motor_pin}
+    name: "${friendly_name} Short Vibration"
+    restore_mode: ALWAYS_OFF
+    on_turn_on:
+      - delay: ${short_vibra_time}
+      - switch.turn_off: short_vibra
+
+  - platform: gpio
     id: pa_power
     pin: ${pa_power_pin}
     name: "PA Power"
@@ -537,7 +547,7 @@ tx_ultimate_touch:
   on_press:
     - lambda: |-
         auto button = id(button_lookup)[${button_count}-1][touch.x-1];
-        ESP_LOGW("tx_ultimate_touch.on_press", "Touch Position: %d, State: %d, Button: %d", touch.x, touch.state, button);
+        ESP_LOGI("tx_ultimate_touch.on_press", "Touch Position: %d, State: %d, Button: %d", touch.x, touch.state, button);
         id(led_on_button_press)->execute(button);
         id(button_held)[button-1]=1;
     - switch.turn_on: vibra
@@ -545,7 +555,7 @@ tx_ultimate_touch:
   on_release:
 #   - lambda: 'ESP_LOGI("button", "on_release stopping on_button_press");'
     - script.stop: led_on_button_press
-    - script.stop: my_bars
+    - script.stop: bars_go_up_and_down
     - lambda: |-
         int button = id(button_lookup)[${button_count}-1][touch.x-1];
         id(button_held)[button-1]=0;
@@ -631,7 +641,7 @@ sun:
   longitude: ${longitude}
 
 script:
-  - id: my_bars
+  - id: bars_go_up_and_down
     mode: restart
     parameters:
       button: int
@@ -658,7 +668,7 @@ script:
                   }
                 }
                 target_led->schedule_show();
-                id(vibra).turn_on();
+                id(short_vibra).turn_on();
             - delay: ${bar_delay}
 
   - id: led_on_button_press
@@ -720,7 +730,7 @@ script:
             }
             target_led->schedule_show();
             id(vibra).turn_on();
-            id(my_bars)->execute(button);
+            id(bars_go_up_and_down)->execute(button);
           }
 
   - id: led_on_button_press_internal
