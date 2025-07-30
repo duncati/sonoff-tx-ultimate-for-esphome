@@ -695,6 +695,7 @@ script:
             target_led->schedule_show();
             id(vibra).turn_on();
             id(bars)->execute(button);
+          }
 
   - id: bars
     mode: restart
