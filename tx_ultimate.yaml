@@ -26,7 +26,7 @@ substitutions:
   touch_effect: "Scan"
 
   bar_color: "{80,70,0}"
-  bar_delay: "200"
+  bar_delay: 200ms
 
   very_long_press_brightness: "1"
   very_long_press_color: "{0,100,0}"
@@ -549,6 +549,7 @@ tx_ultimate_touch:
   on_release:
 #   - lambda: 'ESP_LOGI("button", "on_release stopping on_button_press");'
     - script.stop: led_on_button_press
+    - script.stop: bars
     - lambda: |-
         int button = id(button_lookup)[${button_count}-1][touch.x-1];
         id(button_held)[button-1]=0;
@@ -692,30 +693,38 @@ script:
               target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
             }
             target_led->schedule_show();
-            //id(vibra).turn_on();
-            int bar_height = id(button_bar_brightness)[button-1];
-            while (id(button_held)) {
-              ESP_LOGI("button", "button %d bar adjusting, height is %d", button, bar_height);
-              if (bar_height == 7) {
-                id(button_bar_flipper)[button-1] = -1;
-              } else if (bar_height == 0) {
-                id(button_bar_flipper)[button-1] = 1;
-              }
-              bar_height+=id(button_bar_flipper)[button-1];
-              for (int i=0; i<bar_height; i++) {
-                target_led->get(13+i).set(esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]));
-                if (i==7) {
-                  target_led->get(27).set(esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]));
-                } else {
-                  target_led->get(5-i).set(esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]));
+            id(vibra).turn_on();
+            id(bars)->execute(button);
+
+  - id: bars
+    mode: restart
+    parameters:
+      button: int
+    then:
+      - delay: ${after_touch_dim_delay}
+      - repeat:
+          count: 100
+          then:
+            - lambda: |-
+                int bar_height = id(button_bar_brightness)[button-1];
+                ESP_LOGI("button", "button %d bar adjusting, height is %d", button, bar_height);
+                if (bar_height == 7) {
+                  id(button_bar_flipper)[button-1] = -1;
+                } else if (bar_height == 0) {
+                  id(button_bar_flipper)[button-1] = 1;
                 }
-              }
-              target_led->schedule_show();
-              //id(vibra).turn_on();
-              delay(id(bar_delay));
-            }
-            id(button_bar_brightness)[button-1] = bar_height;
-          }
+                id(button_bar_brightness)[button-1]+=id(button_bar_flipper)[button-1];
+                for (int i=0; i<bar_height; i++) {
+                  target_led->get(13+i).set(esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]));
+                  if (i==7) {
+                    target_led->get(27).set(esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]));
+                  } else {
+                    target_led->get(5-i).set(esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]));
+                  }
+                }
+                target_led->schedule_show();
+                id(vibra).turn_on();
+      - delay: ${dim_between_led_delay}
 
   - id: led_on_button_press_internal
     mode: parallel
