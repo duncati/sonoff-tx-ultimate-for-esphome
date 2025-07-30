@@ -12,7 +12,7 @@ substitutions:
   button_led_feedback_top: "true"
   button_led_feedback_bottom: "true"
 
-  short_vibra_time: 50ms
+  short_vibra_time: 30ms
   vibra_time: 150ms
   button_on_time: 500ms
 
@@ -729,18 +729,38 @@ script:
                   id(button_bar_flipper)[button-1] = 1;
                 }
                 id(button_bar_brightness)[button-1]+=id(button_bar_flipper)[button-1];
-                auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
-                for (int i=0; i<bar_height; i++) {
-                  target_led->get(13+i).set(esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]));
-                  if (i==7) {
-                    target_led->get(27).set(esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]));
-                  } else {
-                    target_led->get(5-i).set(esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]));
-                  }
-                }
-                target_led->schedule_show();
+                id(set_bar_height).execute(button, bar_height);
                 id(short_vibration).execute();
             - delay: ${bar_delay}
+
+  - id: set_bar_height
+    mode: restart
+    parameters:
+      button: int
+      height: int
+    then:
+      - lambda: |-
+          auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
+          // TODO there's gotta be a set LED range.... -- range(from, to)
+          auto color = esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]);
+          for (int i=0; i<bar_height; i++) {
+            target_led->get(13+i).set(color);
+            if (i==7) {
+              target_led->get(27).set(color);
+            } else {
+              target_led->get(5-i).set(color);
+            }
+          }
+          auto black = esphome::Color(0, 0, 0);
+          for (int i=bar_height; i<7; i++) {
+            target_led->get(13+i).set(black);
+            if (i==7) {
+              target_led->get(27).set(black);
+            } else {
+              target_led->get(5-i).set(black);
+            }
+          }
+          target_led->schedule_show();
 
   - id: short_vibration
     then:
