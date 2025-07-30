@@ -717,7 +717,7 @@ script:
             - lambda: |-
                 if (id(button_held)[button-1] == 0) {
                   ESP_LOGI("button", "button %d no longer held in up and down", button);
-                  set_bar_height(0);
+                  id(set_bar_height).execute(0);
                   return;
                 }
                 int bar_height = id(button_bar_brightness)[button-1];
