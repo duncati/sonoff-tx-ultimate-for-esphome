@@ -27,7 +27,7 @@ substitutions:
   touch_effect: "Scan"
 
   bar_color: "{80,70,0}"
-  bar_delay: 200ms
+  bar_delay: 300ms
 
   very_long_press_brightness: "1"
   very_long_press_color: "{0,100,0}"
@@ -716,7 +716,7 @@ script:
           count: 100
           then:
             - lambda: |-
-                if (!id(button_held)[button-1]) {
+                if (id(button_held)[button-1] == 0) {
                   ESP_LOGI("button", "button %d no longer held in up and down", button);
                   id(bars_go_up_and_down).stop();
                   return;
@@ -742,6 +742,18 @@ script:
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
           // TODO there's gotta be a set LED range.... -- range(from, to)
           auto color = esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]);
+          auto black = esphome::Color(0, 0, 0);
+          target_led->range(13, 13+height-1).set(color);
+          target_led->range(13+height-1, 20).set(black);
+          target_led->range(0, 5-height+1).set(color);
+          target_led->range(5-height+1, 6).set(black);
+          if (height==7) {
+            target_led->get(27).set(color);
+          } else {
+            target_led->get(27).set(black);
+          }
+
+          /*
           for (int i=0; i<height; i++) {
             target_led->get(13+i).set(color);
             if (i==7) {
@@ -759,6 +771,7 @@ script:
               target_led->get(5-i).set(black);
             }
           }
+          */
           target_led->schedule_show();
 
   - id: short_vibration
