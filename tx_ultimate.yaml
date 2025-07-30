@@ -729,21 +729,20 @@ script:
                   id(button_bar_flipper)[button-1] = 1;
                 }
                 id(button_bar_brightness)[button-1]+=id(button_bar_flipper)[button-1];
-                id(set_bar_height).execute(button, bar_height);
+                id(set_bar_height).execute(bar_height);
                 id(short_vibration).execute();
             - delay: ${bar_delay}
 
   - id: set_bar_height
     mode: restart
     parameters:
-      button: int
       height: int
     then:
       - lambda: |-
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
           // TODO there's gotta be a set LED range.... -- range(from, to)
           auto color = esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]);
-          for (int i=0; i<bar_height; i++) {
+          for (int i=0; i<height; i++) {
             target_led->get(13+i).set(color);
             if (i==7) {
               target_led->get(27).set(color);
@@ -752,7 +751,7 @@ script:
             }
           }
           auto black = esphome::Color(0, 0, 0);
-          for (int i=bar_height; i<7; i++) {
+          for (int i=height; i<7; i++) {
             target_led->get(13+i).set(black);
             if (i==7) {
               target_led->get(27).set(black);
