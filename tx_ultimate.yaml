@@ -735,8 +735,9 @@ script:
             - lambda: |-
                 if (id(button_held)[button-1] == 0) {
                   ESP_LOGI("button", "button %d no longer held in up and down", button);
+                  // TODO may be better to fade this out
                   id(set_bar_height).execute(0);
-                  return { "break": true};
+                  id(bars_go_up_and_down).stop();
                 }
                 int bar_height = id(button_bar_brightness)[button-1];
                 ESP_LOGI("button", "button %d bar adjusting %d, height is %d", button, id(button_bar_flipper)[button-1], bar_height);
