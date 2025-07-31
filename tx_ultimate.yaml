@@ -760,25 +760,25 @@ script:
     then:
       - lambda: |-
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
-#         /* solid bar color with ranges
-#         auto black = esphome::Color(0, 0, 0);
-#         auto color = esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]);
-#         if (height == 0) {
-#           target_led->range(13, 20).set(black);
-#           target_led->range(0, 6).set(black);
-#           target_led->get(27).set(black);
-#         } else {
-#           target_led->range(13, 13+height-1).set(color);
-#           target_led->range(13+height-1, 20).set(black);
-#           target_led->range(0, 5-height+1).set(color);
-#           target_led->range(5-height+1, 6).set(black);
-#           if (height==7) {
-#             target_led->get(27).set(color);
-#           } else {
-#             target_led->get(27).set(black);
-#           }
-#         }
-#         */
+          // solid bar color with ranges
+          //  auto black = esphome::Color(0, 0, 0);
+          //  auto color = esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]);
+          //  if (height == 0) {
+          //    target_led->range(13, 20).set(black);
+          //    target_led->range(0, 6).set(black);
+          //    target_led->get(27).set(black);
+          //  } else {
+          //    target_led->range(13, 13+height-1).set(color);
+          //    target_led->range(13+height-1, 20).set(black);
+          //    target_led->range(0, 5-height+1).set(color);
+          //    target_led->range(5-height+1, 6).set(black);
+          //    if (height==7) {
+          //      target_led->get(27).set(color);
+          //    } else {
+          //      target_led->get(27).set(black);
+          //    }
+          //  }
+          //
           for (int i=0; i<height; i++) {
             ESP_LOGI("button", "setting led %d to %d, %d, %d", 13+i, id(bar_colors[i]).r, id(bar_colors[i]).g, id(bar_colors[i]).b);
             target_led->get(13+i).set(id(bar_colors[i])));
