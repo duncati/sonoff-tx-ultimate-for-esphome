@@ -628,7 +628,7 @@ tx_ultimate_touch:
              id: very_long_press
              state: ON
           - lambda: >
-        ESP_LOGD("tx_ultimate_touch.on_long_touch_release", "Very Long Touch Release Position: %d / State: %d", touch.x, touch.state);
+              ESP_LOGD("tx_ultimate_touch.on_long_touch_release", "Very Long Touch Release Position: %d / State: %d", touch.x, touch.state);
 
 time:
   - platform: homeassistant
