@@ -606,6 +606,7 @@ tx_ultimate_touch:
         ESP_LOGD("tx_ultimate_touch.on_full_touch_release", "Full Touch Release Position: %d / State: %d", touch.x, touch.state);
 
   on_long_touch_release:
+# TODO - ignore this completely? the long hold for bars kinda overrides it, and I have my own reasonably shorter long press
     - script.execute: led_on_long_touch
     - switch.turn_on: vibra
     - binary_sensor.template.publish:
@@ -742,6 +743,7 @@ script:
     then:
       - lambda: |-
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
+          // TODO: make configurable bar color steps, each bar a different color from say yellow to red -- so no more range
           auto color = esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]);
           auto black = esphome::Color(0, 0, 0);
           if (height == 0) {
@@ -760,6 +762,25 @@ script:
             }
           }
           target_led->schedule_show();
+          /*
+          for (int i=0; i<height; i++) {
+            target_led->get(13+i).set(color);
+            if (i==7) {
+              target_led->get(27).set(color);
+            } else {
+              target_led->get(5-i).set(color);
+            }
+          }
+          auto black = esphome::Color(0, 0, 0);
+          for (int i=height; i<7; i++) {
+            target_led->get(13+i).set(black);
+            if (i==7) {
+              target_led->get(27).set(black);
+            } else {
+              target_led->get(5-i).set(black);
+            }
+          }
+          */
 
   - id: short_vibration
     then:
