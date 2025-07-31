@@ -26,7 +26,15 @@ substitutions:
   touch_color: "{0,100,100}"
   touch_effect: "Scan"
 
+  long_hold_uses_bars: "true"
   bar_color: "{255,150,0}"
+  bar_color1: "{255,252,0}"
+  bar_color2: "{255,222,0}"
+  bar_color3: "{255,191,0}"
+  bar_color4: "{255,159,0}"
+  bar_color5: "{255,124,0}"
+  bar_color6: "{255,83,0}"
+  bar_color7: "{255,0,0}"
   bar_delay: 300ms
 
   very_long_press_brightness: "1"
@@ -194,6 +202,10 @@ globals:
     type: int [3]
     restore_value: no
     initial_value: ${bar_color}
+  - id: bar_colors
+    type: esphome::Color [7]
+    restore_value: no
+    initial_value: '{ esphome::Color(${bar_color1}), esphome::Color(${bar_color2}), esphome::Color(${bar_color3}), esphome::Color(${bar_color4}), esphome::Color(${bar_color5}), esphome::Color(${bar_color6}), esphome::Color(${bar_color7}) }'
   - id: button_bar_flipper
     type: int8_t[4]
     restore_value: no
@@ -606,13 +618,16 @@ tx_ultimate_touch:
         ESP_LOGD("tx_ultimate_touch.on_full_touch_release", "Full Touch Release Position: %d / State: %d", touch.x, touch.state);
 
   on_long_touch_release:
-# TODO - ignore this completely? the long hold for bars kinda overrides it, and I have my own reasonably shorter long press
-    - script.execute: led_on_long_touch
-    - switch.turn_on: vibra
-    - binary_sensor.template.publish:
-       id: very_long_press
-       state: ON
-    - lambda: >
+    - if:
+        condition:
+          lambda: "return !${long_hold_uses_bars};"
+        then:
+          - script.execute: led_on_long_touch
+          - switch.turn_on: vibra
+          - binary_sensor.template.publish:
+             id: very_long_press
+             state: ON
+          - lambda: >
         ESP_LOGD("tx_ultimate_touch.on_long_touch_release", "Very Long Touch Release Position: %d / State: %d", touch.x, touch.state);
 
 time:
@@ -691,7 +706,9 @@ script:
             }
             target_led->schedule_show();
             id(vibra).turn_on();
-            id(bars_go_up_and_down)->execute(button);
+            if (${long_hold_uses_bars}) {
+              id(bars_go_up_and_down)->execute(button);
+            }
           }
 
   - id: led_on_button_press_internal
@@ -743,9 +760,9 @@ script:
     then:
       - lambda: |-
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
-          // TODO: make configurable bar color steps, each bar a different color from say yellow to red -- so no more range
-          auto color = esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]);
           auto black = esphome::Color(0, 0, 0);
+          /* solid bar color with ranges
+          //auto color = esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]);
           if (height == 0) {
             target_led->range(13, 20).set(black);
             target_led->range(0, 6).set(black);
@@ -761,14 +778,14 @@ script:
               target_led->get(27).set(black);
             }
           }
-          target_led->schedule_show();
-          /*
+          */
           for (int i=0; i<height; i++) {
-            target_led->get(13+i).set(color);
+            ESP_LOGI("button", "setting led %d to %d, %d, %d", 13+i, id(bar_colors[i]).r, id(bar_colors[i]).g, id(bar_colors[i]).b);
+            target_led->get(13+i).set(id(bar_colors[i])));
             if (i==7) {
-              target_led->get(27).set(color);
+              target_led->get(27).set(id(bar_colors[i])));
             } else {
-              target_led->get(5-i).set(color);
+              target_led->get(5-i).set(id(bar_colors[i])));
             }
           }
           auto black = esphome::Color(0, 0, 0);
@@ -780,7 +797,7 @@ script:
               target_led->get(5-i).set(black);
             }
           }
-          */
+          target_led->schedule_show();
 
   - id: short_vibration
     then:
