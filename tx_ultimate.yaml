@@ -781,11 +781,11 @@ script:
           //
           for (int i=0; i<height; i++) {
             ESP_LOGI("button", "setting led %d to %d, %d, %d", 13+i, id(bar_colors)[i].r, id(bar_colors)[i].g, id(bar_colors)[i].b);
-            target_led->get(13+i).set(id(bar_colors)[i]));
+            target_led->get(13+i).set(id(bar_colors)[i]);
             if (i==7) {
-              target_led->get(27).set(id(bar_colors)[i]));
+              target_led->get(27).set(id(bar_colors)[i]);
             } else {
-              target_led->get(5-i).set(id(bar_colors)[i]));
+              target_led->get(5-i).set(id(bar_colors)[i]);
             }
           }
           auto black = esphome::Color(0, 0, 0);
