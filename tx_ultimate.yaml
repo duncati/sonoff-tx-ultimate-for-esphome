@@ -721,26 +721,6 @@ tx_ultimate_touch:
     - lambda: >
         ESP_LOGW("tx_ultimate_touch.on_release", "Release Position: %d / State: %d", touch.x, touch.state);
 
-  possible_double_tap:
-    - parameters:
-      button: int
-    - delay: ${double_tap_timeout}
-    - lambda: |-
-        if (id(button_double_tap)[button-1]>1) {
-            case 1: id(double_tap_1).publish_state(true); break;
-            case 2: id(double_tap_2).publish_state(true); break;
-            case 3: id(double_tap_3).publish_state(true); break;
-            case 4: id(double_tap_4).publish_state(true); break;
-        } else {
-          switch(button) {
-            case 1: id(button_1).publish_state(true); break;
-            case 2: id(button_2).publish_state(true); break;
-            case 3: id(button_3).publish_state(true); break;
-            case 4: id(button_4).publish_state(true); break;
-          }
-        }
-        id(button_double_tap)[button-1]=0;
-
   on_swipe_left:
     - script.execute: led_on_swipe_left
     - switch.turn_on: vibra
@@ -956,6 +936,27 @@ script:
             }
             target_led->schedule_show();
           }
+
+  - id: possible_double_tap
+    mode: parallel
+    - parameters:
+      button: int
+    - delay: ${double_tap_timeout}
+    - lambda: |-
+        if (id(button_double_tap)[button-1]>1) {
+            case 1: id(double_tap_1).publish_state(true); break;
+            case 2: id(double_tap_2).publish_state(true); break;
+            case 3: id(double_tap_3).publish_state(true); break;
+            case 4: id(double_tap_4).publish_state(true); break;
+        } else {
+          switch(button) {
+            case 1: id(button_1).publish_state(true); break;
+            case 2: id(button_2).publish_state(true); break;
+            case 3: id(button_3).publish_state(true); break;
+            case 4: id(button_4).publish_state(true); break;
+          }
+        }
+        id(button_double_tap)[button-1]=0;
 
   - id: short_vibration
     then:
