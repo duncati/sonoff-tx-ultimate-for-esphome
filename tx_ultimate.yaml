@@ -514,20 +514,20 @@ light:
           speed: 10
           width: 20
 
-speaker:
-  - platform: i2s_audio
-    i2s_dout_pin: ${audio_sdata_pin}
-    id: my_speaker
-    name: "Gemini sucks"
-    i2s_audio_id: audio_i2s
-    dac_type: external
-
 # - platform: mixer
 #   id: mixer_speaker
 #   speaker: audio_i2s
 #   source:
 #     - id: announcement_source
 #     - id: media_source
+
+speaker:
+  - platform: i2s_audio
+    id: my_speaker
+    name: "Gemini sucks"
+    i2s_audio_id: audio_i2s
+    dac_type: external
+    i2s_dout_pin: ${audio_sdata_pin}
 
 media_player:
   - platform: speaker
