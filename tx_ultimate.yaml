@@ -134,6 +134,14 @@ esp32:
   framework:
     type: esp-idf
 
+external_components:
+  - source:
+      type: git
+      url: https://github.com/gnumpi/esphome_audio.git
+      ref: main
+    components:
+      - adf_pipeline
+
 logger:
 #  hardware_uart: UART2
   level: DEBUG
