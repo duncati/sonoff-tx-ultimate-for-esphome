@@ -1174,18 +1174,22 @@ script:
       - script.execute:
           id: led_on_button_press
           button: 4
+          double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: led_on_button_press
           button: 3
+          double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: led_on_button_press
           button: 2
+          double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: led_on_button_press
           button: 1
+          double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: dim_led_at_button_4
@@ -1214,18 +1218,22 @@ script:
       - script.execute:
           id: led_on_button_press
           button: 1
+          double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: led_on_button_press
           button: 2
+          double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: led_on_button_press
           button: 3
+          double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: led_on_button_press
           button: 4
+          double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: dim_led_at_button_1
