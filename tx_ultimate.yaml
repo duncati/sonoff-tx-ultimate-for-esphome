@@ -521,8 +521,7 @@ i2s_audio:
   i2s_bclk_pin: ${audio_bclk_pin}
 
 speaker:
-  - platform:
-    i2s_audio
+  - platform: i2s_audio
     id: speaker
     i2s_audio_id: my_i2s_bus # The ID you defined above
     dac_type: external
