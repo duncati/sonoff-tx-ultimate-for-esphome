@@ -868,7 +868,7 @@ script:
           auto original_color = target_led->get(led_index).get();
           id(original_led_color)[led_index-1] = original_color;
           auto color = double_tap ? id(double_tap_color) : id(touch_color);
-          ESP_LOGD("button", "button %d press at LED %d, original color was %d %d %d, new color is %d %d %d ", button, led_index, original_color.r, original_color.g, original_color.b, color.r, color.g, color.b);
+          ESP_LOGD("button", "button %d press at LED %d, original color was %d %d %d, new color is %d %d %d ", button, led_index, original_color.r, original_color.g, original_color.b, color[0], color[1], color[2];
           target_led->get(led_index).set(esphome::Color(color[0], color[1], color[2]));
 
   - id: bars_go_up_and_down
