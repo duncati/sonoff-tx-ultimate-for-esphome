@@ -519,6 +519,7 @@ speaker:
     id: my_speaker
     name: "Gemini sucks"
     i2s_audio_id: audio_i2s
+    dac_type: external
 
 # - platform: mixer
 #   id: mixer_speaker
