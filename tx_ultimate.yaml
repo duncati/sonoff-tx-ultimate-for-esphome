@@ -132,6 +132,7 @@ esp32:
   board: esp32dev
   framework:
     type: esp-idf
+    version: recommended
 
 logger:
 #  hardware_uart: UART2
@@ -165,7 +166,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/gnumpi/esphome_audio.git
-      ref: master
+      ref: main
     components:
       - adf_pipeline
       - i2s_audio
