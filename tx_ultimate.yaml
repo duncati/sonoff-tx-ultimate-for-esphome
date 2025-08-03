@@ -490,6 +490,15 @@ light:
         to: 6
 
   - platform: partition
+    name: "All LEDs"
+    id: all_leds
+    internal: true
+    segments:
+      - id: leds
+        from: 0
+        to: 27
+
+  - platform: partition
     name: "LEDs Top"
     id: leds_top
     internal: true
@@ -679,7 +688,7 @@ script:
               id(led_on_button_press_internal)->execute(button, led_index);
             }
             id(button_press_start_time)[button-1] = millis();
-            static_cast<esphome::light::AddressableLight *>(id(leds).get_output())->schedule_show();
+            static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
           } else {
             ESP_LOGI("button", "button %d press at LED %d, button pressed before fade completed", button, led_index);
           }
@@ -689,7 +698,7 @@ script:
       - lambda: |-
           ESP_LOGI("button", "button %d possibly long pressed, not stopped", button);
           if (millis() - id(button_press_start_time)[button-1] > ${long_press_time}) {
-            auto target_led = static_cast<esphome::light::AddressableLight *>(id(leds).get_output()); 
+            auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
             int led_index;
             if (${button_led_feedback_bottom}) {
               switch(${button_count}) {
@@ -723,7 +732,7 @@ script:
       led_index: int
     then:
       - lambda: |-
-          auto target_led = static_cast<esphome::light::AddressableLight *>(id(leds).get_output());
+          auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
           auto original_color = target_led->get(led_index).get();
           ESP_LOGD("button", "button %d press at LED %d, color was %d %d %d", button, led_index, original_color.r, original_color.g, original_color.b);
           id(original_led_color)[led_index-1] = original_color;
@@ -762,7 +771,7 @@ script:
       height: int
     then:
       - lambda: |-
-          auto target_led = static_cast<esphome::light::AddressableLight *>(id(leds).get_output()); 
+          auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
           // solid bar color with ranges
           //  auto black = esphome::Color(0, 0, 0);
           //  auto color = esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]);
@@ -829,7 +838,7 @@ script:
             dim_color[1]*(1.0-factor) + original_color.g*factor,
             dim_color[2]*(1.0-factor) + original_color.b*factor
           );
-          static_cast<esphome::light::AddressableLight *>(id(leds).get_output())->get(led_index).set(color);
+          static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->get(led_index).set(color);
 
 # The lovely ESPHome framework will stop execution of a script, even in parallel mode, if it's called
 # again while the first execution is in a delay. The solution: duplicate this dim script for each
@@ -864,7 +873,7 @@ script:
                   }
                   id(dim_led_internal)->execute(iteration, led_index, is_long_press);
                 }
-                static_cast<esphome::light::AddressableLight *>(id(leds).get_output())->schedule_show();
+                static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
             - delay: ${dim_between_led_delay}
       - lambda: 'id(button_press_start_time)[0] = 0;'
 
@@ -898,7 +907,7 @@ script:
                   }
                   id(dim_led_internal)->execute(iteration, led_index, is_long_press);
                 }
-                static_cast<esphome::light::AddressableLight *>(id(leds).get_output())->schedule_show();
+                static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
             - delay: ${dim_between_led_delay}
       - lambda: 'id(button_press_start_time)[1] = 0;'
 
@@ -932,7 +941,7 @@ script:
                   }
                   id(dim_led_internal)->execute(iteration, led_index, is_long_press);
                 }
-                static_cast<esphome::light::AddressableLight *>(id(leds).get_output())->schedule_show();
+                static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
             - delay: ${dim_between_led_delay}
       - lambda: 'id(button_press_start_time)[2] = 0;'
 
@@ -966,7 +975,7 @@ script:
                   }
                   id(dim_led_internal)->execute(iteration, led_index, is_long_press);
                 }
-                static_cast<esphome::light::AddressableLight *>(id(leds).get_output())->schedule_show();
+                static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
             - delay: ${dim_between_led_delay}
       - lambda: 'id(button_press_start_time)[3] = 0;'
 
