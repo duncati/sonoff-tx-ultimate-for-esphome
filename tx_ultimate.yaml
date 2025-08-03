@@ -169,6 +169,7 @@ external_components:
       ref: main
     components:
       - adf_pipeline
+      - i2s_audio
   - source:
       type: git
       url: https://github.com/duncati/sonoff-tx-ultimate-for-esphome
