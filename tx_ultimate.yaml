@@ -959,19 +959,19 @@ script:
             switch(button) {
               case 1: 
                 id(double_tap_1).publish_state(true);
-                id(dim_led_at_button_1)->execute(is_long_press);
+                id(dim_led_at_button_1)->execute(false);
                 break;
               case 2:
                 id(double_tap_2).publish_state(true);
-                id(dim_led_at_button_2)->execute(is_long_press);
+                id(dim_led_at_button_2)->execute(false);
                 break;
               case 3:
                 id(double_tap_3).publish_state(true);
-                id(dim_led_at_button_3)->execute(is_long_press);
+                id(dim_led_at_button_3)->execute(false);
                 break;
               case 4:
                 id(double_tap_4).publish_state(true);
-                id(dim_led_at_button_4)->execute(is_long_press);
+                id(dim_led_at_button_4)->execute(false);
                 break;
             }
           } else {
