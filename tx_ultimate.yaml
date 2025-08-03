@@ -795,6 +795,9 @@ script:
       double_tap: bool
     then:
       - lambda: |-
+          if (id(button_double_tap)[button-1]>1) {
+            return;
+          }
           int led_index;
           if (id(button_press_start_time)[button-1] == 0) {
             if (${button_led_feedback_bottom}) {
@@ -954,7 +957,7 @@ script:
       - delay: ${double_tap_timeout}
       - lambda: |-
           if (id(button_double_tap)[button-1]>1) {
-            ESP_LOGI("button", "double tap on button %d", button);
+            ESP_LOGW("button", "Double tap at button %d", button);
             id(led_on_button_press)->execute(button, true);
             switch(button) {
               case 1: 
