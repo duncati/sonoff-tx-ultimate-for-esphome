@@ -17,6 +17,7 @@ substitutions:
   button_on_time: 500ms
 
   double_tap_timeout: 200ms
+  double_tap_color: "{100, 0, 0}"
 
   nightlight: "on"
   nightlight_brightness: "0.2"
@@ -687,7 +688,7 @@ tx_ultimate_touch:
     - lambda: |-
         auto button = id(button_lookup)[${button_count}-1][touch.x-1];
         ESP_LOGI("tx_ultimate_touch.on_press", "Touch Position: %d, State: %d, Button: %d", touch.x, touch.state, button);
-        id(led_on_button_press)->execute(button);
+        id(led_on_button_press)->execute(button, false);
         id(button_held)[button-1]=1;
     - switch.turn_on: vibra
 
@@ -787,6 +788,7 @@ script:
     mode: parallel
     parameters:
       button: int
+      double_tap: bool
     then:
       - lambda: |-
           int led_index;
@@ -798,7 +800,7 @@ script:
                 case 2: led_index = 15 - 4*button; break;
                 case 1: led_index = 9; break;
               }
-              id(led_on_button_press_internal)->execute(button, led_index);
+              id(led_on_button_press_internal)->execute(button, led_index, double_tap);
             }
             if (${button_led_feedback_top}) {
               switch(${button_count}) {
@@ -807,7 +809,7 @@ script:
                 case 2: led_index = 17 + 4*button; break;
                 case 1: led_index = 23; break;
               }
-              id(led_on_button_press_internal)->execute(button, led_index);
+              id(led_on_button_press_internal)->execute(button, led_index, double_tap);
             }
             id(button_press_start_time)[button-1] = millis();
             static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
@@ -852,13 +854,15 @@ script:
     parameters:
       button: int
       led_index: int
+      double_tap: bool
     then:
       - lambda: |-
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
           auto original_color = target_led->get(led_index).get();
           ESP_LOGD("button", "button %d press at LED %d, color was %d %d %d", button, led_index, original_color.r, original_color.g, original_color.b);
           id(original_led_color)[led_index-1] = original_color;
-          target_led->get(led_index).set(esphome::Color(id(touch_color)[0], id(touch_color)[1], id(touch_color)[2]));
+          auto color = double_tap ? double_tap_color : touch_color;
+          target_led->get(led_index).set(esphome::Color(id(color)[0], id(color)[1], id(color)[2]));
 
   - id: bars_go_up_and_down
     mode: restart
@@ -946,6 +950,8 @@ script:
       - delay: ${double_tap_timeout}
       - lambda: |-
           if (id(button_double_tap)[button-1]>1) {
+            ESP_LOGI("button", "double tap on button %d", button);
+            id(led_on_button_press)->execute(button, true);
             switch(button) {
               case 1: id(double_tap_1).publish_state(true); break;
               case 2: id(double_tap_2).publish_state(true); break;
