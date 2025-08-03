@@ -132,8 +132,7 @@ esp32:
   board: esp32dev
   framework:
     type: esp-idf
-    version: 4.4.8
-    platform_version: 5.4.0
+    CONFIG_ESP32_S3_BOX_BOARD: "y"
 
 logger:
 #  hardware_uart: UART2
