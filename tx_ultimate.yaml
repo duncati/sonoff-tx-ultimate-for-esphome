@@ -16,6 +16,8 @@ substitutions:
   vibra_time: 150ms
   button_on_time: 500ms
 
+  double_tap_timeout: 200ms
+
   nightlight: "on"
   nightlight_brightness: "0.2"
   nightlight_color: "{80,70,0}"
@@ -110,6 +112,18 @@ esphome:
           state: OFF
       - binary_sensor.template.publish:
           id: swipe_right
+          state: OFF
+      - binary_sensor.template.publish:
+          id: double_tap_1
+          state: OFF
+      - binary_sensor.template.publish:
+          id: double_tap_2
+          state: OFF
+      - binary_sensor.template.publish:
+          id: double_tap_3
+          state: OFF
+      - binary_sensor.template.publish:
+          id: double_tap_4
           state: OFF
       - binary_sensor.template.publish:
           id: long_press_1
@@ -221,6 +235,10 @@ globals:
     type: uint8_t[4]
     restore_value: no
     initial_value: '{1, 1, 1, 1}'
+  - id: button_double_tap
+    type: uint8_t[4]
+    restore_value: no
+    initial_value: '{0, 0, 0, 0}'
   - id: button_held
     type: uint8_t[4]
     restore_value: no
@@ -337,6 +355,42 @@ binary_sensor:
       - delay: ${button_on_time}
       - binary_sensor.template.publish:
           id: multi_touch
+          state: OFF
+
+  - platform: template
+    name: "Double Tap 1"
+    id: double_tap_1
+    on_press:
+      - delay: ${button_on_time}
+      - binary_sensor.template.publish:
+          id: double_tap_1
+          state: OFF
+
+  - platform: template
+    name: "Double Tap 2"
+    id: double_tap_2
+    on_press:
+      - delay: ${button_on_time}
+      - binary_sensor.template.publish:
+          id: double_tap_2
+          state: OFF
+
+  - platform: template
+    name: "Double Tap 3"
+    id: double_tap_3
+    on_press:
+      - delay: ${button_on_time}
+      - binary_sensor.template.publish:
+          id: double_tap_3
+          state: OFF
+
+  - platform: template
+    name: "Double Tap 4"
+    id: double_tap_4
+    on_press:
+      - delay: ${button_on_time}
+      - binary_sensor.template.publish:
+          id: double_tap_4
           state: OFF
 
   - platform: template
@@ -521,28 +575,30 @@ light:
           speed: 10
           width: 20
 
-adf_pipeline:
-  - platform: i2s_audio
-    type: audio_out
-    id: adf_speaker
-    i2s_audio_id: i2s_out
-    i2s_dout_pin: ${audio_sdata_pin}
+#This almost worked:
+# adf_pipeline:
+#   - platform: i2s_audio
+#     type: audio_out
+#     id: adf_speaker
+#     i2s_audio_id: i2s_out
+#     i2s_dout_pin: ${audio_sdata_pin}
 
-media_player:
-  - platform: adf_pipeline
-    id: adf_media_player
-    name: Media player
-    keep_pipeline_alive: false
-    internal: false
-    pipeline:
-      - self
-      - adf_speaker
+# media_player:
+#   - platform: adf_pipeline
+#     id: adf_media_player
+#     name: Media player
+#     keep_pipeline_alive: false
+#     internal: false
+#     pipeline:
+#       - self
+#       - adf_speaker
 
-i2s_audio:
-  - id: i2s_out
-    i2s_lrclk_pin: ${audio_lrclk_pin}
-    i2s_bclk_pin: ${audio_bclk_pin}
+# i2s_audio:
+#   - id: i2s_out
+#     i2s_lrclk_pin: ${audio_lrclk_pin}
+#     i2s_bclk_pin: ${audio_bclk_pin}
 
+# This was shit:
 # - platform: mixer
 #   id: mixer_speaker
 #   speaker: audio_i2s
@@ -638,7 +694,7 @@ tx_ultimate_touch:
     - lambda: 'ESP_LOGI("button", "on_release stopping led_on_button_press and bar_go_up_and_down");'
     - script.stop: led_on_button_press
     - lambda: |-
-        int button = id(button_lookup)[${button_count}-1][touch.x-1];
+        auto button = id(button_lookup)[${button_count}-1][touch.x-1];
         id(button_held)[button-1]=0;
         auto button_press_duration = millis() - id(button_press_start_time)[button-1];
         ESP_LOGD("button", "Button %d released, held for %u ms", button, button_press_duration);
@@ -653,12 +709,8 @@ tx_ultimate_touch:
             case 4: id(long_press_4).publish_state(true); break;
           }
         } else {
-          switch(button) {
-            case 1: id(button_1).publish_state(true); break;
-            case 2: id(button_2).publish_state(true); break;
-            case 3: id(button_3).publish_state(true); break;
-            case 4: id(button_4).publish_state(true); break;
-          }
+          id(button_double_tap)[button-1]++;
+          id(possible_double_tap)->execute(button);
         }
         switch(button) {
           case 1: id(dim_led_at_button_1)->execute(is_long_press); break;
@@ -668,6 +720,26 @@ tx_ultimate_touch:
         }
     - lambda: >
         ESP_LOGW("tx_ultimate_touch.on_release", "Release Position: %d / State: %d", touch.x, touch.state);
+
+  possible_double_tap:
+    - parameters:
+      button: int
+    - delay: ${double_tap_timeout}
+    - lambda: |-
+        if (id(button_double_tap)[button-1]>1) {
+            case 1: id(double_tap_1).publish_state(true); break;
+            case 2: id(double_tap_2).publish_state(true); break;
+            case 3: id(double_tap_3).publish_state(true); break;
+            case 4: id(double_tap_4).publish_state(true); break;
+        } else {
+          switch(button) {
+            case 1: id(button_1).publish_state(true); break;
+            case 2: id(button_2).publish_state(true); break;
+            case 3: id(button_3).publish_state(true); break;
+            case 4: id(button_4).publish_state(true); break;
+          }
+        }
+        id(button_double_tap)[button-1]=0;
 
   on_swipe_left:
     - script.execute: led_on_swipe_left
