@@ -134,14 +134,6 @@ esp32:
   framework:
     type: esp-idf
 
-external_components:
-  - source:
-      type: git
-      url: https://github.com/gnumpi/esphome_audio.git
-      ref: main
-    components:
-      - adf_pipeline
-
 logger:
 #  hardware_uart: UART2
   level: DEBUG
@@ -171,7 +163,12 @@ improv_serial:
 captive_portal:
 
 external_components:
-#  - source: /config/esphome/my_components
+  - source:
+      type: git
+      url: https://github.com/gnumpi/esphome_audio.git
+      ref: main
+    components:
+      - adf_pipeline
   - source:
       type: git
       url: https://github.com/duncati/sonoff-tx-ultimate-for-esphome
