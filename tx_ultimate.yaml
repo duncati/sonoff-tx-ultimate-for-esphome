@@ -514,26 +514,38 @@ light:
           speed: 10
           width: 20
 
+speaker:
+  - platform: i2s_audio
+    id: audio_i2s
+    i2s_lrclk_pin: ${audio_lrclk_pin}
+    i2s_bclk_pin: ${audio_bclk_pin}
+    i2s_dout_pin: ${audio_sdata_pin}
+  - platform: mixer
+    id: mixer_speaker
+    speaker: audio_i2s
+    source:
+      - id: announcement_source
+      - id: media_source
+
 media_player:
   - platform: speaker
     name: ${friendly_name} Player
     id: speaker_out
     media_pipeline:
-      speaker: audio_i2s
+      speaker: media_source
     announcement_pipeline:
-      speaker: audio_i2s
+      speaker: announcement_source
     files:
       - id: on_sound
         file: "sounds/on.wav"
       - id: off_sound
         file: "sounds/off.wav"
 
-i2s_audio:
-  id: audio_i2s
-  i2s_lrclk_pin: ${audio_lrclk_pin}
-  i2s_bclk_pin: ${audio_bclk_pin}
-  i2s_dout_pin: ${audio_sdata_pin}
-  #use_legacy: true
+# i2s_audio:
+#   id: audio_i2s
+#   i2s_lrclk_pin: ${audio_lrclk_pin}
+#   i2s_bclk_pin: ${audio_bclk_pin}
+#   i2s_dout_pin: ${audio_sdata_pin}
 
 # media_player:
 #   - platform: i2s_audio
