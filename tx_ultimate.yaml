@@ -821,7 +821,7 @@ script:
             id(button_press_start_time)[button-1] = millis();
             static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
           } else {
-            ESP_LOGI("button", "button %d press at LED %d, button pressed before fade completed", button, led_index);
+            ESP_LOGI("button", "button %d pressed before fade completed", button);
           }
 # This script is stopped by on_release, so only if the button is held long enough 
 # will the long press color turn on.
@@ -866,9 +866,9 @@ script:
       - lambda: |-
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
           auto original_color = target_led->get(led_index).get();
-          ESP_LOGD("button", "button %d press at LED %d, color was %d %d %d", button, led_index, original_color.r, original_color.g, original_color.b);
           id(original_led_color)[led_index-1] = original_color;
           auto color = double_tap ? id(double_tap_color) : id(touch_color);
+          ESP_LOGD("button", "button %d press at LED %d, original color was %d %d %d, new color is %d %d %d ", button, led_index, original_color.r, original_color.g, original_color.b, color.r, color.g, color.b);
           target_led->get(led_index).set(esphome::Color(color[0], color[1], color[2]));
 
   - id: bars_go_up_and_down
