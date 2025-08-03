@@ -221,6 +221,10 @@ globals:
     type: int [3]
     restore_value: no
     initial_value: ${touch_color}
+  - id: double_tap_color
+    type: int [3]
+    restore_value: no
+    initial_value: ${double_tap_color}
   - id: bar_color
     type: int [3]
     restore_value: no
