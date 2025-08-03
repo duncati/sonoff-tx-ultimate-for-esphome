@@ -505,31 +505,31 @@ light:
           speed: 10
           width: 20
 
-media_player:
-  - platform: i2s_audio
-    id: media_out
-    name: ${friendly_name} Player
-    dac_type: external
-    i2s_dout_pin: ${audio_sdata_pin}
-    i2s_audio_id: audio_i2s
-    i2s_comm_fmt: lsb
-    mode: mono
-
-i2s_audio:
-  id: audio_i2s
-  i2s_lrclk_pin: ${audio_lrclk_pin}
-  i2s_bclk_pin: ${audio_bclk_pin}
-
-speaker:
-  - platform: i2s_audio
-    id: speaker
-    i2s_audio_id: my_i2s_bus # The ID you defined above
-    dac_type: external
-    i2s_dout_pin: ${audio_sdata_pin}
-    # Optional settings
-    sample_rate: 16000
-    bits_per_sample: 16bit
-    channel: mono
+# media_player:
+#   - platform: i2s_audio
+#     id: media_out
+#     name: ${friendly_name} Player
+#     dac_type: external
+#     i2s_dout_pin: ${audio_sdata_pin}
+#     i2s_audio_id: audio_i2s
+#     i2s_comm_fmt: lsb
+#     mode: mono
+#
+# i2s_audio:
+#   id: audio_i2s
+#   i2s_lrclk_pin: ${audio_lrclk_pin}
+#   i2s_bclk_pin: ${audio_bclk_pin}
+#
+# speaker:
+#   - platform: i2s_audio
+#     id: speaker
+#     i2s_audio_id: my_i2s_bus # The ID you defined above
+#     dac_type: external
+#     i2s_dout_pin: ${audio_sdata_pin}
+#     # Optional settings
+#     sample_rate: 16000
+#     bits_per_sample: 16bit
+#     channel: mono
 
 uart:
   tx_pin: ${uart_tx_pin}
