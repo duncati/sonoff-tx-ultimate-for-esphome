@@ -514,6 +514,28 @@ light:
           speed: 10
           width: 20
 
+adf_pipeline:
+  - platform: i2s_audio
+    type: audio_out
+    id: adf_speaker
+    i2s_audio_id: i2s_out
+    i2s_dout_pin: ${audio_sdata_pin}
+
+media_player:
+  - platform: adf_pipeline
+    id: adf_media_player
+    name: Media player
+    keep_pipeline_alive: false
+    internal: false
+    pipeline:
+      - self
+      - adf_speaker
+
+i2s_audio:
+  - id: i2s_out
+    i2s_lrclk_pin: ${audio_lrclk_pin}
+    i2s_bclk_pin: ${audio_bclk_pin}
+
 # - platform: mixer
 #   id: mixer_speaker
 #   speaker: audio_i2s
@@ -521,28 +543,28 @@ light:
 #     - id: announcement_source
 #     - id: media_source
 
-speaker:
-  - platform: i2s_audio
-    id: my_speaker
-    name: "Gemini sucks"
-    i2s_lrclk_pin: ${audio_lrclk_pin}
-    i2s_bclk_pin: ${audio_bclk_pin}
-    i2s_dout_pin: ${audio_sdata_pin}
-    dac_type: external
+# speaker:
+#   - platform: i2s_audio
+#     id: my_speaker
+#     name: "Gemini sucks"
+#     i2s_lrclk_pin: ${audio_lrclk_pin}
+#     i2s_bclk_pin: ${audio_bclk_pin}
+#     i2s_dout_pin: ${audio_sdata_pin}
+#     dac_type: external
 
-media_player:
-  - platform: speaker
-    name: ${friendly_name} Player
-    id: speaker_out
-    media_pipeline:
-      speaker: media_source
-    announcement_pipeline:
-      speaker: announcement_source
-    files:
-      - id: on_sound
-        file: "sounds/on.wav"
-      - id: off_sound
-        file: "sounds/off.wav"
+# media_player:
+#   - platform: speaker
+#     name: ${friendly_name} Player
+#     id: speaker_out
+#     media_pipeline:
+#       speaker: media_source
+#     announcement_pipeline:
+#       speaker: announcement_source
+#     files:
+#       - id: on_sound
+#         file: "sounds/on.wav"
+#       - id: off_sound
+#         file: "sounds/off.wav"
 
 # i2s_audio:
 #   id: audio_i2s
