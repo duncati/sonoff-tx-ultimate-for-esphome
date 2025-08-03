@@ -525,9 +525,10 @@ speaker:
   - platform: i2s_audio
     id: my_speaker
     name: "Gemini sucks"
-    i2s_audio_id: audio_i2s
+    i2s_lrclk_pin: ${audio_lrclk_pin}
+    i2s_bclk_pin: ${audio_bclk_pin}
+    i2s_dout_pin: ${audio_sdata_pin}
     dac_type: external
-#   i2s_dout_pin: ${audio_sdata_pin}
 
 media_player:
   - platform: speaker
@@ -543,11 +544,11 @@ media_player:
       - id: off_sound
         file: "sounds/off.wav"
 
-i2s_audio:
-  id: audio_i2s
-  i2s_lrclk_pin: ${audio_lrclk_pin}
-  i2s_bclk_pin: ${audio_bclk_pin}
-  i2s_dout_pin: ${audio_sdata_pin}
+# i2s_audio:
+#   id: audio_i2s
+#   i2s_lrclk_pin: ${audio_lrclk_pin}
+#   i2s_bclk_pin: ${audio_bclk_pin}
+#   i2s_dout_pin: ${audio_sdata_pin}
 
 # media_player:
 #   - platform: i2s_audio
