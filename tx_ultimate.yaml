@@ -177,6 +177,7 @@ improv_serial:
 captive_portal:
 
 external_components:
+# this is for ADF
   - source:
       type: git
       url: https://github.com/gnumpi/esphome_audio.git
@@ -945,10 +946,12 @@ script:
       - delay: ${double_tap_timeout}
       - lambda: |-
           if (id(button_double_tap)[button-1]>1) {
+            switch(button) {
               case 1: id(double_tap_1).publish_state(true); break;
               case 2: id(double_tap_2).publish_state(true); break;
               case 3: id(double_tap_3).publish_state(true); break;
               case 4: id(double_tap_4).publish_state(true); break;
+            }
           } else {
             switch(button) {
               case 1: id(button_1).publish_state(true); break;
