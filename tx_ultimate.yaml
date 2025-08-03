@@ -449,6 +449,7 @@ light:
 # - platform: neopixelbus
 #   type: GRB
 #   variant: WS2811
+    chipset: WS2811
     pin: ${led_pin}
     num_leds: 28
     name: "NeoPixel Light"
