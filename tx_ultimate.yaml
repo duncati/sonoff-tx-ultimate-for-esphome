@@ -516,6 +516,7 @@ light:
 
 speaker:
   - platform: i2s_audio
+    i2s_dout_pin: ${audio_sdata_pin}
     id: my_speaker
     name: "Gemini sucks"
     i2s_audio_id: audio_i2s
