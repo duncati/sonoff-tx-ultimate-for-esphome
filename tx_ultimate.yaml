@@ -533,9 +533,6 @@ i2s_audio:
   i2s_dout_pin: ${audio_sdata_pin}
   #use_legacy: true
 
-spiffs:
-  size: 2048
-
 # media_player:
 #   - platform: i2s_audio
 #     id: media_out
