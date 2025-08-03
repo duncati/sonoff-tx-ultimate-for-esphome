@@ -527,7 +527,7 @@ speaker:
     name: "Gemini sucks"
     i2s_audio_id: audio_i2s
     dac_type: external
-    i2s_dout_pin: ${audio_sdata_pin}
+#   i2s_dout_pin: ${audio_sdata_pin}
 
 media_player:
   - platform: speaker
