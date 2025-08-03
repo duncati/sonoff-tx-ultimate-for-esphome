@@ -520,6 +520,18 @@ i2s_audio:
   i2s_lrclk_pin: ${audio_lrclk_pin}
   i2s_bclk_pin: ${audio_bclk_pin}
 
+speaker:
+  - platform:
+    i2s_audio
+    id: speaker
+    i2s_audio_id: my_i2s_bus # The ID you defined above
+    dac_type: external
+    i2s_dout_pin: ${audio_sdata_pin}
+    # Optional settings
+    sample_rate: 16000
+    bits_per_sample: 16bit
+    channel: mono
+
 uart:
   tx_pin: ${uart_tx_pin}
   rx_pin: ${uart_rx_pin}
