@@ -719,6 +719,7 @@ tx_ultimate_touch:
         } else {
           id(button_double_tap)[button-1]++;
           id(double_tap_timer)->execute(button);
+          // TODO maybe add triple tap?
           if (id(button_double_tap)[button-1]>1) {
             is_double_tap = true;
             id(process_double_tap)->execute(button);
@@ -973,7 +974,7 @@ script:
       button: int
     then:
       - delay: ${double_tap_timeout}
-      - lambda: 'id(button_press_start_time)[button-1] = 0;'
+      - lambda: 'id(button_double_tap)[button-1] = 0;'
 
   - id: process_double_tap
     mode: parallel
