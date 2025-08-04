@@ -1070,6 +1070,7 @@ script:
     mode: restart
     parameters:
       is_long_press: bool
+      is_double_tap: bool
     then:
       - delay: ${after_touch_dim_delay}
       - repeat:
@@ -1104,6 +1105,7 @@ script:
     mode: restart
     parameters:
       is_long_press: bool
+      is_double_tap: bool
     then:
       - delay: ${after_touch_dim_delay}
       - repeat:
@@ -1138,6 +1140,7 @@ script:
     mode: restart
     parameters:
       is_long_press: bool
+      is_double_tap: bool
     then:
       - delay: ${after_touch_dim_delay}
       - repeat:
