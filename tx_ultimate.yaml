@@ -705,7 +705,7 @@ tx_ultimate_touch:
         auto button_press_duration = millis() - id(button_press_start_time)[button-1];
         ESP_LOGD("button", "Button %d released, held for %u ms", button, button_press_duration);
         bool is_long_press = false;
-        boolea is_double_tap = false;
+        bool is_double_tap = false;
         if (button_press_duration >= ${long_press_time}) {
           is_long_press = true;
           ESP_LOGD("button", "Button %d long pressed", button);
@@ -1012,7 +1012,7 @@ script:
     then:
       - lambda: |-
           auto to_color = id(original_led_color)[led_index-1];
-          esphome::Color from_color;
+          int[] from_color;
           if (is_long_press) {
             from_color = id(long_press_color);
           } else if (is_double_tap) {
