@@ -157,7 +157,7 @@ logger:
     light: INFO
     script: INFO
     switch: INFO
-#    tx_ultimate_touch: INFO
+    tx_ultimate_touch: INFO
     uart_debug: INFO
 
 dashboard_import:
@@ -691,7 +691,7 @@ tx_ultimate_touch:
   on_press:
     - lambda: |-
         auto button = id(button_lookup)[${button_count}-1][touch.x-1];
-        ESP_LOGI("tx_ultimate_touch.on_press", "Touch Position: %d, State: %d, Button: %d", touch.x, touch.state, button);
+        ESP_LOGI("button", "Touch Position: %d, State: %d, Button: %d", touch.x, touch.state, button);
         id(led_on_button_press)->execute(button, false);
         id(button_held)[button-1]=1;
     - switch.turn_on: vibra
@@ -725,7 +725,7 @@ tx_ultimate_touch:
           case 4: id(dim_led_at_button_4)->execute(is_long_press); break;
         }
     - lambda: >
-        ESP_LOGW("tx_ultimate_touch.on_release", "Release Position: %d / State: %d", touch.x, touch.state);
+        ESP_LOGW("button", "Release Position: %d / State: %d", touch.x, touch.state);
 
   on_swipe_left:
     - script.execute: led_on_swipe_left
@@ -734,7 +734,7 @@ tx_ultimate_touch:
         id: swipe_left
         state: ON
     - lambda: >
-        ESP_LOGD("tx_ultimate_touch.on_swipe_left", "Swipe Left Position: %d / State: %d", touch.x, touch.state);
+        ESP_LOGD("button", "Swipe Left Position: %d / State: %d", touch.x, touch.state);
 
   on_swipe_right:
     - script.execute: led_on_swipe_right
@@ -743,7 +743,7 @@ tx_ultimate_touch:
         id: swipe_right
         state: ON
     - lambda: >
-        ESP_LOGD("tx_ultimate_touch.on_swipe_right", "Swipe Right Position: %d / State: %d", touch.x, touch.state);
+        ESP_LOGD("button", "Swipe Right Position: %d / State: %d", touch.x, touch.state);
 
   on_full_touch_release:
     - script.execute: led_on_full_touch
@@ -752,7 +752,7 @@ tx_ultimate_touch:
         id: multi_touch
         state: ON
     - lambda: >
-        ESP_LOGD("tx_ultimate_touch.on_full_touch_release", "Full Touch Release Position: %d / State: %d", touch.x, touch.state);
+        ESP_LOGD("button", "Full Touch Release Position: %d / State: %d", touch.x, touch.state);
 
   on_long_touch_release:
     - if:
@@ -765,7 +765,7 @@ tx_ultimate_touch:
              id: very_long_press
              state: ON
           - lambda: >
-              ESP_LOGD("tx_ultimate_touch.on_long_touch_release", "Very Long Touch Release Position: %d / State: %d", touch.x, touch.state);
+              ESP_LOGD("button", "Very Long Touch Release Position: %d / State: %d", touch.x, touch.state);
         else:
           - lambda: |-
               auto button = id(button_lookup)[${button_count}-1][touch.x-1];
@@ -829,6 +829,7 @@ script:
       - lambda: |-
           ESP_LOGI("button", "button %d possibly long pressed, not stopped", button);
           if (millis() - id(button_press_start_time)[button-1] > ${long_press_time}) {
+            ESP_LOGI("button", "button %d long pressed", button);
             auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
             int led_index;
             if (${button_led_feedback_bottom}) {
