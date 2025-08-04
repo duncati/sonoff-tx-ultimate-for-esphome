@@ -986,7 +986,7 @@ script:
       - lambda: |-
           ESP_LOGW("button", "Double tap at button %d", button);
           // TODO fix this, it's hacky:
-          //id(button_press_start_time)[button-1] = 0;
+          id(button_press_start_time)[button-1] = 0;
           id(led_on_button_press)->execute(button, true);
           switch(button) {
             case 1: 
@@ -1076,7 +1076,7 @@ script:
                 }
                 static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
             - delay: ${dim_led_step_delay}
-#     - lambda: 'id(button_press_start_time)[0] = 0;'
+      - lambda: 'id(button_press_start_time)[0] = 0;'
 
   - id: dim_led_at_button_2
     mode: restart
@@ -1111,7 +1111,7 @@ script:
                 }
                 static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
             - delay: ${dim_led_step_delay}
-#     - lambda: 'id(button_press_start_time)[1] = 0;'
+      - lambda: 'id(button_press_start_time)[1] = 0;'
 
   - id: dim_led_at_button_3
     mode: restart
@@ -1146,7 +1146,7 @@ script:
                 }
                 static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
             - delay: ${dim_led_step_delay}
-#     - lambda: 'id(button_press_start_time)[2] = 0;'
+      - lambda: 'id(button_press_start_time)[2] = 0;'
 
   - id: dim_led_at_button_4
     mode: restart
@@ -1181,7 +1181,7 @@ script:
                 }
                 static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
             - delay: ${dim_led_step_delay}
-#     - lambda: 'id(button_press_start_time)[3] = 0;'
+      - lambda: 'id(button_press_start_time)[3] = 0;'
 
   - id: refresh_nightlight
     mode: restart
