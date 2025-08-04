@@ -16,7 +16,7 @@ substitutions:
   vibra_time: 150ms
   button_on_time: 500ms
 
-  double_tap_timeout: 200ms
+  double_tap_timeout: 250ms
   double_tap_color: "{100, 0, 0}"
 
   nightlight: "on"
@@ -1012,7 +1012,7 @@ script:
     then:
       - lambda: |-
           auto to_color = id(original_led_color)[led_index-1];
-          std::array<int, 3> from_color;
+          int* from_color;
           if (is_long_press) {
             from_color = id(long_press_color);
           } else if (is_double_tap) {
