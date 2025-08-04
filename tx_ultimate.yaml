@@ -796,6 +796,7 @@ script:
     then:
       - lambda: |-
           if (id(button_double_tap)[button-1]>1) {
+            id(button_press_start_time)[button-1] = 0;
             return;
           }
           int led_index;
