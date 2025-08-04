@@ -61,7 +61,8 @@ substitutions:
 
   after_touch_dim_delay: 500ms
   swipe_between_led_delay: 300ms
-  dim_between_led_delay: 50ms
+  dim_led_steps: 10
+  dim_led_step_delay: 50ms
 
   relay_1_pin: GPIO18
   relay_2_pin: GPIO17
@@ -717,6 +718,7 @@ tx_ultimate_touch:
           }
         } else {
           id(button_double_tap)[button-1]++;
+          id(double_tap_timer)->execute(button);
           if (id(button_double_tap)[button-1]>1) {
             is_double_tap = true;
             id(process_double_tap)->execute(button);
@@ -965,6 +967,14 @@ script:
             target_led->schedule_show();
           }
 
+  - id: double_tap_timer
+    mode: restart
+    parameters:
+      button: int
+    then:
+      - delay: ${double_tap_timeout}
+      - lambda: 'id(button_press_start_time)[button-1] = 0;'
+
   - id: process_double_tap
     mode: parallel
     parameters:
@@ -1039,7 +1049,7 @@ script:
     then:
       - delay: ${after_touch_dim_delay}
       - repeat:
-          count: 10
+          count: ${dim_led_steps}
           then:
             - lambda: |-
                 int button = 1;
@@ -1063,7 +1073,7 @@ script:
                   id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
                 }
                 static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
-            - delay: ${dim_between_led_delay}
+            - delay: ${dim_led_step_delay}
       - lambda: 'id(button_press_start_time)[0] = 0;'
 
   - id: dim_led_at_button_2
@@ -1074,7 +1084,7 @@ script:
     then:
       - delay: ${after_touch_dim_delay}
       - repeat:
-          count: 10
+          count: ${dim_led_steps}
           then:
             - lambda: |-
                 int button = 2;
@@ -1098,7 +1108,7 @@ script:
                   id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
                 }
                 static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
-            - delay: ${dim_between_led_delay}
+            - delay: ${dim_led_step_delay}
       - lambda: 'id(button_press_start_time)[1] = 0;'
 
   - id: dim_led_at_button_3
@@ -1109,7 +1119,7 @@ script:
     then:
       - delay: ${after_touch_dim_delay}
       - repeat:
-          count: 10
+          count: ${dim_led_steps}
           then:
             - lambda: |-
                 int button = 3;
@@ -1133,7 +1143,7 @@ script:
                   id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
                 }
                 static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
-            - delay: ${dim_between_led_delay}
+            - delay: ${dim_led_step_delay}
       - lambda: 'id(button_press_start_time)[2] = 0;'
 
   - id: dim_led_at_button_4
@@ -1144,7 +1154,7 @@ script:
     then:
       - delay: ${after_touch_dim_delay}
       - repeat:
-          count: 10
+          count: ${dim_led_steps}
           then:
             - lambda: |-
                 int button = 4;
@@ -1168,7 +1178,7 @@ script:
                   id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
                 }
                 static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
-            - delay: ${dim_between_led_delay}
+            - delay: ${dim_led_step_delay}
       - lambda: 'id(button_press_start_time)[3] = 0;'
 
   - id: refresh_nightlight
