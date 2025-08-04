@@ -1012,7 +1012,7 @@ script:
     then:
       - lambda: |-
           auto to_color = id(original_led_color)[led_index-1];
-          int[] from_color;
+          int[3] from_color;
           if (is_long_press) {
             from_color = id(long_press_color);
           } else if (is_double_tap) {
