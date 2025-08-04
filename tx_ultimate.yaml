@@ -1014,14 +1014,11 @@ script:
           auto to_color = id(original_led_color)[led_index-1];
           int* from_color;
           if (is_long_press) {
-            from_color = static_cast<int*>(id(long_press_color)->value);
-            //from_color = id(long_press_color)->value();
+            from_color = id(long_press_color).value;
           } else if (is_double_tap) {
-            from_color = static_cast<int*>(id(double_tap_color)->value);
-            //from_color = id(double_tap_color)->value();
+            from_color = id(double_tap_color).value;
           } else {
-            from_color = static_cast<int*>(id(touch_color)->value);
-            //from_color = touch_color->value();
+            from_color = touch_color.value;
           }
           float factor = iteration * 0.1f;
           auto color = esphome::Color(
