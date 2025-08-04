@@ -795,10 +795,6 @@ script:
       double_tap: bool
     then:
       - lambda: |-
-          if (id(button_double_tap)[button-1]>1) {
-            id(button_press_start_time)[button-1] = 0;
-            return;
-          }
           int led_index;
           if (id(button_press_start_time)[button-1] == 0) {
             if (${button_led_feedback_bottom}) {
@@ -824,39 +820,43 @@ script:
           } else {
             ESP_LOGI("button", "button %d pressed before fade completed", button);
           }
+      - if:
+          condition:
+            - lambda: 'return !double_tap;'
+          then:
 # This script is stopped by on_release, so only if the button is held long enough 
 # will the long press color turn on.
-      - delay: ${long_press_time}ms
-      - lambda: |-
-          ESP_LOGI("button", "button %d possibly long pressed, not stopped", button);
-          if (millis() - id(button_press_start_time)[button-1] > ${long_press_time}) {
-            ESP_LOGI("button", "button %d long pressed", button);
-            auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
-            int led_index;
-            if (${button_led_feedback_bottom}) {
-              switch(${button_count}) {
-                case 4: led_index = 14 - 2*button; break;
-                case 3: led_index = 13 - 2*button; break;
-                case 2: led_index = 15 - 4*button; break;
-                case 1: led_index = 9; break;
-              }
-              target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
-            }
-            if (${button_led_feedback_top}) {
-              switch(${button_count}) {
-                case 4: led_index = 18 + 2*button; break;
-                case 3: led_index = 19 + 2*button; break;
-                case 2: led_index = 17 + 4*button; break;
-                case 1: led_index = 23; break;
-              }
-              target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
-            }
-            target_led->schedule_show();
-            id(vibra).turn_on();
-            if (${long_hold_uses_bars}) {
-              id(bars_go_up_and_down)->execute(button);
-            }
-          }
+            - delay: ${long_press_time}ms
+            - lambda: |-
+                ESP_LOGI("button", "button %d possibly long pressed, not stopped", button);
+                if (millis() - id(button_press_start_time)[button-1] > ${long_press_time}) {
+                  ESP_LOGI("button", "button %d long pressed", button);
+                  auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
+                  int led_index;
+                  if (${button_led_feedback_bottom}) {
+                    switch(${button_count}) {
+                      case 4: led_index = 14 - 2*button; break;
+                      case 3: led_index = 13 - 2*button; break;
+                      case 2: led_index = 15 - 4*button; break;
+                      case 1: led_index = 9; break;
+                    }
+                    target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
+                  }
+                  if (${button_led_feedback_top}) {
+                    switch(${button_count}) {
+                      case 4: led_index = 18 + 2*button; break;
+                      case 3: led_index = 19 + 2*button; break;
+                      case 2: led_index = 17 + 4*button; break;
+                      case 1: led_index = 23; break;
+                    }
+                    target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
+                  }
+                  target_led->schedule_show();
+                  id(vibra).turn_on();
+                  if (${long_hold_uses_bars}) {
+                    id(bars_go_up_and_down)->execute(button);
+                  }
+                }
 
   - id: led_on_button_press_internal
     mode: parallel
