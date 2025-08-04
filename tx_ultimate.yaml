@@ -960,6 +960,8 @@ script:
       - lambda: |-
           if (id(button_double_tap)[button-1]>1) {
             ESP_LOGW("button", "Double tap at button %d", button);
+            // TODO fix this, it's hacky:
+            id(button_press_start_time)[button-1] = 0;
             id(led_on_button_press)->execute(button, true);
             switch(button) {
               case 1: 
