@@ -23,8 +23,8 @@ namespace esphome
 
         struct TouchPoint
         {
-            int8_t x = -1;
-            int8_t state = -1;
+            uint8_t x = -1;
+            uint8_t state = -1;
         };
 
         class TxUltimateTouch : public uart::UARTDevice, public Component
@@ -48,12 +48,12 @@ namespace esphome
 
         protected:
             void send_touch_(TouchPoint tp);
-            void handle_touch(int bytes[]);
+            void handle_touch(uint8_t bytes[]);
 
-            TouchPoint get_touch_point(int bytes[]);
-            bool is_valid_data(int bytes[]);
-            int get_x_touch_position(int bytes[]);
-            int get_touch_state(int bytes[]);
+            TouchPoint get_touch_point(uint8_t bytes[]);
+            bool is_valid_data(uint8_t bytes[]);
+            uint8_t get_x_touch_position(uint8_t bytes[]);
+            uint8_t get_touch_state(uint8_t bytes[]);
 
             Trigger<TouchPoint> touch_trigger_;
             Trigger<TouchPoint> release_trigger_;
