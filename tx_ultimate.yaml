@@ -762,7 +762,7 @@ tx_ultimate_touch:
 
 # TODO rename this from full to multi
   on_full_touch_release:
-    - script.execute: led_on_full_touch
+    - script.execute: led_on_multi_touch
     - switch.turn_on: vibra
     - binary_sensor.template.publish:
         id: multi_touch
@@ -775,7 +775,9 @@ tx_ultimate_touch:
         condition:
           lambda: "return !${long_hold_uses_bars};"
         then:
-          - lambda: "id(button_held)[button-1]=0;"
+          - lambda |-
+              auto button = id(button_lookup)[${button_count}-1][touch.x-1];
+              id(button_held)[button-1]=0;
           - script.execute: led_on_long_touch
           - switch.turn_on: vibra
           - binary_sensor.template.publish:
@@ -1303,7 +1305,7 @@ script:
           is_long_press: false
           is_double_tap: false
 
-  - id: led_on_full_touch
+  - id: led_on_multi_touch
     mode: restart
     then:
       - light.turn_on:
