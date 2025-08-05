@@ -36,10 +36,13 @@ namespace esphome {
       }
 
       void TxUltimateTouch::handle_touch(uint8_t bytes[]) {
-         ESP_LOGD(TAG, "------------");
+         char buf[128];
+         int len = 0;
          for (uint8_t i = 0; i < 15; i++) {
-            ESP_LOGD(TAG, "%i", bytes[i]);
+            len += snprintf(buf+len, sizeof(buf)-len, "%d ", bytes[i]);
          }
+         // normally this is LOGV
+         ESP_LOGD(TAG, "Read bytes: %s", buf);
 
          if (is_valid_data(bytes)) {
             send_touch_(get_touch_point(bytes));
