@@ -769,11 +769,21 @@ tx_ultimate_touch:
     - lambda: >
         ESP_LOGD("button", "Full Touch Release Position: %d / State: %d", touch.x, touch.state);
 
+  on_multi_touch_release:
+    - script.execute: led_on_full_touch
+    - switch.turn_on: vibra
+    - binary_sensor.template.publish:
+        id: multi_touch
+        state: ON
+    - lambda: >
+        ESP_LOGD("button", "Full Touch Release Position: %d / State: %d", touch.x, touch.state);
+
   on_long_touch_release:
     - if:
         condition:
           lambda: "return !${long_hold_uses_bars};"
         then:
+          - lambda: "id(button_held)[button-1]=0;"
           - script.execute: led_on_long_touch
           - switch.turn_on: vibra
           - binary_sensor.template.publish:
@@ -990,20 +1000,15 @@ script:
           switch(button) {
             case 1: 
               id(double_tap_1).publish_state(true);
-              // FIXME another event code path dims the leds, maybe on_press after the delay?
-              //id(dim_led_at_button_1)->execute(false);
               break;
             case 2:
               id(double_tap_2).publish_state(true);
-              //id(dim_led_at_button_2)->execute(false);
               break;
             case 3:
               id(double_tap_3).publish_state(true);
-              //id(dim_led_at_button_3)->execute(false);
               break;
             case 4:
               id(double_tap_4).publish_state(true);
-              //id(dim_led_at_button_4)->execute(false);
               break;
           }
 
