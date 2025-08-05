@@ -775,7 +775,7 @@ tx_ultimate_touch:
         condition:
           lambda: "return !${long_hold_uses_bars};"
         then:
-          - lambda |-
+          - lambda: |-
               auto button = id(button_lookup)[${button_count}-1][touch.x-1];
               id(button_held)[button-1]=0;
           - script.execute: led_on_long_touch
