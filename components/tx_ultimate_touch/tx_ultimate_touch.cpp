@@ -100,7 +100,6 @@ namespace esphome
             case TOUCH_STATE_ALL_FIELDS:
                 ESP_LOGD(TAG, "Multi Touch Release");
                 this->multi_touch_release_trigger_.trigger(tp);
-                this->full_touch_release_trigger_.trigger(tp);
                 break;
 
             default:
