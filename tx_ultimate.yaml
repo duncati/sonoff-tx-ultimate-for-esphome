@@ -158,7 +158,7 @@ logger:
     light: INFO
     script: INFO
     switch: INFO
-    tx_ultimate_touch: INFO
+    #tx_ultimate_touch: INFO
     uart_debug: INFO
 
 dashboard_import:
@@ -771,6 +771,7 @@ tx_ultimate_touch:
         ESP_LOGD("button", "Multi Touch Release Position: %d / State: %d", touch.x, touch.state);
 
   on_long_touch_release:
+    - lambda: 'ESP_LOGD("button", "Very Long Touch Release Position: %d / State: %d", touch.x, touch.state);'
     - if:
         condition:
           lambda: "return !${long_hold_uses_bars};"
