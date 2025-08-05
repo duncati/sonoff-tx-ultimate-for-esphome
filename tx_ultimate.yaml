@@ -907,7 +907,8 @@ script:
                   ESP_LOGI("button", "button %d no longer held in up and down", button);
                   // TODO may be better to fade the bars out instead of turning them off
                   id(set_bar_height).execute(0);
-                  id(bars_go_up_and_down).stop();
+                  iteration = 100;
+                  //id(bars_go_up_and_down).stop();
                 } else {
                   int bar_height = id(button_bar_brightness)[button-1];
                   ESP_LOGI("button", "button %d bar adjusting %d, height is %d", button, id(button_bar_flipper)[button-1], bar_height);
@@ -927,6 +928,7 @@ script:
       height: int
     then:
       - lambda: |-
+          ESP_LOGI("button", "set_bar_height to %d", height);
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
           // solid bar color with ranges
           //  auto black = esphome::Color(0, 0, 0);
