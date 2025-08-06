@@ -17,15 +17,16 @@ namespace esphome {
          uint8_t bytes[15] = {};
 
          ESP_LOGD(TAG, "loop");
-         while (this->available()) {
-            this->read_array(bytes, available());
-            ESP_LOGD(TAG, "read bytes");
+         while (available()) {
+            ESP_LOGD(TAG, "%d bytes available", available());
+            int read = read_array(bytes, available());
+            ESP_LOGD(TAG, "read %d bytes", read);
             /*
             if (memcmp(bytes, HEADER, 4) == 0) {
                handle_touch(bytes);
             }
             */
-            if (bytes[0] == 170) {
+            if (read > 4 && bytes[0] == 170) {
                handle_touch(bytes);
             }
          };
