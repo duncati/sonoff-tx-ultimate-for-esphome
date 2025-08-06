@@ -92,8 +92,6 @@ namespace esphome {
       }
 
       bool TxUltimateTouch::is_valid_data(uint8_t bytes[]) {
-         bool valid = true;
-
          if (!(bytes[0] == 170 && bytes[1] == 85 && bytes[2] == 1 && bytes[3] == 2)) {
             return false;
          }
