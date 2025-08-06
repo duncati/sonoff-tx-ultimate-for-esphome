@@ -192,7 +192,7 @@ external_components:
       url: https://github.com/duncati/sonoff-tx-ultimate-for-esphome
       ref: main
     components: [tx_ultimate_touch]
-    refresh: 60s
+    refresh: 0s
 # plug my github repo in here to override the components directory
 
 globals:
@@ -762,8 +762,8 @@ tx_ultimate_touch:
     - lambda: >
         ESP_LOGD("button", "Swipe Right Position: %d / State: %d", touch.x, touch.state);
 
-  #on_multi_touch_release:
-  on_full_touch_release:
+# on_full_touch_release:
+  on_multi_touch_release:
     - script.execute: led_on_multi_touch
     - switch.turn_on: vibra
     - binary_sensor.template.publish:
