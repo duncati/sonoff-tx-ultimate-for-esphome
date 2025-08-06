@@ -17,7 +17,7 @@ namespace esphome {
          //uint8_t i = 0;
 
          while (this->available()) {
-            size_t bytes_read = this->readBytes(bytes, sizeof(bytes));
+            this->read_array(bytes, available());
             /*
             byte = this->read();
             ESP_LOGD(TAG, "Read byte %d: %d", i, byte);
