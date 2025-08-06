@@ -15,11 +15,12 @@ namespace esphome {
 
       void TxUltimateTouch::loop() {
          uint8_t bytes[15] = {};
+         int available;
 
          ESP_LOGD(TAG, "loop");
-         while (available()) {
-            ESP_LOGD(TAG, "%d bytes available", available());
-            int read = read_array(bytes, available());
+         while (available = available()) {
+            ESP_LOGD(TAG, "%d bytes available", available);
+            int read = read_array(bytes, available);
             ESP_LOGD(TAG, "read %d bytes", read);
             /*
             if (memcmp(bytes, HEADER, 4) == 0) {
