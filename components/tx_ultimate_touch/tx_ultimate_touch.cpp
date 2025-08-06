@@ -10,30 +10,40 @@ namespace esphome {
       }
 
       void TxUltimateTouch::loop() {
-         bool found = false;
+         //bool found = false;
 
          uint8_t bytes[15] = {};
-         uint8_t byte = -1;
-         uint8_t i = 0;
+         //uint8_t byte = -1;
+         //uint8_t i = 0;
 
          while (this->available()) {
+            size_t bytes_read = this->readBytes(bytes, sizeof(bytes));
+            /*
             byte = this->read();
-            ESP_LOGD(TAG, "Read byte: %d", byte);
+            ESP_LOGD(TAG, "Read byte %d: %d", i, byte);
             if (byte == 170) {
                //handle_touch(bytes);
                i = 0;
             }
+            */
+            if (bytes[0] == 170) {
+               handle_touch(bytes);
+            }
 
+            /*
             bytes[i++] = byte;
 
             if (byte != 0) {
                found = true;
             }
+            */
          };
 
+         /*
          if (found) {
             handle_touch(bytes);
          }
+         */
       }
 
       void TxUltimateTouch::handle_touch(uint8_t bytes[]) {
@@ -43,7 +53,7 @@ namespace esphome {
             len += snprintf(buf+len, sizeof(buf)-len, "%d ", bytes[i]);
          }
          // normally this is LOGV
-         ESP_LOGD(TAG, "Read bytes: %s", buf);
+         ESP_LOGD(TAG, "Read bytes(%d): %s", len, buf);
 
          if (is_valid_data(bytes)) {
             send_touch_(get_touch_point(bytes));
