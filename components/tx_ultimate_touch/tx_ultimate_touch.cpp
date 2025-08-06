@@ -171,5 +171,5 @@ namespace esphome {
          return tp;
       }
 
-   } // namespace tx_ultimate_touch
-} // namespace esphome
+   }
+}
