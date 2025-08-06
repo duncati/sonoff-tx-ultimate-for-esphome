@@ -21,7 +21,7 @@ CONF_ON_RELEASE = "on_release"
 CONF_ON_SWIPE_LEFT = "on_swipe_left"
 CONF_ON_SWIPE_RIGHT = "on_swipe_right"
 
-CONF_ON_MULTI_TOUCH_RELEASE = "on_multi_touch_release"
+CONF_ON_FULL_TOUCH_RELEASE = "on_full_touch_release"
 CONF_ON_LONG_TOUCH_RELEASE = "on_long_touch_release"
 
 # ------------------------------
@@ -48,7 +48,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Optional(CONF_ON_RELEASE): automation.validate_automation(single=True),
     cv.Optional(CONF_ON_SWIPE_LEFT): automation.validate_automation(single=True),
     cv.Optional(CONF_ON_SWIPE_RIGHT): automation.validate_automation(single=True),
-    cv.Optional(CONF_ON_MULTI_TOUCH_RELEASE): automation.validate_automation(single=True),
+    cv.Optional(CONF_ON_FULL_TOUCH_RELEASE): automation.validate_automation(single=True),
     cv.Optional(CONF_ON_LONG_TOUCH_RELEASE): automation.validate_automation(single=True),
 
 }).extend(cv.COMPONENT_SCHEMA).extend(uart.UART_DEVICE_SCHEMA)
@@ -89,11 +89,11 @@ async def register_tx_ultimate_touch(var, config):
             config[CONF_ON_SWIPE_RIGHT],
         )
 
-    if CONF_ON_MULTI_TOUCH_RELEASE in config:
+    if CONF_ON_FULL_TOUCH_RELEASE in config:
         await automation.build_automation(
-            var.get_multi_touch_release_trigger(),
+            var.get_full_touch_release_trigger(),
             [(TouchPoint, "touch")],
-            config[CONF_ON_MULTI_TOUCH_RELEASE],
+            config[CONF_ON_FULL_TOUCH_RELEASE],
         )
 
     if CONF_ON_LONG_TOUCH_RELEASE in config:
