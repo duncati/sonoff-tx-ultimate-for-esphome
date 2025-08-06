@@ -16,8 +16,15 @@ namespace esphome {
       void TxUltimateTouch::loop() {
          uint8_t bytes[15] = {};
 
+         ESP_LOGD(TAG, "loop");
          while (this->available()) {
             this->read_array(bytes, available());
+            ESP_LOGD(TAG, "read bytes");
+            /*
+            if (memcmp(bytes, HEADER, 4) == 0) {
+               handle_touch(bytes);
+            }
+            */
             if (bytes[0] == 170) {
                handle_touch(bytes);
             }
@@ -27,6 +34,7 @@ namespace esphome {
       void TxUltimateTouch::handle_touch(uint8_t bytes[]) {
          char buf[64];
          int len = 0;
+         ESP_LOGD(TAG, "handle touch");
          for (uint8_t i = 0; i < 15; i++) {
             len += snprintf(buf+len, sizeof(buf)-len, "%d ", bytes[i]);
          }
@@ -41,6 +49,7 @@ namespace esphome {
       }
 
       void TxUltimateTouch::send_touch_(TouchPoint tp) {
+         ESP_LOGD(TAG, "send touch");
          switch (tp.state) {
             case TOUCH_STATE_RELEASE:
                if (tp.x >= 17) {
@@ -80,7 +89,6 @@ namespace esphome {
 
       bool TxUltimateTouch::is_valid_data(uint8_t bytes[]) {
          if (memcmp(bytes, HEADER, 4) != 0) {
-         //if (!(bytes[0] == 170 && bytes[1] == 85 && bytes[2] == 1 && bytes[3] == 2)) {
             return false;
          }
 
@@ -101,6 +109,7 @@ namespace esphome {
       TouchPoint TxUltimateTouch::get_touch_point(uint8_t bytes[]) {
          TouchPoint tp;
          tp.state = bytes[4];
+         ESP_LOGD(TAG, "get touch point");
          switch (bytes[4]) {
             case TOUCH_STATE_RELEASE:
                if (bytes[5] == 11) {
