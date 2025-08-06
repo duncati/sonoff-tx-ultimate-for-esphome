@@ -111,7 +111,7 @@ namespace esphome {
                break;
             case TOUCH_STATE_SWIPE:
                tp.x = 0;
-               tp.state = bytes[5]:
+               tp.state = bytes[5];
                break;
             case TOUCH_STATE_PRESS:
                tp.x = bytes[6];
