@@ -30,38 +30,30 @@ namespace esphome {
          }
       }
 
-      void TxUltimateTouch::handle_touch(uint8_t bytes[])
-      {
+      void TxUltimateTouch::handle_touch(uint8_t bytes[]) {
          ESP_LOGV("UART-Log", "------------");
-         for (int i = 0; i < 15; i++)
-         {
+         for (int i = 0; i < 15; i++) {
             ESP_LOGV("UART-Log", "%i", bytes[i]);
          }
 
-         if (is_valid_data(bytes))
-         {
+         if (is_valid_data(bytes)) {
             send_touch_(get_touch_point(bytes));
          }
       }
 
-      void TxUltimateTouch::dump_config()
-      {
+      void TxUltimateTouch::dump_config() {
          ESP_LOGCONFIG(TAG, "Tx Ultimate Touch");
       }
 
-      void TxUltimateTouch::send_touch_(TouchPoint tp)
-      {
-         switch (tp.state)
-         {
+      void TxUltimateTouch::send_touch_(TouchPoint tp) {
+         ESP_LOGD(TAG, "send touch");
+         switch (tp.state) {
             case TOUCH_STATE_RELEASE:
-               if (tp.x >= 17)
-               {
-                  tp.x = tp.x - 16;
+               if (tp.x >= 17) {
+                  tp.x -= 16;
                   ESP_LOGD(TAG, "Long Press Release (x=%d)", tp.x);
                   this->long_touch_release_trigger_.trigger(tp);
-               }
-               else
-               {
+               } else {
                   ESP_LOGD(TAG, "Release (x=%d)", tp.x);
                   this->release_trigger_.trigger(tp);
                }
@@ -83,8 +75,8 @@ namespace esphome {
                break;
 
             case TOUCH_STATE_ALL_FIELDS:
-               ESP_LOGD(TAG, "Full Touch Release");
-               this->full_touch_release_trigger_.trigger(tp);
+               ESP_LOGD(TAG, "Multi Touch Release");
+               this->multi_touch_release_trigger_.trigger(tp);
                break;
 
             default:
@@ -100,18 +92,16 @@ namespace esphome {
             return false;
          }
 
-         int state = get_touch_state(bytes);
+         uint8_t state = get_touch_state(bytes);
          if (state != TOUCH_STATE_PRESS &&
                state != TOUCH_STATE_RELEASE &&
                state != TOUCH_STATE_SWIPE_LEFT &&
                state != TOUCH_STATE_SWIPE_RIGHT &&
-               state != TOUCH_STATE_ALL_FIELDS)
-         {
+               state != TOUCH_STATE_ALL_FIELDS) {
             return false;
          }
 
-         if (bytes[6] < 0 && state != TOUCH_STATE_ALL_FIELDS)
-         {
+         if (bytes[6] < 0 && state != TOUCH_STATE_ALL_FIELDS) {
             return false;
          }
 
