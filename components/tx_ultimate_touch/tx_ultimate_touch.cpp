@@ -44,6 +44,7 @@ namespace esphome {
       }
 
       void TxUltimateTouch::send_touch_(TouchPoint tp) {
+         uint8_t response[8] = {170, 85, 1, 2, 1, 1};
          switch (tp.state) {
             case TOUCH_STATE_RELEASE:
                if (tp.x >= 17) {
@@ -59,7 +60,6 @@ namespace esphome {
             case TOUCH_STATE_PRESS:
                ESP_LOGD(TAG, "Press (x=%d)", tp.x);
                this->touch_trigger_.trigger(tp);
-               uint8_t response[8] = {170, 85, 1, 2, 1, 1};
                append_crc16_modbus(response, 6, 8);
                write_array(response, 8);
                flush();
