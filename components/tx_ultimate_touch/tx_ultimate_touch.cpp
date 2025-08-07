@@ -29,7 +29,7 @@ namespace esphome {
          }
       }
 
-      void TxUltimateTouch::handle_touch(const uint8_t bytes[]) {
+      void TxUltimateTouch::handle_touch(uint8_t bytes[]) {
          char buf[64];
          int len = 0;
          for (uint8_t i = 4; i < 11; i++) {
@@ -82,7 +82,7 @@ namespace esphome {
          }
       }
 
-      TouchPoint TxUltimateTouch::get_touch_point(const uint8_t bytes[]) {
+      TouchPoint TxUltimateTouch::get_touch_point(uint8_t bytes[]) {
          TouchPoint tp;
          tp.state = bytes[4];
          switch (bytes[4]) {

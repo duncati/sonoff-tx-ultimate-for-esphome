@@ -44,7 +44,6 @@ namespace esphome {
         protected:
             void send_touch_(TouchPoint tp);
             void handle_touch(uint8_t bytes[]);
-
             TouchPoint get_touch_point(uint8_t bytes[]);
 
             Trigger<TouchPoint> touch_trigger_;
