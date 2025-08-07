@@ -11,36 +11,32 @@ namespace esphome {
       static const uint8_t HEADER[] = {170, 85, 1, 2};
       static const int BUFFER_SIZE = 16;
 
-      void TxUltimateTouch::setup()
-      {
+      void TxUltimateTouch::setup() {
          ESP_LOGI("log", "%s", "Tx Ultimate Touch is initialized");
       }
 
-      void TxUltimateTouch::loop()
-      {
-         bool found = false;
-
+      void TxUltimateTouch::loop() {
          uint8_t bytes[BUFFER_SIZE] = {};
 
          int avail;
          while ((avail = available())) {
             ESP_LOGD(TAG, "avail=%d", avail);
-            read_array(bytes, MIN(avail, BUFFER_SIZE));
+            int read = read_array(bytes, MIN(avail, BUFFER_SIZE));
+            ESP_LOGD(TAG, "read %d bytes", read);
             if (memcmp(bytes, HEADER, 4) == 0) {
                handle_touch(bytes);
             }
          }
       }
 
-      void TxUltimateTouch::handle_touch(uint8_t bytes[]) {
+      void TxUltimateTouch::handle_touch(const uint8_t bytes[]) {
          char buf[64];
          int len = 0;
-         for (uint8_t i = 0; i < 15; i++) {
+         for (uint8_t i = 4; i < 11; i++) {
             len += snprintf(buf+len, sizeof(buf)-len, "%d ", bytes[i]);
          }
-         // TODO set this back to LOGV
-         ESP_LOGD(TAG, "Read bytes(%d): %s", len, buf);
-
+         // TODO set this back to LOGV or wrap it in a "if log level" or comment it out
+         ESP_LOGD(TAG, "Read bytes: %s", buf);
          send_touch_(get_touch_point(bytes));
       }
 
@@ -49,7 +45,6 @@ namespace esphome {
       }
 
       void TxUltimateTouch::send_touch_(TouchPoint tp) {
-         ESP_LOGD(TAG, "send touch");
          switch (tp.state) {
             case TOUCH_STATE_RELEASE:
                if (tp.x >= 17) {
@@ -87,11 +82,17 @@ namespace esphome {
          }
       }
 
-      TouchPoint TxUltimateTouch::get_touch_point(uint8_t bytes[]) {
+      TouchPoint TxUltimateTouch::get_touch_point(const uint8_t bytes[]) {
          TouchPoint tp;
          tp.state = bytes[4];
-         ESP_LOGD(TAG, "get touch point");
          switch (bytes[4]) {
+            // some releases hav bytes[4]=2 && bytes[5]!=0 and bytes[6]=x
+            // others releases have bytes[4]=1 and bytes[5]=x
+            case TOUCH_STATE_PRESS:
+               if (bytes[5] != 0) {
+                  tp.state = TOUCH_STATE_RELEASE;
+               }
+               break;
             case TOUCH_STATE_RELEASE:
                if (bytes[5] == 11) {
                   tp.state = TOUCH_STATE_ALL_FIELDS;
