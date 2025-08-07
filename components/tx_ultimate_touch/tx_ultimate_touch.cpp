@@ -113,18 +113,17 @@ namespace esphome {
          return tp;
       }
 
+      int send_stuff_count;
       void TxUltimateTouch::send_stuff() {
-         uint8_t response[8] = {170, 85, 1, 2, 0, 0};
-         for (int i=0; i<15; i++) {
-            response[6]=i;
-            for (int j=0; j<15; j++) {
-               response[7]=j;
-               append_crc16_modbus(response, 6, 8);
-               ESP_LOGD(TAG, "sending %d %d", i, j);
-               write_array(response, 8);
-               flush();
-               delay(100);
-            }
+         int i=send_stuff_count%16;
+         int j=send_stuff_count/16;
+         uint8_t response[8] = {170, 85, 1, 2, i, j};
+         append_crc16_modbus(response, 6, 8);
+         ESP_LOGD(TAG, "sending %d %d %d %d", i, j, response[6], response[7]);
+         write_array(response, 8);
+         flush();
+         if (send_stuff_count<256) {
+            App.schedule_task(200, send_stuff);
          }
       }
 
