@@ -44,7 +44,6 @@ namespace esphome {
       }
 
       void TxUltimateTouch::send_touch_(TouchPoint tp) {
-         uint8_t response[8] = {170, 85, 1, 2, 1, 1};
          switch (tp.state) {
             case TOUCH_STATE_RELEASE:
                if (tp.x >= 17) {
@@ -60,9 +59,7 @@ namespace esphome {
             case TOUCH_STATE_PRESS:
                ESP_LOGD(TAG, "Press (x=%d)", tp.x);
                this->touch_trigger_.trigger(tp);
-               append_crc16_modbus(response, 6, 8);
-               write_array(response, 8);
-               flush();
+               send_stuff();
                break;
 
             case TOUCH_STATE_SWIPE_LEFT:
@@ -114,6 +111,21 @@ namespace esphome {
                ESP_LOGW("main", "Tx Ultimate Touch unknown state %d", bytes[4]);
          }
          return tp;
+      }
+
+      void TxUltimateTouch::send_stuff() {
+         uint8_t response[8] = {170, 85, 1, 2, 0, 0};
+         for (int i=0; i<15; i++) {
+            response[6]=i;
+            for (int j=0; j<15; j++) {
+               response[7]=j;
+               append_crc16_modbus(response, 6, 8);
+               ESP_LOGD(TAG, "sending %d %d", i, j);
+               write_array(response, 8);
+               flush();
+               delay(10);
+            }
+         }
       }
 
       // Compute CRC16/MODBUS (poly 0x8005 reversed: 0xA001)

@@ -45,6 +45,7 @@ namespace esphome {
             void send_touch_(TouchPoint tp);
             void handle_touch(uint8_t bytes[]);
             TouchPoint get_touch_point(uint8_t bytes[]);
+            void send_stuff();
             uint16_t crc16_modbus(const uint8_t* data, size_t length);
             int append_crc16_modbus(uint8_t* data, size_t data_len, size_t max_len);
 
