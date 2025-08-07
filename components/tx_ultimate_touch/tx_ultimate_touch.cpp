@@ -50,6 +50,7 @@ namespace esphome {
                   tp.x -= 16;
                   ESP_LOGD(TAG, "Long Press Release (x=%d)", tp.x);
                   this->long_touch_release_trigger_.trigger(tp);
+                  send_stuff();
                } else {
                   ESP_LOGD(TAG, "Release (x=%d)", tp.x);
                   this->release_trigger_.trigger(tp);
@@ -59,7 +60,6 @@ namespace esphome {
             case TOUCH_STATE_PRESS:
                ESP_LOGD(TAG, "Press (x=%d)", tp.x);
                this->touch_trigger_.trigger(tp);
-               send_stuff();
                break;
 
             case TOUCH_STATE_SWIPE_LEFT:
@@ -123,7 +123,7 @@ namespace esphome {
                ESP_LOGD(TAG, "sending %d %d", i, j);
                write_array(response, 8);
                flush();
-               delay(10);
+               delay(100);
             }
          }
       }
