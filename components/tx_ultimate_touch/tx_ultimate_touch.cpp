@@ -148,6 +148,25 @@ namespace esphome {
       }
       */
 
+      // crc_16_ccitt_false
+      uint16_t TxUltimateTouch::crc16_modbus(const uint8_t *data, size_t length) {
+         uint16_t crc = 0xFFFF;
+         size_t i, j;
+
+         for (i = 0; i < length; ++i) {
+            crc ^= (uint16_t)data[i] << 8;
+            for (j = 0; j < 8; ++j) {
+               if (crc & 0x8000) {
+                  crc = (crc << 1) ^ 0x1021;
+               } else {
+                  crc <<= 1;
+               }
+            }
+         }
+         return crc;
+      }
+
+      /*
       // crc16_xmodem, not modbus
       uint16_t TxUltimateTouch::crc16_modbus(const uint8_t *data, size_t length) {
          uint16_t crc = 0x0000;
@@ -165,6 +184,7 @@ namespace esphome {
          }
          return crc;
       }
+      */
 
       // Appends CRC to array (if space allows)
       int TxUltimateTouch::append_crc16_modbus(uint8_t *data, size_t data_len, size_t max_len) {
