@@ -30,7 +30,7 @@ namespace esphome {
             Trigger<TouchPoint> *get_release_trigger() { return &this->release_trigger_; }
             Trigger<TouchPoint> *get_swipe_left_trigger() { return &this->swipe_trigger_left_; }
             Trigger<TouchPoint> *get_swipe_right_trigger() { return &this->swipe_trigger_right_; }
-            Trigger<TouchPoint> *get_full_touch_release_trigger() { return &this->full_touch_release_trigger_; }
+            Trigger<TouchPoint> *get_multi_touch_release_trigger() { return &this->multi_touch_release_trigger_; }
             Trigger<TouchPoint> *get_long_touch_release_trigger() { return &this->long_touch_release_trigger_; }
 
             void set_uart_component(esphome::uart::UARTComponent *uart_component) {
@@ -54,7 +54,7 @@ namespace esphome {
             Trigger<TouchPoint> release_trigger_;
             Trigger<TouchPoint> swipe_trigger_left_;
             Trigger<TouchPoint> swipe_trigger_right_;
-            Trigger<TouchPoint> full_touch_release_trigger_;
+            Trigger<TouchPoint> multi_touch_release_trigger_;
             Trigger<TouchPoint> long_touch_release_trigger_;
         };
     }
