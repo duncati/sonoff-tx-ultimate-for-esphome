@@ -20,9 +20,11 @@ namespace esphome
             int byte = -1;
             int i = 0;
 
-            while (this->available())
+            int avail;
+            while ((avail = available()))
             {
-                byte = this->read();
+                ESP_LOGD(TAG, "avail=%d", avail);
+                byte = read();
                 if (byte == 170)
                 {
                     handle_touch(bytes);
