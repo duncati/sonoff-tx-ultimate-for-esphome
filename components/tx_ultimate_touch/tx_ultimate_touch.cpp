@@ -3,11 +3,13 @@
 
 namespace esphome {
    namespace tx_ultimate_touch {
+      #define MIN(a, b) (((a) < (b)) ? (a) : (b))
       static const char *TAG = "tx_ultimate_touch";
       // 170, 85 is the header, 1 is the version, 2 is the opcode (it's always 2)
       // after the header there's data length (1 or 2) followed by 1 or 2 bytes of data
       // after that is a 2 byte checksum (ignored)
       static const uint8_t HEADER[] = {170, 85, 1, 2};
+      static const int BUFFER_SIZE = 16;
 
       void TxUltimateTouch::setup()
       {
@@ -18,27 +20,28 @@ namespace esphome {
       {
          bool found = false;
 
-         uint8_t bytes[15] = {};
+         uint8_t bytes[BUFFER_SIZE] = {};
 
          int avail;
          while ((avail = available())) {
             ESP_LOGD(TAG, "avail=%d", avail);
-            read_array(bytes, avail);
-            if (bytes[0] == 170) {
+            read_array(bytes, MIN(avail, BUFFER_SIZE));
+            if (memcmp(bytes, HEADER, 4) == 0) {
                handle_touch(bytes);
             }
          }
       }
 
       void TxUltimateTouch::handle_touch(uint8_t bytes[]) {
-         ESP_LOGV("UART-Log", "------------");
-         for (int i = 0; i < 15; i++) {
-            ESP_LOGV("UART-Log", "%i", bytes[i]);
+         char buf[64];
+         int len = 0;
+         for (uint8_t i = 0; i < 15; i++) {
+            len += snprintf(buf+len, sizeof(buf)-len, "%d ", bytes[i]);
          }
+         // TODO set this back to LOGV
+         ESP_LOGD(TAG, "Read bytes(%d): %s", len, buf);
 
-         if (is_valid_data(bytes)) {
-            send_touch_(get_touch_point(bytes));
-         }
+         send_touch_(get_touch_point(bytes));
       }
 
       void TxUltimateTouch::dump_config() {
@@ -82,30 +85,6 @@ namespace esphome {
             default:
                break;
          }
-      }
-
-      bool TxUltimateTouch::is_valid_data(uint8_t bytes[])
-      {
-         bool valid = true;
-
-         if (memcmp(bytes, HEADER, 4) != 0) {
-            return false;
-         }
-
-         uint8_t state = get_touch_state(bytes);
-         if (state != TOUCH_STATE_PRESS &&
-               state != TOUCH_STATE_RELEASE &&
-               state != TOUCH_STATE_SWIPE_LEFT &&
-               state != TOUCH_STATE_SWIPE_RIGHT &&
-               state != TOUCH_STATE_ALL_FIELDS) {
-            return false;
-         }
-
-         if (bytes[6] < 0 && state != TOUCH_STATE_ALL_FIELDS) {
-            return false;
-         }
-
-         return true;
       }
 
       uint8_t TxUltimateTouch::get_x_touch_position(uint8_t bytes[])
