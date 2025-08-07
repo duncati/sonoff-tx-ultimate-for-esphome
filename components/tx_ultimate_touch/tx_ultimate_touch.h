@@ -8,10 +8,8 @@
 #include "esphome/components/switch/switch.h"
 #include "esphome/components/light/addressable_light.h"
 
-namespace esphome
-{
-    namespace tx_ultimate_touch
-    {
+namespace esphome {
+    namespace tx_ultimate_touch {
         const static uint8_t TOUCH_STATE_RELEASE = 1;
         const static uint8_t TOUCH_STATE_PRESS = 2;
         const static uint8_t TOUCH_STATE_SWIPE = 3;
@@ -21,14 +19,12 @@ namespace esphome
         const static uint8_t TOUCH_STATE_SWIPE_RIGHT = 12;
         const static uint8_t TOUCH_STATE_SWIPE_LEFT = 13;
 
-        struct TouchPoint
-        {
-            int8_t x = -1;
-            int8_t state = -1;
+        struct TouchPoint {
+            uint8_t x = -1;
+            uint8_t state = -1;
         };
 
-        class TxUltimateTouch : public uart::UARTDevice, public Component
-        {
+        class TxUltimateTouch : public uart::UARTDevice, public Component {
         public:
             Trigger<TouchPoint> *get_touch_trigger() { return &this->touch_trigger_; }
             Trigger<TouchPoint> *get_release_trigger() { return &this->release_trigger_; }
@@ -37,8 +33,7 @@ namespace esphome
             Trigger<TouchPoint> *get_full_touch_release_trigger() { return &this->full_touch_release_trigger_; }
             Trigger<TouchPoint> *get_long_touch_release_trigger() { return &this->long_touch_release_trigger_; }
 
-            void set_uart_component(esphome::uart::UARTComponent *uart_component)
-            {
+            void set_uart_component(esphome::uart::UARTComponent *uart_component) {
                 this->set_uart_parent(uart_component);
             }
 
@@ -61,8 +56,6 @@ namespace esphome
             Trigger<TouchPoint> swipe_trigger_right_;
             Trigger<TouchPoint> full_touch_release_trigger_;
             Trigger<TouchPoint> long_touch_release_trigger_;
-
-        }; // class TxUltimateTouch
-
-    } // namespace tx_ultimate_touch
-} // namespace esphome
+        };
+    }
+}
