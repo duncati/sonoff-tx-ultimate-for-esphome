@@ -86,11 +86,14 @@ namespace esphome {
          TouchPoint tp;
          tp.state = bytes[4];
          switch (bytes[4]) {
-            // some releases hav bytes[4]=2 && bytes[5]!=0 and bytes[6]=x
-            // others releases have bytes[4]=1 and bytes[5]=x
+            // some releases are bytes[4]=2 && bytes[5]!=0 where x=bytes[6]
+            // others releases are bytes[4]=1 where x=bytes[5]
             case TOUCH_STATE_PRESS:
                if (bytes[5] != 0) {
                   tp.state = TOUCH_STATE_RELEASE;
+                  tp.x = bytes[5];
+               } else {
+                  tp.x = bytes[6];
                }
                break;
             case TOUCH_STATE_RELEASE:
@@ -103,9 +106,6 @@ namespace esphome {
             case TOUCH_STATE_SWIPE:
                tp.x = 0;
                tp.state = bytes[5];
-               break;
-            case TOUCH_STATE_PRESS:
-               tp.x = bytes[6];
                break;
             default:
                ESP_LOGW("main", "Tx Ultimate Touch unknown state %d", bytes[4]);
