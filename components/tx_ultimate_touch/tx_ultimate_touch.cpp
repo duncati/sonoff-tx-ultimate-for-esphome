@@ -146,8 +146,8 @@ namespace esphome {
       }
       */
 
-      // crc16_xmodem
-      uint16_t crc16_modbus(const uint8_t *data, size_t length) {
+      // crc16_xmodem, not modbus
+      uint16_t TxUltimateTouch::crc16_modbus(const uint8_t *data, size_t length) {
          uint16_t crc = 0x0000;
          size_t i, j;
 
