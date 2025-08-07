@@ -21,8 +21,7 @@ namespace esphome {
          int avail;
          while ((avail = available())) {
             ESP_LOGD(TAG, "avail=%d", avail);
-            int read = read_array(bytes, MIN(avail, BUFFER_SIZE));
-            ESP_LOGD(TAG, "read %d bytes", read);
+            read_array(bytes, MIN(avail, BUFFER_SIZE));
             if (memcmp(bytes, HEADER, 4) == 0) {
                handle_touch(bytes);
             }
@@ -60,6 +59,10 @@ namespace esphome {
             case TOUCH_STATE_PRESS:
                ESP_LOGD(TAG, "Press (x=%d)", tp.x);
                this->touch_trigger_.trigger(tp);
+               uint8_t response[8] = {170, 85, 1, 2, 1, 1};
+               append_crc16_modbus(response, 6, 8);
+               write_array(response, 8);
+               flush();
                break;
 
             case TOUCH_STATE_SWIPE_LEFT:
@@ -111,6 +114,34 @@ namespace esphome {
                ESP_LOGW("main", "Tx Ultimate Touch unknown state %d", bytes[4]);
          }
          return tp;
+      }
+
+      // Compute CRC16/MODBUS (poly 0x8005 reversed: 0xA001)
+      uint16_t crc16_modbus(const uint8_t* data, size_t length) {
+         uint16_t crc = 0xFFFF;
+         for (size_t i = 0; i < length; ++i) {
+            crc ^= data[i];
+            for (int j = 0; j < 8; j++) {
+               if (crc & 0x0001)
+                  crc = (crc >> 1) ^ 0xA001;
+               else
+                  crc = crc >> 1;
+            }
+         }
+         return crc;
+      }
+
+      // Appends CRC to array (if space allows)
+      int append_crc16_modbus(uint8_t *data, size_t data_len, size_t max_len) {
+         if (data_len + 2 > max_len) {
+            return -1; // Not enough space to append CRC
+         }
+
+         uint16_t crc = crc16_modbus(data, data_len);
+         data[data_len]     = crc & 0xFF;       // Low byte
+         data[data_len + 1] = (crc >> 8) & 0xFF; // High byte
+
+         return 0; // Success
       }
    }
 }
