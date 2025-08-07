@@ -117,7 +117,7 @@ namespace esphome {
       }
 
       // Compute CRC16/MODBUS (poly 0x8005 reversed: 0xA001)
-      uint16_t crc16_modbus(const uint8_t* data, size_t length) {
+      uint16_t TxUltimateTouch::crc16_modbus(const uint8_t* data, size_t length) {
          uint16_t crc = 0xFFFF;
          for (size_t i = 0; i < length; ++i) {
             crc ^= data[i];
@@ -132,7 +132,7 @@ namespace esphome {
       }
 
       // Appends CRC to array (if space allows)
-      int append_crc16_modbus(uint8_t *data, size_t data_len, size_t max_len) {
+      int TxUltimateTouch::append_crc16_modbus(uint8_t *data, size_t data_len, size_t max_len) {
          if (data_len + 2 > max_len) {
             return -1; // Not enough space to append CRC
          }
