@@ -1,3 +1,4 @@
+#include "esphome.h"
 #include "esphome/core/log.h"
 #include "tx_ultimate_touch.h"
 
@@ -115,8 +116,8 @@ namespace esphome {
 
       int send_stuff_count;
       void TxUltimateTouch::send_stuff() {
-         int i=send_stuff_count%16;
-         int j=send_stuff_count/16;
+         uint8_t i=send_stuff_count%16;
+         uint8_t j=send_stuff_count/16;
          uint8_t response[8] = {170, 85, 1, 2, i, j};
          append_crc16_modbus(response, 6, 8);
          ESP_LOGD(TAG, "sending %d %d %d %d", i, j, response[6], response[7]);
