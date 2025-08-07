@@ -48,12 +48,12 @@ namespace esphome
 
         protected:
             void send_touch_(TouchPoint tp);
-            void handle_touch(int bytes[]);
+            void handle_touch(uint8_t bytes[]);
 
-            TouchPoint get_touch_point(int bytes[]);
-            bool is_valid_data(int bytes[]);
-            int get_x_touch_position(int bytes[]);
-            int get_touch_state(int bytes[]);
+            TouchPoint get_touch_point(uint8_t bytes[]);
+            bool is_valid_data(uint8_t bytes[]);
+            int get_x_touch_position(uint8_t bytes[]);
+            int get_touch_state(uint8_t bytes[]);
 
             Trigger<TouchPoint> touch_trigger_;
             Trigger<TouchPoint> release_trigger_;

@@ -16,38 +16,19 @@ namespace esphome
         {
             bool found = false;
 
-            int bytes[15] = {};
-            int byte = -1;
-            int i = 0;
+            uint8_t bytes[15] = {};
 
             int avail;
-            while ((avail = available()))
-            {
+            while ((avail = available())) {
                 ESP_LOGD(TAG, "avail=%d", avail);
-                byte = read();
-                if (byte == 170)
-                {
+                read_array(bytes, avail);
+                if (bytes[0] == 170) {
                     handle_touch(bytes);
-                    i = 0;
                 }
-
-                bytes[i] = byte;
-
-                i++;
-
-                if (byte != 0)
-                {
-                    found = true;
-                }
-            };
-
-            if (found)
-            {
-                handle_touch(bytes);
             }
         }
 
-        void TxUltimateTouch::handle_touch(int bytes[])
+        void TxUltimateTouch::handle_touch(uint8_t bytes[])
         {
             ESP_LOGV("UART-Log", "------------");
             for (int i = 0; i < 15; i++)
@@ -109,7 +90,7 @@ namespace esphome
             }
         }
 
-        bool TxUltimateTouch::is_valid_data(int bytes[])
+        bool TxUltimateTouch::is_valid_data(uint8_t bytes[])
         {
             bool valid = true;
 
@@ -136,7 +117,7 @@ namespace esphome
             return true;
         }
 
-        int TxUltimateTouch::get_x_touch_position(int bytes[])
+        int TxUltimateTouch::get_x_touch_position(uint8_t bytes[])
         {
             int state = bytes[4];
             switch (state)
@@ -163,7 +144,7 @@ namespace esphome
             }
         }
 
-        int TxUltimateTouch::get_touch_state(int bytes[])
+        int TxUltimateTouch::get_touch_state(uint8_t bytes[])
         {
             int state = bytes[4];
 
@@ -192,7 +173,7 @@ namespace esphome
             return state;
         }
 
-        TouchPoint TxUltimateTouch::get_touch_point(int bytes[])
+        TouchPoint TxUltimateTouch::get_touch_point(uint8_t bytes[])
         {
             TouchPoint tp;
 
