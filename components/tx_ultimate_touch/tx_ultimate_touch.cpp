@@ -122,7 +122,7 @@ namespace esphome {
          ESP_LOGD(TAG, "sending %d %d %d %d", i, j, response[6], response[7]);
          write_array(response, 8);
          flush();
-         if (send_stuff_count<256) {
+         if (++send_stuff_count<256) {
             this->set_timeout("send_stuff", 200, [this]() {
                   this->send_stuff();
             });
