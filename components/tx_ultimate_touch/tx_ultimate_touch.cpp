@@ -115,15 +115,17 @@ namespace esphome {
 
       int send_stuff_count;
       void TxUltimateTouch::send_stuff() {
-         uint8_t i=send_stuff_count%16;
-         uint8_t j=send_stuff_count/16;
+         uint8_t i=send_stuff_count/16;
+         uint8_t j=send_stuff_count%16;
          uint8_t response[8] = {170, 85, 1, 2, i, j};
          append_crc16_modbus(response, 6, 8);
-         ESP_LOGD(TAG, "sending %d %d %d %d", i, j, response[6], response[7]);
+         ESP_LOGD(TAG, "sending %d %d %d %d %d %d %d %d", 
+               response[0], response[1], response[2], response[3],
+               response[4], response[5], response[6], response[7]);
          write_array(response, 8);
          flush();
          if (++send_stuff_count<256) {
-            this->set_timeout("send_stuff", 200, [this]() {
+            this->set_timeout("send_stuff", 500, [this]() {
                   this->send_stuff();
             });
          }
