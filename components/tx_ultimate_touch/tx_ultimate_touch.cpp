@@ -87,66 +87,28 @@ namespace esphome {
          }
       }
 
-      uint8_t TxUltimateTouch::get_x_touch_position(uint8_t bytes[])
-      {
-         uint8_t state = bytes[4];
-         switch (state)
-         {
-            case TOUCH_STATE_RELEASE:
-               return bytes[5];
-               break;
-
-            case TOUCH_STATE_ALL_FIELDS:
-               return bytes[5];
-               break;
-
-            case TOUCH_STATE_SWIPE_LEFT:
-               return bytes[5];
-               break;
-
-            case TOUCH_STATE_SWIPE_RIGHT:
-               return bytes[5];
-               break;
-
-            default:
-               return bytes[6];
-               break;
-         }
-      }
-
-      uint8_t TxUltimateTouch::get_touch_state(uint8_t bytes[])
-      {
-         uint8_t state = bytes[4];
-
-         if (state == TOUCH_STATE_PRESS && bytes[5] != 0)
-         {
-            state = TOUCH_STATE_RELEASE;
-         }
-
-         if (state == TOUCH_STATE_RELEASE && bytes[5] == TOUCH_STATE_ALL_FIELDS)
-         {
-            state = TOUCH_STATE_ALL_FIELDS;
-         }
-
-         if (state == TOUCH_STATE_SWIPE)
-         {
-            if (bytes[5] == TOUCH_STATE_SWIPE_RIGHT)
-            {
-               state = TOUCH_STATE_SWIPE_RIGHT;
-            }
-            else if (bytes[5] == TOUCH_STATE_SWIPE_LEFT)
-            {
-               state = TOUCH_STATE_SWIPE_LEFT;
-            }
-         }
-
-         return state;
-      }
-
       TouchPoint TxUltimateTouch::get_touch_point(uint8_t bytes[]) {
          TouchPoint tp;
-         tp.x = get_x_touch_position(bytes);
-         tp.state = get_touch_state(bytes);
+         tp.state = bytes[4];
+         ESP_LOGD(TAG, "get touch point");
+         switch (bytes[4]) {
+            case TOUCH_STATE_RELEASE:
+               if (bytes[5] == 11) {
+                  tp.state = TOUCH_STATE_ALL_FIELDS;
+               } else {
+                  tp.x = bytes[5];
+               }
+               break;
+            case TOUCH_STATE_SWIPE:
+               tp.x = 0;
+               tp.state = bytes[5];
+               break;
+            case TOUCH_STATE_PRESS:
+               tp.x = bytes[6];
+               break;
+            default:
+               ESP_LOGW("main", "Tx Ultimate Touch unknown state %d", bytes[4]);
+         }
          return tp;
       }
    }

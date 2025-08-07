@@ -46,9 +46,6 @@ namespace esphome {
             void handle_touch(uint8_t bytes[]);
 
             TouchPoint get_touch_point(uint8_t bytes[]);
-            bool is_valid_data(uint8_t bytes[]);
-            uint8_t get_x_touch_position(uint8_t bytes[]);
-            uint8_t get_touch_state(uint8_t bytes[]);
 
             Trigger<TouchPoint> touch_trigger_;
             Trigger<TouchPoint> release_trigger_;
