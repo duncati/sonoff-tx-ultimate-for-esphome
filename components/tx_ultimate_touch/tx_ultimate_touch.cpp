@@ -1,4 +1,3 @@
-#include "esphome.h"
 #include "esphome/core/log.h"
 #include "tx_ultimate_touch.h"
 
@@ -124,7 +123,9 @@ namespace esphome {
          write_array(response, 8);
          flush();
          if (send_stuff_count<256) {
-            App.schedule_task(200, send_stuff);
+            this->set_timeout("send_stuff", 200, [this]() {
+                  this->send_stuff();
+            });
          }
       }
 
