@@ -17,11 +17,18 @@ namespace esphome {
 
       void TxUltimateTouch::loop() {
          uint8_t bytes[BUFFER_SIZE] = {};
+         char logbuf[64];
 
          int avail;
          while ((avail = available())) {
             ESP_LOGD(TAG, "avail=%d", avail);
             read_array(bytes, MIN(avail, BUFFER_SIZE));
+            int len = 0;
+            for (uint8_t i = 4; i < 11; i++) {
+               len += snprintf(logbuf+len, sizeof(logbuf)-len, "%d ", bytes[i]);
+            }
+            // TODO set this back to LOGV or wrap it in a "if log level" or comment it out
+            ESP_LOGD(TAG, "Read bytes: %s", logbuf);
             if (memcmp(bytes, HEADER, 4) == 0) {
                handle_touch(bytes);
             }
@@ -29,13 +36,6 @@ namespace esphome {
       }
 
       void TxUltimateTouch::handle_touch(uint8_t bytes[]) {
-         char buf[64];
-         int len = 0;
-         for (uint8_t i = 4; i < 11; i++) {
-            len += snprintf(buf+len, sizeof(buf)-len, "%d ", bytes[i]);
-         }
-         // TODO set this back to LOGV or wrap it in a "if log level" or comment it out
-         ESP_LOGD(TAG, "Read bytes: %s", buf);
          send_touch_(get_touch_point(bytes));
       }
 
@@ -113,7 +113,7 @@ namespace esphome {
          return tp;
       }
 
-      int send_stuff_count;
+      int send_stuff_count = 16;
       void TxUltimateTouch::send_stuff() {
          uint8_t i=send_stuff_count/16;
          uint8_t j=send_stuff_count%16;
@@ -125,7 +125,7 @@ namespace esphome {
          write_array(response, 8);
          flush();
          if (++send_stuff_count<256) {
-            this->set_timeout("send_stuff", 500, [this]() {
+            this->set_timeout("send_stuff", 1000, [this]() {
                   this->send_stuff();
             });
          }
