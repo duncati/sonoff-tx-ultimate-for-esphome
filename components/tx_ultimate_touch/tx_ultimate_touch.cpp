@@ -118,7 +118,7 @@ namespace esphome {
          uint8_t i=send_stuff_count/16;
          uint8_t j=send_stuff_count%16;
          uint8_t response[8] = {170, 85, 1, 2, i, j};
-         append_crc16_modbus(response, 6, 8);
+         append_crc16(response, 6, 8);
          ESP_LOGD(TAG, "sending %d %d %d %d %d %d %d %d", 
                response[0], response[1], response[2], response[3],
                response[4], response[5], response[6], response[7]);
@@ -131,31 +131,12 @@ namespace esphome {
          }
       }
 
-      /*
-      // Compute CRC16/MODBUS (poly 0x8005 reversed: 0xA001)
-      uint16_t TxUltimateTouch::crc16_modbus(const uint8_t* data, size_t length) {
+      // CRC-16/CCITT-FALSE hashing algorithm
+      uint16_t TxUltimateTouch::crc16(const uint8_t *data, int length) {
          uint16_t crc = 0xFFFF;
-         for (size_t i = 0; i < length; ++i) {
-            crc ^= data[i];
+         for (int i = 0; i < length; i++) {
+            crc ^= ((uint16_t)data[i]) << 8;
             for (int j = 0; j < 8; j++) {
-               if (crc & 0x0001)
-                  crc = (crc >> 1) ^ 0xA001;
-               else
-                  crc = crc >> 1;
-            }
-         }
-         return crc;
-      }
-      */
-
-      // crc_16_ccitt_false
-      uint16_t TxUltimateTouch::crc16_modbus(const uint8_t *data, size_t length) {
-         uint16_t crc = 0xFFFF;
-         size_t i, j;
-
-         for (i = 0; i < length; ++i) {
-            crc ^= (uint16_t)data[i] << 8;
-            for (j = 0; j < 8; ++j) {
                if (crc & 0x8000) {
                   crc = (crc << 1) ^ 0x1021;
                } else {
@@ -166,37 +147,10 @@ namespace esphome {
          return crc;
       }
 
-      /*
-      // crc16_xmodem, not modbus
-      uint16_t TxUltimateTouch::crc16_modbus(const uint8_t *data, size_t length) {
-         uint16_t crc = 0x0000;
-         size_t i, j;
-
-         for (i = 0; i < length; ++i) {
-            crc ^= (uint16_t)data[i] << 8;
-            for (j = 0; j < 8; ++j) {
-               if (crc & 0x8000) {
-                  crc = (crc << 1) ^ 0x1021;
-               } else {
-                  crc <<= 1;
-               }
-            }
-         }
-         return crc;
-      }
-      */
-
-      // Appends CRC to array (if space allows)
-      int TxUltimateTouch::append_crc16_modbus(uint8_t *data, size_t data_len, size_t max_len) {
-         if (data_len + 2 > max_len) {
-            return -1; // Not enough space to append CRC
-         }
-
-         uint16_t crc = crc16_modbus(data, data_len);
-         data[data_len]     = crc & 0xFF;       // Low byte
-         data[data_len + 1] = (crc >> 8) & 0xFF; // High byte
-
-         return 0; // Success
+      void TxUltimateTouch::append_crc16(uint8_t *data, size_t data_len, size_t max_len) {
+         uint16_t crc = crc16(data + 2, data_len - 2);
+         data[data_len + 1] = crc & 0xFF;
+         data[data_len] = (crc >> 8) & 0xFF;
       }
    }
 }
