@@ -24,7 +24,8 @@ namespace esphome {
             ESP_LOGD(TAG, "avail=%d", avail);
             read_array(bytes, MIN(avail, BUFFER_SIZE));
             int len = 0;
-            for (uint8_t i = 4; i < 11; i++) {
+            // skip the 2-byte header
+            for (uint8_t i = 2; i < avail; i++) {
                len += snprintf(logbuf+len, sizeof(logbuf)-len, "%d ", bytes[i]);
             }
             // TODO set this back to LOGV or wrap it in a "if log level" or comment it out
@@ -82,6 +83,7 @@ namespace esphome {
          }
       }
 
+      // error 1 1 132 94
       TouchPoint TxUltimateTouch::get_touch_point(uint8_t bytes[]) {
          TouchPoint tp;
          tp.state = bytes[4];
