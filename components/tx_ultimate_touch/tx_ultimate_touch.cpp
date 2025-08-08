@@ -10,6 +10,7 @@ namespace esphome {
       // after that is a 2 byte checksum (ignored)
       static const uint8_t HEADER[] = {170, 85, 1, 2};
       static const int BUFFER_SIZE = 16;
+      static int send_stuff_count = 0;
 
       void TxUltimateTouch::setup() {
          ESP_LOGI("log", "%s", "Tx Ultimate Touch is initialized");
@@ -119,7 +120,6 @@ namespace esphome {
          return tp;
       }
 
-      int send_stuff_count = 0;
       void TxUltimateTouch::send_stuff() {
          uint8_t i=send_stuff_count/256;
          uint8_t j=send_stuff_count%256;
