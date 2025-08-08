@@ -132,7 +132,7 @@ namespace esphome {
       }
 
       // CRC-16/CCITT-FALSE hashing algorithm
-      uint16_t TxUltimateTouch::crc16(const uint8_t *data, int length) {
+      uint16_t TxUltimateTouch::crc16(uint8_t *data, size_t length) {
          uint16_t crc = 0xFFFF;
          for (int i = 0; i < length; i++) {
             crc ^= ((uint16_t)data[i]) << 8;
