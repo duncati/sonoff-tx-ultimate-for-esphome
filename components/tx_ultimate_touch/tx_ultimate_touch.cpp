@@ -32,7 +32,7 @@ namespace esphome {
                   len += snprintf(logbuf+len, sizeof(logbuf)-len, "%d ", bytes[i]);
                }
                // TODO set this back to LOGV or wrap it in a "if log level" or comment it out
-               ESP_LOGD(TAG, "------------------Read bytes: %s", logbuf);
+               ESP_LOGW(TAG, "------------------Read bytes: %s", logbuf);
             }
             if (memcmp(bytes, HEADER, 4) == 0) {
                handle_touch(bytes);
