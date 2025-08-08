@@ -119,7 +119,7 @@ namespace esphome {
          return tp;
       }
 
-      int send_stuff_count = 16;
+      int send_stuff_count = 256;
       void TxUltimateTouch::send_stuff() {
          uint8_t i=send_stuff_count/16;
          uint8_t j=send_stuff_count%16;
@@ -130,7 +130,7 @@ namespace esphome {
                response[4], response[5], response[6], response[7]);
          write_array(response, 8);
          flush();
-         if (++send_stuff_count<256) {
+         if (++send_stuff_count<1024) {
             this->set_timeout("send_stuff", 1000, [this]() {
                   this->send_stuff();
             });
