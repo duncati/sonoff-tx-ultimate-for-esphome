@@ -21,7 +21,7 @@ namespace esphome {
 
          int avail;
          while ((avail = available())) {
-            ESP_LOGD(TAG, "avail=%d", avail);
+            //ESP_LOGD(TAG, "avail=%d", avail);
             read_array(bytes, MIN(avail, BUFFER_SIZE));
             if (bytes[2] == 1 && bytes[3] == 130) {
                // error response, ignore
@@ -32,7 +32,7 @@ namespace esphome {
                   len += snprintf(logbuf+len, sizeof(logbuf)-len, "%d ", bytes[i]);
                }
                // TODO set this back to LOGV or wrap it in a "if log level" or comment it out
-               ESP_LOGW(TAG, "------------------Read bytes: %s", logbuf);
+               ESP_LOGW(TAG, "------------------Read bytes, send_stuff_count=%d: %s", send_stuff_count, logbuf);
             }
             if (memcmp(bytes, HEADER, 4) == 0) {
                handle_touch(bytes);
@@ -121,16 +121,18 @@ namespace esphome {
 
       int send_stuff_count = 0;
       void TxUltimateTouch::send_stuff() {
-         uint8_t i=send_stuff_count/64;
-         uint8_t j=send_stuff_count%64;
+         uint8_t i=send_stuff_count/256;
+         uint8_t j=send_stuff_count%256;
          uint8_t response[8] = {170, 85, 1, 2, i, j};
          append_crc16(response, 6, 8);
+         /*
          ESP_LOGD(TAG, "sending (%d), %d %d %d %d %d %d %d %d", send_stuff_count,
                response[0], response[1], response[2], response[3],
                response[4], response[5], response[6], response[7]);
+         */
          write_array(response, 8);
          flush();
-         if (++send_stuff_count<1024) {
+         if (++send_stuff_count<65536) {
             this->set_timeout("send_stuff", 1000, [this]() {
                   this->send_stuff();
             });
