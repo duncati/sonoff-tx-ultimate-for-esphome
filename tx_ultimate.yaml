@@ -706,7 +706,7 @@ tx_ultimate_touch:
         auto button = id(button_lookup)[${button_count}-1][touch.x-1];
         id(button_held)[button-1]=0;
         auto button_press_duration = millis() - id(button_press_start_time)[button-1];
-        ESP_LOGD("button", "Button %d released, held for %u ms", button, button_press_duration);
+        ESP_LOGD("button", "Button %d released, held for %u ms (%d)", button, button_press_duration, id(button_press_start_time)[button-1]);
         bool is_long_press = false;
         bool is_double_tap = false;
         if (button_press_duration >= ${long_press_time}) {

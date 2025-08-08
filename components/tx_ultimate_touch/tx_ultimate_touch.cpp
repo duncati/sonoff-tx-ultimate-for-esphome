@@ -23,13 +23,17 @@ namespace esphome {
          while ((avail = available())) {
             ESP_LOGD(TAG, "avail=%d", avail);
             read_array(bytes, MIN(avail, BUFFER_SIZE));
-            int len = 0;
-            // skip the 2-byte header
-            for (uint8_t i = 2; i < avail; i++) {
-               len += snprintf(logbuf+len, sizeof(logbuf)-len, "%d ", bytes[i]);
+            if (bytes[2] == 1 && bytes[3] == 130) {
+               // error response, ignore
+            } else {
+               int len = 0;
+               // skip the 2-byte header
+               for (uint8_t i = 2; i < avail; i++) {
+                  len += snprintf(logbuf+len, sizeof(logbuf)-len, "%d ", bytes[i]);
+               }
+               // TODO set this back to LOGV or wrap it in a "if log level" or comment it out
+               ESP_LOGD(TAG, "Read bytes: %s", logbuf);
             }
-            // TODO set this back to LOGV or wrap it in a "if log level" or comment it out
-            ESP_LOGD(TAG, "Read bytes: %s", logbuf);
             if (memcmp(bytes, HEADER, 4) == 0) {
                handle_touch(bytes);
             }
@@ -127,7 +131,7 @@ namespace esphome {
          write_array(response, 8);
          flush();
          if (++send_stuff_count<256) {
-            this->set_timeout("send_stuff", 1000, [this]() {
+            this->set_timeout("send_stuff", 200, [this]() {
                   this->send_stuff();
             });
          }
