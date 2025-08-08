@@ -694,7 +694,7 @@ tx_ultimate_touch:
   on_press:
     - lambda: |-
         auto button = id(button_lookup)[${button_count}-1][touch.x-1];
-        ESP_LOGI("button", "Touch Position: %d, State: %d, Button: %d at %d", touch.x, touch.state, button, millis());
+        ESP_LOGI("button", "Touch Position: %d, State: %d, Button: %d at %lu", touch.x, touch.state, button, millis());
         id(led_on_button_press)->execute(button, false);
         id(button_held)[button-1]=1;
     - switch.turn_on: vibra
@@ -705,8 +705,8 @@ tx_ultimate_touch:
     - lambda: |-
         auto button = id(button_lookup)[${button_count}-1][touch.x-1];
         id(button_held)[button-1]=0;
-        auto button_press_duration = millis() - id(button_press_start_time)[button-1];
-        ESP_LOGD("button", "Button %d released, held for %u ms (%d - %d)", button, millis(), button_press_duration, id(button_press_start_time)[button-1]);
+        uint32_t button_press_duration = millis() - id(button_press_start_time)[button-1];
+        ESP_LOGD("button", "Button %d released, held for %u ms (%lu - %lu)", button, millis(), button_press_duration, id(button_press_start_time)[button-1]);
         bool is_long_press = false;
         bool is_double_tap = false;
         if (button_press_duration >= ${long_press_time}) {
