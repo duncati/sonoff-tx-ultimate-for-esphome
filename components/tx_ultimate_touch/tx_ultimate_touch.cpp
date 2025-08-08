@@ -132,10 +132,15 @@ namespace esphome {
          */
          write_array(response, 8);
          flush();
+         if (send_stuff_count%1000 == 0) {
+            ESP_LOGW(TAG, "------------------ send_stuff_count=%d", send_stuff_count);
+         }
          if (++send_stuff_count<65536) {
-            this->set_timeout("send_stuff", 1000, [this]() {
+            this->set_timeout("send_stuff", 500, [this]() {
                   this->send_stuff();
             });
+         } else {
+            ESP_LOGW(TAG, "------------------ DONE !!!!! ---------------");
          }
       }
 
