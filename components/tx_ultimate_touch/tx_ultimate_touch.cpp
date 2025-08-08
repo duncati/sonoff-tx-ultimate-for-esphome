@@ -32,7 +32,7 @@ namespace esphome {
                   len += snprintf(logbuf+len, sizeof(logbuf)-len, "%d ", bytes[i]);
                }
                // TODO set this back to LOGV or wrap it in a "if log level" or comment it out
-               ESP_LOGD(TAG, "Read bytes: %s", logbuf);
+               ESP_LOGD(TAG, "------------------Read bytes: %s", logbuf);
             }
             if (memcmp(bytes, HEADER, 4) == 0) {
                handle_touch(bytes);
@@ -131,7 +131,7 @@ namespace esphome {
          write_array(response, 8);
          flush();
          if (++send_stuff_count<256) {
-            this->set_timeout("send_stuff", 200, [this]() {
+            this->set_timeout("send_stuff", 1000, [this]() {
                   this->send_stuff();
             });
          }
