@@ -88,7 +88,7 @@ esphome:
   name: ${name}
   friendly_name: ${friendly_name}
   project:
-    name: smarthomeyourself.tx_ultimate
+    name: smarthomeyourself_tx_ultimate
     version: "1.0"
 
   on_boot:
