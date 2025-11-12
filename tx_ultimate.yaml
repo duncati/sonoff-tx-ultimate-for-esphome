@@ -707,8 +707,8 @@ tx_ultimate_touch:
     - lambda: 'ESP_LOGI("button", "on_release stopping led_on_button_press and bar_go_up_and_down");'
     - script.stop: led_on_button_press
     - script.execute: handle_on_release
-      x: touch.x
-      state: 'Very Long Press'
+        x: touch.x
+        state: 'Very Long Press'
 
   on_swipe_left:
     - script.execute: led_on_swipe_left
