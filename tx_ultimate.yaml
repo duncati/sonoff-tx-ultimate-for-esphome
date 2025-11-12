@@ -443,14 +443,10 @@ binary_sensor:
     name: "Very Long Press"
     id: very_long_press
     on_press:
-      - script.execute:
-          id: handle_on_release
-          x: touch.x
-          state: touch.state
-#     - delay: ${button_on_time}
-#     - binary_sensor.template.publish:
-#         id: very_long_press
-#         state: OFF
+     - delay: ${button_on_time}
+     - binary_sensor.template.publish:
+         id: very_long_press
+         state: OFF
 
 switch:
   - platform: gpio
@@ -710,7 +706,7 @@ tx_ultimate_touch:
     - script.execute:
         id: handle_on_release
         x: touch.x
-        state: 'Very Long Press'
+        state: OFF
 
   on_swipe_left:
     - script.execute: led_on_swipe_left
@@ -751,6 +747,10 @@ tx_ultimate_touch:
               auto button = id(button_lookup)[${button_count}-1][touch.x-1];
               id(button_held)[button-1]=0;
           - script.execute: led_on_long_touch
+          - script.execute:
+              id: handle_on_release
+              x: touch.x
+              state: TRIGGERED
           - switch.turn_on: vibra
           - binary_sensor.template.publish:
              id: very_long_press
