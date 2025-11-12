@@ -443,7 +443,7 @@ binary_sensor:
     name: "Very Long Press"
     id: very_long_press
     on_press:
-      - scripte.execute: handle_on_release
+      - script.execute: handle_on_release
         x: touch.x
         state: touch.state
 #     - delay: ${button_on_time}
