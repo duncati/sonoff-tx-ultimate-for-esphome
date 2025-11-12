@@ -1179,7 +1179,7 @@ script:
     mode: parallel
     parameters:
       x: int
-      state: string
+      state: bool
     then:
       - lambda: |-
           auto button = id(button_lookup)[${button_count}-1][x-1];
@@ -1222,7 +1222,7 @@ script:
             case 4: id(dim_led_at_button_4)->execute(is_long_press, is_double_tap); break;
           }
       - lambda: >
-          ESP_LOGW("button", "Release Position: %d / State: %d", x, state);
+          ESP_LOGW("button", "Release Position: %d / State: %d", x, state ? "ON" : "OFF");
 
 # TODO dim the right LEDs based on the button_count
   - id: led_on_swipe_left
