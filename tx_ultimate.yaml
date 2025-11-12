@@ -1184,7 +1184,8 @@ script:
     parameters:
       x: int
       state: string
-    - lambda: |-
+    then:
+      - lambda: |-
         auto button = id(button_lookup)[${button_count}-1][x-1];
         id(button_held)[button-1]=0;
         // this will be wrong once every 49.7 days when millis() resets to 0 *shrug*
@@ -1200,31 +1201,31 @@ script:
             case 2: id(long_press_2).publish_state(true); break;
             case 3: id(long_press_3).publish_state(true); break;
             case 4: id(long_press_4).publish_state(true); break;
-          }
+        }
+      } else {
+        id(button_double_tap)[button-1]++;
+        id(double_tap_timer)->execute(button);
+        // TODO maybe add triple tap?
+        if (id(button_double_tap)[button-1]>1) {
+          is_double_tap = true;
+          id(process_double_tap)->execute(button);
+          id(button_double_tap)[button-1]=0;
         } else {
-          id(button_double_tap)[button-1]++;
-          id(double_tap_timer)->execute(button);
-          // TODO maybe add triple tap?
-          if (id(button_double_tap)[button-1]>1) {
-            is_double_tap = true;
-            id(process_double_tap)->execute(button);
-            id(button_double_tap)[button-1]=0;
-          } else {
-            switch(button) {
-              case 1: id(button_1).publish_state(true); break;
-              case 2: id(button_2).publish_state(true); break;
-              case 3: id(button_3).publish_state(true); break;
-              case 4: id(button_4).publish_state(true); break;
-            }
+          switch(button) {
+            case 1: id(button_1).publish_state(true); break;
+            case 2: id(button_2).publish_state(true); break;
+            case 3: id(button_3).publish_state(true); break;
+            case 4: id(button_4).publish_state(true); break;
           }
         }
-        switch(button) {
-          case 1: id(dim_led_at_button_1)->execute(is_long_press, is_double_tap); break;
-          case 2: id(dim_led_at_button_2)->execute(is_long_press, is_double_tap); break;
-          case 3: id(dim_led_at_button_3)->execute(is_long_press, is_double_tap); break;
-          case 4: id(dim_led_at_button_4)->execute(is_long_press, is_double_tap); break;
-        }
-    - lambda: >
+      }
+      switch(button) {
+        case 1: id(dim_led_at_button_1)->execute(is_long_press, is_double_tap); break;
+        case 2: id(dim_led_at_button_2)->execute(is_long_press, is_double_tap); break;
+        case 3: id(dim_led_at_button_3)->execute(is_long_press, is_double_tap); break;
+        case 4: id(dim_led_at_button_4)->execute(is_long_press, is_double_tap); break;
+      }
+      - lambda: >
         ESP_LOGW("button", "Release Position: %d / State: %d", x, state);
 
 # TODO dim the right LEDs based on the button_count
