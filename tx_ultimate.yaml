@@ -743,8 +743,11 @@ tx_ultimate_touch:
           - lambda: |-
               auto button = id(button_lookup)[${button_count}-1][touch.x-1];
               id(button_held)[button-1]=0;
-              id(handle_on_release).execute(touch.x, touch.state);
-          - script.execute: led_on_long_touch
+              //id(handle_on_release).execute(touch.x, touch.state);
+              id(set_bar_height).execute(0);
+              id(bars_go_up_and_down).stop();
+              // maybe don't do LED effects for the very long touch since it doesn't do anything??
+              id(led_on_long_touch);
           - switch.turn_on: vibra
           - binary_sensor.template.publish:
              id: very_long_press
