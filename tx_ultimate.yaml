@@ -939,8 +939,8 @@ script:
                 target_led->get(5-i).set(black);
               }
             }
-            target_led->schedule_show();
           }
+          target_led->schedule_show();
 
   - id: double_tap_timer
     mode: restart
