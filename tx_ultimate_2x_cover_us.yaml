@@ -650,7 +650,7 @@ tx_ultimate_touch:
     - lambda: >
         ESP_LOGD("tx_ultimate_touch.on_full_touch_release", "Full Touch Release Position: %d / State: %d", touch.x, touch.state);
 
-  on_long_touch_release:
+  on_long_touch:
     - script.execute: led_on_long_touch
 
     - switch.turn_on: vibra
@@ -660,7 +660,7 @@ tx_ultimate_touch:
         state: ON
 
     - lambda: >
-        ESP_LOGD("tx_ultimate_touch.on_long_touch_release", "Long Touch Release Position: %d / State: %d", touch.x, touch.state);
+        ESP_LOGD("tx_ultimate_touch.on_long_touch", "Long Touch Release Position: %d / State: %d", touch.x, touch.state);
 
 time:
   - platform: homeassistant

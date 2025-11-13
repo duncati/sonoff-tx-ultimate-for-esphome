@@ -489,7 +489,7 @@ Is triggered, if you swipe from left to right side of the surface.
 ### on_full_touch_release
 Is triggered, if you touch more than one point on the surface.  
   
-### on_long_touch_release
+### on_long_touch
 Is triggered, if you touch a point on the surface longer than 5 seconds.  
   
 &nbsp;  
@@ -530,7 +530,7 @@ It send information for the following events:
 ### Binary sensors
 I've added one binary sensor for each type of touch event, except the long press.  
 So you can handle all events easy in Home Assistant.  
-The long press event is only usable by using the on_long_touch_release action at the moment.  
+The long press event is only usable by using the on_long_touch action at the moment.  
   
 ### LEDs
 There are 28 addressable LEDs on board. They are implemented as neopixel platform with 2 predefined effects.

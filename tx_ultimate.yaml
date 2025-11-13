@@ -733,22 +733,10 @@ tx_ultimate_touch:
     - lambda: >
         ESP_LOGD("button", "Multi Touch Release Position: %d / State: %d", touch.x, touch.state);
 
-# This is a lie. This is not a release, this is holding the pad for >5s. I can still be touching the pad when this triggers. Worse yet, a real release is never sent. :/
-  on_long_touch_release:
+  on_long_touch:
     - lambda: |-
         ESP_LOGD("button", "Very Long Touch Event Position: %d / State: %d", touch.x, touch.state);
-        auto button = id(button_lookup)[${button_count}-1][touch.x-1];
-        id(button_held)[button-1]=0;
         id(handle_on_release).execute(touch.x, touch.state);
-        //id(bars_go_up_and_down).stop();
-        //id(set_bar_height).execute(0);
-        //id(led_on_button_press).stop();
-        //switch(touch.x) {
-          //case 1: id(dim_led_at_button_1).execute(true, false); break;
-          //case 2: id(dim_led_at_button_2).execute(true, false); break;
-          //case 3: id(dim_led_at_button_3).execute(true, false); break;
-          //case 4: id(dim_led_at_button_4).execute(true, false); break;
-        //}
         // maybe don't do LED effects for the very long touch since it doesn't do anything??
         //id(led_on_long_touch);
     - switch.turn_on: vibra
@@ -876,7 +864,7 @@ script:
                   id(bars_go_up_and_down).stop();
                 } else {
                   int bar_height = id(button_bar_brightness)[button-1];
-                  ESP_LOGI("button", "button %d bar adjusting %d, height is %d", button, id(button_bar_flipper)[button-1], bar_height);
+                  //ESP_LOGI("button", "button %d bar adjusting %d, height is %d", button, id(button_bar_flipper)[button-1], bar_height);
                   if (bar_height == 7) {
                     id(button_bar_flipper)[button-1] = -1;
                   } else if (bar_height == 1) {
@@ -893,7 +881,7 @@ script:
       height: int
     then:
       - lambda: |-
-          ESP_LOGI("button", "set_bar_height to %d", height);
+          //ESP_LOGI("button", "set_bar_height to %d", height);
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
           // solid bar color with ranges
           //  auto black = esphome::Color(0, 0, 0);

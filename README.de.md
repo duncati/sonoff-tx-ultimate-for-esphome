@@ -490,7 +490,7 @@ Wird ausgelöst, wenn Sie von der linken Seite zur rechten Seite der Oberfläche
 ### on_full_touch_release
 Wird ausgelöst, wenn Sie mehr als einen Punkt auf der Oberfläche berühren.  
   
-### on_long_touch_release
+### on_long_touch
 Wird ausgelöst, wenn Sie einen Punkt auf der Oberfläche länger als 5 Sekunden berühren.  
   
 &nbsp;  
@@ -531,7 +531,7 @@ Sie sendet Informationen für die folgenden Ereignisse:
 ### Binäre Sensoren
 Ich habe einen binären Sensor für jeden Typ von Touch-Ereignis hinzugefügt, außer für den Langzeitdruck.  
 So können Sie alle Ereignisse einfach in Home Assistant verarbeiten.  
-Das Langzeitdruck-Ereignis kann derzeit nur über die on_long_touch_release-Aktion verwendet werden.  
+Das Langzeitdruck-Ereignis kann derzeit nur über die on_long_touch-Aktion verwendet werden.  
   
 ### LEDs
 Auf der Platine befinden sich 28 adressierbare LEDs. Sie sind als Neopixel-Plattform mit 2 vordefinierten Effekten implementiert.  
