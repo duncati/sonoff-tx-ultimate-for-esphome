@@ -735,37 +735,26 @@ tx_ultimate_touch:
 
 # This is a lie. This is not a release, this is holding the pad for >5s. I can still be touching the pad when this triggers. Worse yet, a real release is never sent. :/
   on_long_touch_release:
-    - lambda: 'ESP_LOGD("button", "Very Long Touch Release Position: %d / State: %d %d", touch.x, touch.state, ${long_hold_uses_bars});'
-    - if:
-        condition:
-          lambda: "return !${long_hold_uses_bars};"
-        then:
-          - lambda: |-
-              auto button = id(button_lookup)[${button_count}-1][touch.x-1];
-              id(button_held)[button-1]=0;
-              //id(handle_on_release).execute(touch.x, touch.state);
-              id(bars_go_up_and_down).stop();
-              id(set_bar_height).execute(0);
-              id(led_on_button_press).stop();
-              ESP_LOGD("button", "Very Long Touch dim switch %d", touch.x);
-              switch(touch.x) {
-                case 1: id(dim_led_at_button_1).execute(true, false); break;
-                case 2: id(dim_led_at_button_2).execute(true, false); break;
-                case 3: id(dim_led_at_button_3).execute(true, false); break;
-                case 4: id(dim_led_at_button_4).execute(true, false); break;
-              }
-              // maybe don't do LED effects for the very long touch since it doesn't do anything??
-              //id(led_on_long_touch);
-          - switch.turn_on: vibra
-          - binary_sensor.template.publish:
-             id: very_long_press
-             state: ON
-          - lambda: >
-              ESP_LOGD("button", "Very Long Touch Release Position: %d / State: %d", touch.x, touch.state);
-        else:
-          - lambda: |-
-              auto button = id(button_lookup)[${button_count}-1][touch.x-1];
-              id(button_held)[button-1]=0;
+    - lambda: |-
+        ESP_LOGD("button", "Very Long Touch Event Position: %d / State: %d", touch.x, touch.state);
+        auto button = id(button_lookup)[${button_count}-1][touch.x-1];
+        id(button_held)[button-1]=0;
+        id(handle_on_release).execute(touch.x, touch.state);
+        //id(bars_go_up_and_down).stop();
+        //id(set_bar_height).execute(0);
+        //id(led_on_button_press).stop();
+        //switch(touch.x) {
+          //case 1: id(dim_led_at_button_1).execute(true, false); break;
+          //case 2: id(dim_led_at_button_2).execute(true, false); break;
+          //case 3: id(dim_led_at_button_3).execute(true, false); break;
+          //case 4: id(dim_led_at_button_4).execute(true, false); break;
+        //}
+        // maybe don't do LED effects for the very long touch since it doesn't do anything??
+        //id(led_on_long_touch);
+    - switch.turn_on: vibra
+    - binary_sensor.template.publish:
+       id: very_long_press
+       state: ON
 
 time:
   - platform: homeassistant
@@ -1030,7 +1019,6 @@ script:
           count: ${dim_led_steps}
           then:
             - lambda: |-
-                ESP_LOGD("button", "Dimming button 1");
                 int button = 1;
                 int led_index;
                 if (${button_led_feedback_bottom}) {
