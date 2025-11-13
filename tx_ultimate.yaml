@@ -735,7 +735,7 @@ tx_ultimate_touch:
 
 # This is a lie. This is not a release, this is holding the pad for >5s. I can still be touching the pad when this triggers. Worse yet, a real release is never sent. :/
   on_long_touch_release:
-    - lambda: 'ESP_LOGD("button", "Very Long Touch Release Position: %d / State: %d", touch.x, touch.state);'
+    - lambda: 'ESP_LOGD("button", "Very Long Touch Release Position: %d / State: %d %d", touch.x, touch.state, ${long_hold_uses_bars});'
     - if:
         condition:
           lambda: "return !${long_hold_uses_bars};"
