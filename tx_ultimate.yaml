@@ -730,8 +730,9 @@ tx_ultimate_touch:
     - binary_sensor.template.publish:
         id: multi_touch
         state: ON
-    - lambda: >
+    - lambda: |-
         ESP_LOGD("button", "Multi Touch Release Position: %d / State: %d", touch.x, touch.state);
+        id(handle_on_release).execute(touch.x, touch.state);
 
   on_long_touch:
     - lambda: |-
@@ -770,6 +771,7 @@ script:
       - lambda: |-
           int led_index;
           if (id(button_press_start_time)[button-1] == 0) {
+            id(button_press_start_time)[button-1] = millis();
             if (${button_led_feedback_bottom}) {
               switch(${button_count}) {
                 case 4: led_index = 14 - 2*button; break;
@@ -788,7 +790,6 @@ script:
               }
               id(led_on_button_press_internal)->execute(button, led_index, double_tap);
             }
-            id(button_press_start_time)[button-1] = millis();
             static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
           } else {
             id(button_press_start_time)[button-1] = millis();
