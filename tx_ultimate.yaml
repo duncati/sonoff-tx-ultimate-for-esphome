@@ -16,7 +16,7 @@ substitutions:
   vibra_time: 150ms
   button_on_time: 500ms
 
-  double_tap_timeout: 250ms
+  double_tap_timeout: 350ms
   double_tap_color: "{100, 0, 0}"
 
   nightlight: "on"
@@ -791,6 +791,7 @@ script:
             id(button_press_start_time)[button-1] = millis();
             static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
           } else {
+            id(button_press_start_time)[button-1] = millis();
             ESP_LOGI("button", "button %d pressed before fade completed", button);
           }
       - if:
@@ -1191,6 +1192,7 @@ script:
             id(double_tap_timer)->execute(button);
             // TODO maybe add triple tap?
             if (id(button_double_tap)[button-1]>1) {
+              ESP_LOGD("button", "Button %d double tapped", button);
               is_double_tap = true;
               id(process_double_tap)->execute(button);
               id(button_double_tap)[button-1]=0;
