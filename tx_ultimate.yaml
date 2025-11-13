@@ -723,7 +723,6 @@ tx_ultimate_touch:
     - lambda: >
         ESP_LOGD("button", "Swipe Right Position: %d / State: %d", touch.x, touch.state);
 
-# on_full_touch_release:
   on_multi_touch_release:
     - script.execute: led_on_multi_touch
     - switch.turn_on: vibra
@@ -731,8 +730,7 @@ tx_ultimate_touch:
         id: multi_touch
         state: ON
     - lambda: |-
-        ESP_LOGD("button", "Multi Touch Release Position: %d / State: %d", touch.x, touch.state);
-        id(handle_on_release).execute(touch.x, touch.state);
+        ESP_LOGD("button", "Multi Touch Release Position");
 
   on_long_touch:
     - lambda: |-
@@ -1315,6 +1313,15 @@ script:
   - id: led_on_multi_touch
     mode: restart
     then:
+      - script.stop:
+          id: bars_go_up_and_down
+      - script.execute:
+          id: set_bar_height
+          height: 0
+      - script.execute:
+          id: dim_led_at_button_1
+          is_long_press: false
+          is_double_tap: false
       - light.turn_on:
           id: leds_top
           brightness: ${multi_touch_brightness}

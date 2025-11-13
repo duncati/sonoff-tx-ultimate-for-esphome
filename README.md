@@ -486,7 +486,7 @@ Is triggered, if you swipe from right to left side of the surface.
 ### on_swipe_right
 Is triggered, if you swipe from left to right side of the surface.  
   
-### on_full_touch_release
+### on_multi_touch_release
 Is triggered, if you touch more than one point on the surface.  
   
 ### on_long_touch

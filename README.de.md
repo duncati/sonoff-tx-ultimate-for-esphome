@@ -487,7 +487,7 @@ Wird ausgelöst, wenn Sie von der rechten Seite zur linken Seite der Oberfläche
 ### on_swipe_right
 Wird ausgelöst, wenn Sie von der linken Seite zur rechten Seite der Oberfläche wischen.  
   
-### on_full_touch_release
+### on_multi_touch_release
 Wird ausgelöst, wenn Sie mehr als einen Punkt auf der Oberfläche berühren.  
   
 ### on_long_touch
