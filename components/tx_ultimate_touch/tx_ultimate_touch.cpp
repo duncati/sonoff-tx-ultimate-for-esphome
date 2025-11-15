@@ -115,25 +115,25 @@ namespace esphome {
          }
          return tp;
       }
-   }
 
-   int TxUltimateTouch::get_top_led_for_button(int button, int button_count) {
-      switch(button_count) {
-         case 4: return 18 + 2*button;
-         case 3: return 19 + 2*button;
-         case 2: return 17 + 4*button;
-         case 1: return 23;
+      int get_top_led_for_button(int button, int button_count) {
+         switch(button_count) {
+            case 4: return 18 + 2*button;
+            case 3: return 19 + 2*button;
+            case 2: return 17 + 4*button;
+            case 1: return 23;
+         }
+         return -1;
       }
-      return -1;
-   }
 
-   int TxUltimateTouch::get_bottom_led_for_button(int button, int button_count) {
-      switch(button_count) {
-         case 4: return 14 - 2*button;
-         case 3: return 13 - 2*button;
-         case 2: return 15 - 4*button;
-         case 1: return 9;
+      int get_bottom_led_for_button(int button, int button_count) {
+         switch(button_count) {
+            case 4: return 14 - 2*button;
+            case 3: return 13 - 2*button;
+            case 2: return 15 - 4*button;
+            case 1: return 9;
+         }
+         return -1;
       }
-      return -1;
    }
 }
