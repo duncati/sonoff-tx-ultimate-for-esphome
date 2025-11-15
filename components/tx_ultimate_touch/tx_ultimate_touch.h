@@ -45,9 +45,6 @@ namespace esphome {
             void send_touch_(TouchPoint tp);
             void handle_touch(uint8_t bytes[]);
             TouchPoint get_touch_point(uint8_t bytes[]);
-            void send_stuff();
-            uint16_t crc16(uint8_t* data, size_t length);
-            void append_crc16(uint8_t* data, size_t data_len, size_t max_len);
 
             Trigger<TouchPoint> touch_trigger_;
             Trigger<TouchPoint> release_trigger_;

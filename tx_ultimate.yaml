@@ -90,6 +90,14 @@ esphome:
   project:
     name: smarthomeyourself.tx_ultimate
     version: "1.0"
+  includes:
+    - tx_ultimate_utility
+
+  custom_component:
+  - id: utility
+    lambda: |-
+      auto c = new MyComponent();
+      return {c};
 
   on_boot:
     priority: -100
@@ -730,7 +738,9 @@ tx_ultimate_touch:
         id: multi_touch
         state: ON
     - lambda: |-
-        ESP_LOGD("button", "Multi Touch Release Position");
+        ESP_LOGD("button", "Multi Touch Release");
+        int sum = return id(utility).add_values(2, 3);
+        ESP_LOGD("button", "Multi Touch Release sum=%d", sum);
 
   on_long_touch:
     - lambda: |-

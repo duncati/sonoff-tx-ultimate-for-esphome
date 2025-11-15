@@ -10,7 +10,6 @@ namespace esphome {
       // after that is a 2 byte checksum (ignored)
       static const uint8_t HEADER[] = {170, 85, 1, 2};
       static const int BUFFER_SIZE = 16;
-      static int send_stuff_count = 0;
 
       void TxUltimateTouch::setup() {
          ESP_LOGI("log", "%s", "Tx Ultimate Touch is initialized");
@@ -32,8 +31,6 @@ namespace esphome {
                for (uint8_t i = 2; i < avail; i++) {
                   len += snprintf(logbuf+len, sizeof(logbuf)-len, "%d ", bytes[i]);
                }
-               // TODO set this back to LOGV or wrap it in a "if log level" or comment it out
-               ESP_LOGW(TAG, "------------------Read bytes, send_stuff_count=%d: %s", send_stuff_count, logbuf);
             }
             if (memcmp(bytes, HEADER, 4) == 0) {
                handle_touch(bytes);
@@ -56,7 +53,6 @@ namespace esphome {
                   tp.x -= 16;
                   ESP_LOGD(TAG, "Long Press Release (x=%d)", tp.x);
                   this->long_touch_release_trigger_.trigger(tp);
-                  send_stuff();
                } else {
                   ESP_LOGD(TAG, "Release (x=%d)", tp.x);
                   this->release_trigger_.trigger(tp);
@@ -118,52 +114,6 @@ namespace esphome {
                ESP_LOGW("main", "Tx Ultimate Touch unknown state %d", bytes[4]);
          }
          return tp;
-      }
-
-      void TxUltimateTouch::send_stuff() {
-         uint8_t i=send_stuff_count/256;
-         uint8_t j=send_stuff_count%256;
-         uint8_t response[8] = {170, 85, 1, 2, i, j};
-         append_crc16(response, 6, 8);
-         /*
-         ESP_LOGD(TAG, "sending (%d), %d %d %d %d %d %d %d %d", send_stuff_count,
-               response[0], response[1], response[2], response[3],
-               response[4], response[5], response[6], response[7]);
-         */
-         write_array(response, 8);
-         flush();
-         if (send_stuff_count%1000 == 0) {
-            ESP_LOGW(TAG, "------------------ send_stuff_count=%d", send_stuff_count);
-         }
-         if (++send_stuff_count<65536) {
-            this->set_timeout("send_stuff", 500, [this]() {
-                  this->send_stuff();
-            });
-         } else {
-            ESP_LOGW(TAG, "------------------ DONE !!!!! ---------------");
-         }
-      }
-
-      // CRC-16/CCITT-FALSE hashing algorithm
-      uint16_t TxUltimateTouch::crc16(uint8_t *data, size_t length) {
-         uint16_t crc = 0xFFFF;
-         for (int i = 0; i < length; i++) {
-            crc ^= ((uint16_t)data[i]) << 8;
-            for (int j = 0; j < 8; j++) {
-               if (crc & 0x8000) {
-                  crc = (crc << 1) ^ 0x1021;
-               } else {
-                  crc <<= 1;
-               }
-            }
-         }
-         return crc;
-      }
-
-      void TxUltimateTouch::append_crc16(uint8_t *data, size_t data_len, size_t max_len) {
-         uint16_t crc = crc16(data + 2, data_len - 2);
-         data[data_len + 1] = crc & 0xFF;
-         data[data_len] = (crc >> 8) & 0xFF;
       }
    }
 }
