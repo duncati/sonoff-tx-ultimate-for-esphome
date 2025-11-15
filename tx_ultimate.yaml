@@ -343,7 +343,9 @@ binary_sensor:
     name: "Swipe left"
     id: swipe_left
     on_press:
-      - delay: ${button_on_time}
+      - script.stop: led_on_button_press
+      - script.stop: bars_go_up_and_down
+#     - delay: ${button_on_time}
       - binary_sensor.template.publish:
           id: swipe_left
           state: OFF
@@ -352,7 +354,9 @@ binary_sensor:
     name: "Swipe_right"
     id: swipe_right
     on_press:
-      - delay: ${button_on_time}
+      - script.stop: led_on_button_press
+      - script.stop: bars_go_up_and_down
+#     - delay: ${button_on_time}
       - binary_sensor.template.publish:
           id: swipe_right
           state: OFF
@@ -1314,8 +1318,7 @@ script:
     mode: restart
     then:
       - script.stop: led_on_button_press
-      - script.stop:
-          id: bars_go_up_and_down
+      - script.stop: bars_go_up_and_down
       - script.execute:
           id: set_bar_height
           height: 0
