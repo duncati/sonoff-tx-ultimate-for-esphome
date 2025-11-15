@@ -731,7 +731,7 @@ tx_ultimate_touch:
         state: ON
     - lambda: |-
         ESP_LOGD("button", "Multi Touch Release");
-        int sum = return id(tx_touch).add_values(2, 3);
+        int sum = id(tx_touch).add_values(2, 3);
         ESP_LOGD("button", "Multi Touch Release sum=%d", sum);
 
   on_long_touch:
