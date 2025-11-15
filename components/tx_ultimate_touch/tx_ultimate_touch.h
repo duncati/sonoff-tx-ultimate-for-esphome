@@ -37,6 +37,10 @@ namespace esphome {
                 this->set_uart_parent(uart_component);
             }
 
+            int add_values(int a, int b) {
+              return a + b;
+            }
+
             void setup() override;
             void loop() override;
             void dump_config() override;

@@ -85,19 +85,13 @@ substitutions:
   touchpanel_power_pin: GPIO5
 
 esphome:
-  includes:
-    - components/tx_ultimate_touch/tx_ultimate_utility.h
   name: ${name}
   friendly_name: ${friendly_name}
   project:
     name: smarthomeyourself.tx_ultimate
     version: "1.0"
-
-custom_component:
-  - id: utility
-    lambda: |-
-      auto c = new MyComponent();
-      return {c};
+  includes:
+    - components/tx_ultimate_touch/tx_ultimate_utility.h
 
   on_boot:
     priority: -100
@@ -739,7 +733,7 @@ tx_ultimate_touch:
         state: ON
     - lambda: |-
         ESP_LOGD("button", "Multi Touch Release");
-        int sum = return id(utility).add_values(2, 3);
+        int sum = return id(tx_touch).add_values(2, 3);
         ESP_LOGD("button", "Multi Touch Release sum=%d", sum);
 
   on_long_touch:
