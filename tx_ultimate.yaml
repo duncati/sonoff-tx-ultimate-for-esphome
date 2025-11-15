@@ -771,7 +771,8 @@ script:
           if (id(button_press_start_time)[button-1] == 0) {
             id(button_press_start_time)[button-1] = millis();
             if (${button_led_feedback_bottom}) {
-              led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
+              led_index = id(tx_touch).get_bottom_led_for_button(button, 4);
+              //led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
               //switch(${button_count}) {
                 //case 4: led_index = 14 - 2*button; break;
                 //case 3: led_index = 13 - 2*button; break;
@@ -781,7 +782,8 @@ script:
               id(led_on_button_press_internal)->execute(button, led_index, double_tap);
             }
             if (${button_led_feedback_top}) {
-              led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
+              led_index = id(tx_touch).get_top_led_for_button(button, 4);
+              //led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
               //switch(${button_count}) {
                 //case 4: led_index = 18 + 2*button; break;
                 //case 3: led_index = 19 + 2*button; break;
