@@ -90,8 +90,6 @@ esphome:
   project:
     name: smarthomeyourself.tx_ultimate
     version: "1.0"
-  includes:
-    - components/tx_ultimate_touch/tx_ultimate_utility.h
 
   on_boot:
     priority: -100
