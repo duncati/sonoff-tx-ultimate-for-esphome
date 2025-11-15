@@ -124,6 +124,7 @@ namespace esphome {
          case 2: return 17 + 4*button;
          case 1: return 23;
       }
+      return -1;
    }
 
    int get_bottom_led_for_button(int button, int button_count) {
@@ -133,5 +134,6 @@ namespace esphome {
          case 2: return 15 - 4*button;
          case 1: return 9;
       }
+      return -1;
    }
 }
