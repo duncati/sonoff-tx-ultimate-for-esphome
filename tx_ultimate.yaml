@@ -1313,6 +1313,7 @@ script:
   - id: led_on_multi_touch
     mode: restart
     then:
+      - script.stop: led_on_button_press
       - script.stop:
           id: bars_go_up_and_down
       - script.execute:
