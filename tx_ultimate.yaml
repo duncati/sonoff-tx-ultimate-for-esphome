@@ -406,7 +406,6 @@ binary_sensor:
     name: "Long Press 1"
     id: long_press_1
     on_press:
-      - script.stop: led_on_button_press
       - delay: ${button_on_time}
       - binary_sensor.template.publish:
           id: long_press_1
@@ -930,6 +929,9 @@ script:
     then:
       - delay: ${double_tap_timeout}
       - lambda: |-
+          // TODO
+          // handle_on_release is already processing the release, maybe stop and restart it?
+          id(handle_on_release).stop();
           ESP_LOGW("button", "Double tap at button %d", button);
           // TODO fix this, it's hacky:
           id(button_press_start_time)[button-1] = 0;
@@ -948,6 +950,7 @@ script:
               id(double_tap_4).publish_state(true);
               break;
           }
+          id(handle_on_release).execute();
 
   - id: short_vibration
     then:
