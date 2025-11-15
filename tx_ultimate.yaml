@@ -85,15 +85,15 @@ substitutions:
   touchpanel_power_pin: GPIO5
 
 esphome:
+  includes:
+    - components/tx_ultimate_touch/tx_ultimate_utility.h
   name: ${name}
   friendly_name: ${friendly_name}
   project:
     name: smarthomeyourself.tx_ultimate
     version: "1.0"
-  includes:
-    - tx_ultimate_utility
 
-  custom_component:
+custom_component:
   - id: utility
     lambda: |-
       auto c = new MyComponent();
