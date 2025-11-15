@@ -771,25 +771,11 @@ script:
           if (id(button_press_start_time)[button-1] == 0) {
             id(button_press_start_time)[button-1] = millis();
             if (${button_led_feedback_bottom}) {
-              led_index = id(tx_touch).get_bottom_led_for_button(button, 4);
-              //led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
-              //switch(${button_count}) {
-                //case 4: led_index = 14 - 2*button; break;
-                //case 3: led_index = 13 - 2*button; break;
-                //case 2: led_index = 15 - 4*button; break;
-                //case 1: led_index = 9; break;
-              //}
+              led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
               id(led_on_button_press_internal)->execute(button, led_index, double_tap);
             }
             if (${button_led_feedback_top}) {
-              led_index = id(tx_touch).get_top_led_for_button(button, 4);
-              //led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
-              //switch(${button_count}) {
-                //case 4: led_index = 18 + 2*button; break;
-                //case 3: led_index = 19 + 2*button; break;
-                //case 2: led_index = 17 + 4*button; break;
-                //case 1: led_index = 23; break;
-              //}
+              led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
               id(led_on_button_press_internal)->execute(button, led_index, double_tap);
             }
             static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
@@ -824,21 +810,11 @@ script:
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
           int led_index;
           if (${button_led_feedback_bottom}) {
-            switch(${button_count}) {
-              case 4: led_index = 14 - 2*button; break;
-              case 3: led_index = 13 - 2*button; break;
-              case 2: led_index = 15 - 4*button; break;
-              case 1: led_index = 9; break;
-            }
+            led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
             target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
           }
           if (${button_led_feedback_top}) {
-            switch(${button_count}) {
-              case 4: led_index = 18 + 2*button; break;
-              case 3: led_index = 19 + 2*button; break;
-              case 2: led_index = 17 + 4*button; break;
-              case 1: led_index = 23; break;
-            }
+            led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
             target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
           }
           target_led->schedule_show();
@@ -1022,21 +998,11 @@ script:
                 int button = 1;
                 int led_index;
                 if (${button_led_feedback_bottom}) {
-                  switch(${button_count}) {
-                    case 4: led_index = 14 - 2*button; break;
-                    case 3: led_index = 13 - 2*button; break;
-                    case 2: led_index = 15 - 4*button; break;
-                    case 1: led_index = 9; break;
-                  }
+                  led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
                   id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
                 }
                 if (${button_led_feedback_top}) {
-                  switch(${button_count}) {
-                    case 4: led_index = 18 + 2*button; break;
-                    case 3: led_index = 19 + 2*button; break;
-                    case 2: led_index = 17 + 4*button; break;
-                    case 1: led_index = 23; break;
-                  }
+                  led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
                   id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
                 }
                 static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
@@ -1057,21 +1023,11 @@ script:
                 int button = 2;
                 int led_index;
                 if (${button_led_feedback_bottom}) {
-                  switch(${button_count}) {
-                    case 4: led_index = 14 - 2*button; break;
-                    case 3: led_index = 13 - 2*button; break;
-                    case 2: led_index = 15 - 4*button; break;
-                    case 1: led_index = 9; break;
-                  }
+                  led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
                   id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
                 }
                 if (${button_led_feedback_top}) {
-                  switch(${button_count}) {
-                    case 4: led_index = 18 + 2*button; break;
-                    case 3: led_index = 19 + 2*button; break;
-                    case 2: led_index = 17 + 4*button; break;
-                    case 1: led_index = 23; break;
-                  }
+                  led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
                   id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
                 }
                 static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
@@ -1092,21 +1048,11 @@ script:
                 int button = 3;
                 int led_index;
                 if (${button_led_feedback_bottom}) {
-                  switch(${button_count}) {
-                    case 4: led_index = 14 - 2*button; break;
-                    case 3: led_index = 13 - 2*button; break;
-                    case 2: led_index = 15 - 4*button; break;
-                    case 1: led_index = 9; break;
-                  }
+                  led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
                   id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
                 }
                 if (${button_led_feedback_top}) {
-                  switch(${button_count}) {
-                    case 4: led_index = 18 + 2*button; break;
-                    case 3: led_index = 19 + 2*button; break;
-                    case 2: led_index = 17 + 4*button; break;
-                    case 1: led_index = 23; break;
-                  }
+                  led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
                   id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
                 }
                 static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
@@ -1127,21 +1073,11 @@ script:
                 int button = 4;
                 int led_index;
                 if (${button_led_feedback_bottom}) {
-                  switch(${button_count}) {
-                    case 4: led_index = 14 - 2*button; break;
-                    case 3: led_index = 13 - 2*button; break;
-                    case 2: led_index = 15 - 4*button; break;
-                    case 1: led_index = 9; break;
-                  }
+                  led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
                   id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
                 }
                 if (${button_led_feedback_top}) {
-                  switch(${button_count}) {
-                    case 4: led_index = 18 + 2*button; break;
-                    case 3: led_index = 19 + 2*button; break;
-                    case 2: led_index = 17 + 4*button; break;
-                    case 1: led_index = 23; break;
-                  }
+                  led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
                   id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
                 }
                 static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
