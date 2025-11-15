@@ -60,7 +60,7 @@ substitutions:
   swipe_right_effect: ""
 
   after_touch_dim_delay: 500ms
-  swipe_between_led_delay: 300ms
+  swipe_between_led_delay: 200ms
   dim_led_steps: 10
   dim_led_step_delay: 50ms
 
@@ -343,9 +343,7 @@ binary_sensor:
     name: "Swipe left"
     id: swipe_left
     on_press:
-      - script.stop: led_on_button_press
-      - script.stop: bars_go_up_and_down
-#     - delay: ${button_on_time}
+      - delay: ${button_on_time}
       - binary_sensor.template.publish:
           id: swipe_left
           state: OFF
@@ -354,9 +352,7 @@ binary_sensor:
     name: "Swipe_right"
     id: swipe_right
     on_press:
-      - script.stop: led_on_button_press
-      - script.stop: bars_go_up_and_down
-#     - delay: ${button_on_time}
+      - delay: ${button_on_time}
       - binary_sensor.template.publish:
           id: swipe_right
           state: OFF
@@ -1222,6 +1218,7 @@ script:
     mode: restart
     then:
       - script.stop: led_on_button_press
+      - script.stop: bars_go_up_and_down
       - script.stop: dim_led_at_button_1
       - script.stop: dim_led_at_button_2
       - script.stop: dim_led_at_button_3
@@ -1270,6 +1267,7 @@ script:
     mode: restart
     then:
       - script.stop: led_on_button_press
+      - script.stop: bars_go_up_and_down
       - script.stop: dim_led_at_button_1
       - script.stop: dim_led_at_button_2
       - script.stop: dim_led_at_button_3
