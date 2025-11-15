@@ -116,7 +116,7 @@ namespace esphome {
          return tp;
       }
 
-      int get_top_led_for_button(int button, int button_count) {
+      int TxUltimateTouch::get_top_led_for_button(int button, int button_count) {
          switch(button_count) {
             case 4: return 18 + 2*button;
             case 3: return 19 + 2*button;
@@ -126,7 +126,7 @@ namespace esphome {
          return -1;
       }
 
-      int get_bottom_led_for_button(int button, int button_count) {
+      int TxUltimateTouch::get_bottom_led_for_button(int button, int button_count) {
          switch(button_count) {
             case 4: return 14 - 2*button;
             case 3: return 13 - 2*button;
