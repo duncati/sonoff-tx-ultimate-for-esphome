@@ -37,9 +37,8 @@ namespace esphome {
                 this->set_uart_parent(uart_component);
             }
 
-            int add_values(int a, int b) {
-              return a + b;
-            }
+            int get_top_led_for_button(int button, int button_count);
+            int get_bottom_led_for_button(int button, int button_count);
 
             void setup() override;
             void loop() override;

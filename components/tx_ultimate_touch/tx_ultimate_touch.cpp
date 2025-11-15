@@ -116,4 +116,22 @@ namespace esphome {
          return tp;
       }
    }
+
+   int get_top_led_for_button(int button, int button_count) {
+      switch(${button_count}) {
+         case 4: led_index = 18 + 2*button; break;
+         case 3: led_index = 19 + 2*button; break;
+         case 2: led_index = 17 + 4*button; break;
+         case 1: led_index = 23; break;
+      }
+   }
+
+   int get_bottom_led_for_button(int button, int button_count) {
+      switch(button_count) {
+         case 4: led_index = 14 - 2*button; break;
+         case 3: led_index = 13 - 2*button; break;
+         case 2: led_index = 15 - 4*button; break;
+         case 1: led_index = 9; break;
+      }
+   }
 }
