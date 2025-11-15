@@ -1281,22 +1281,22 @@ script:
       - script.stop: dim_led_at_button_3
       - script.stop: dim_led_at_button_4
       - script.execute:
-          id: led_on_button_press
+          id: turn_on_led_at_button
           button: 1
           double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
-          id: led_on_button_press
+          id: turn_on_led_at_button
           button: 2
           double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
-          id: led_on_button_press
+          id: turn_on_led_at_button
           button: 3
           double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
-          id: led_on_button_press
+          id: turn_on_led_at_button
           button: 4
           double_tap: false
       - delay: ${swipe_between_led_delay}
@@ -1328,19 +1328,14 @@ script:
       - script.execute:
           id: set_bar_height
           height: 0
-      - script.execute:
-          id: dim_led_at_button_1
-          is_long_press: false
-          is_double_tap: false
-      - light.turn_on:
-          id: leds_top
-          brightness: ${multi_touch_brightness}
-          red: !lambda "return id(multi_touch_color)[0]/100.0;"
-          green: !lambda "return id(multi_touch_color)[1]/100.0;"
-          blue:  !lambda "return id(multi_touch_color)[2]/100.0;"
-          effect: ${multi_touch_effect}
-# TODO fix this!! on multi release, I want to dim down anything that was pressed
-# but this dims down all of the buttons by first turning them on
+# This is more cheesy than cool
+#     - light.turn_on:
+#         id: leds_top
+#         brightness: ${multi_touch_brightness}
+#         red: !lambda "return id(multi_touch_color)[0]/100.0;"
+#         green: !lambda "return id(multi_touch_color)[1]/100.0;"
+#         blue:  !lambda "return id(multi_touch_color)[2]/100.0;"
+#         effect: ${multi_touch_effect}
       - script.execute:
           id: dim_led_at_button_1
           is_long_press: false
@@ -1357,8 +1352,8 @@ script:
           id: dim_led_at_button_4
           is_long_press: false
           is_double_tap: false
-      - delay: 5s
-      - light.turn_off: leds_top
+#     - delay: 5s
+#     - light.turn_off: leds_top
 
   - id: led_on_long_touch
     mode: restart
