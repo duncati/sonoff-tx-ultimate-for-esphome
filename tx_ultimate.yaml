@@ -950,7 +950,6 @@ script:
               id(double_tap_4).publish_state(true);
               break;
           }
-          id(handle_on_release).execute(button, true);
 
   - id: short_vibration
     then:
