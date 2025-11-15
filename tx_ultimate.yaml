@@ -804,32 +804,40 @@ script:
                 ESP_LOGI("button", "button %d possibly long pressed, not stopped", button);
                 if (millis() - id(button_press_start_time)[button-1] > ${long_press_time}) {
                   ESP_LOGI("button", "button %d long pressed", button);
-                  auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
-                  int led_index;
-                  if (${button_led_feedback_bottom}) {
-                    switch(${button_count}) {
-                      case 4: led_index = 14 - 2*button; break;
-                      case 3: led_index = 13 - 2*button; break;
-                      case 2: led_index = 15 - 4*button; break;
-                      case 1: led_index = 9; break;
-                    }
-                    target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
-                  }
-                  if (${button_led_feedback_top}) {
-                    switch(${button_count}) {
-                      case 4: led_index = 18 + 2*button; break;
-                      case 3: led_index = 19 + 2*button; break;
-                      case 2: led_index = 17 + 4*button; break;
-                      case 1: led_index = 23; break;
-                    }
-                    target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
-                  }
-                  target_led->schedule_show();
+                  id(turn_on_led_at_button)->execute(button);
                   id(vibra).turn_on();
                   if (${long_hold_uses_bars}) {
                     id(bars_go_up_and_down)->execute(button);
                   }
                 }
+
+  - id: turn_on_led_at_button
+    mode: parallel
+    parameters:
+      button: int
+    then:
+      - lambda: |-
+          auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
+          int led_index;
+          if (${button_led_feedback_bottom}) {
+            switch(${button_count}) {
+              case 4: led_index = 14 - 2*button; break;
+              case 3: led_index = 13 - 2*button; break;
+              case 2: led_index = 15 - 4*button; break;
+              case 1: led_index = 9; break;
+            }
+            target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
+          }
+          if (${button_led_feedback_top}) {
+            switch(${button_count}) {
+              case 4: led_index = 18 + 2*button; break;
+              case 3: led_index = 19 + 2*button; break;
+              case 2: led_index = 17 + 4*button; break;
+              case 1: led_index = 23; break;
+            }
+            target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
+          }
+          target_led->schedule_show();
 
   - id: led_on_button_press_internal
     mode: parallel
@@ -1224,22 +1232,22 @@ script:
       - script.stop: dim_led_at_button_3
       - script.stop: dim_led_at_button_4
       - script.execute:
-          id: led_on_button_press
+          id: turn_on_led_at_button
           button: 4
           double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
-          id: led_on_button_press
+          id: turn_on_led_at_button
           button: 3
           double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
-          id: led_on_button_press
+          id: turn_on_led_at_button
           button: 2
           double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
-          id: led_on_button_press
+          id: turn_on_led_at_button
           button: 1
           double_tap: false
       - delay: ${swipe_between_led_delay}
