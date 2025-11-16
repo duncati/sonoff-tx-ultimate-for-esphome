@@ -39,7 +39,7 @@ substitutions:
   max_bar_color2: "{0,255,0}"
   min_bar_color3: "{0,0,0}"
   max_bar_color3: "{0,0,255}"
-  min_bar_color4: "{255,150,0}"
+  min_bar_color4: "{255,255,0}"
   max_bar_color4: "{255,0,0}"
 
   very_long_press_brightness: "1"
@@ -856,7 +856,7 @@ script:
                   //ESP_LOGI("button", "button %d bar adjusting %d, height is %d", button, id(button_bar_flipper)[button-1], bar_height);
                   if (bar_height == 7) {
                     id(button_bar_flipper)[button-1] = -1;
-                  } else if (bar_height == 1) {
+                  } else if (bar_height == 0) {
                     id(button_bar_flipper)[button-1] = 1;
                   }
                   id(button_bar_brightness)[button-1]+=id(button_bar_flipper)[button-1];
