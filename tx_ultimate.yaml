@@ -53,13 +53,11 @@ substitutions:
   multi_touch_color: "{0,0,0}"
   multi_touch_effect: "Rainbow"
 
-  swipe_left_brightness: "1"
-  swipe_left_color: "{0,100,0}"
-  swipe_left_effect: ""
+  min_swipe_right_color: "{255,225,92}"
+  max_swipe_right_color: "{137,21,149}"
 
-  swipe_right_brightness: "1"
-  swipe_right_color: "{100,0,70}"
-  swipe_right_effect: ""
+  min_swipe_left_color: "{137,21,149}"
+  max_swipe_left_color: "{255,225,92}"
 
   after_touch_dim_delay: 500ms
   swipe_between_led_delay: 200ms
@@ -214,14 +212,22 @@ globals:
     type: int[3]
     restore_value: no
     initial_value: ${multi_touch_color}
-  - id: swipe_left_color
-    type: int[3]
+  - id: min_swipe_left_color
+    type: esphome::Color
     restore_value: no
-    initial_value: ${swipe_left_color}
-  - id: swipe_right_color
-    type: int[3]
+    initial_value: 'esphome::Color ${min_swipe_left_color}'
+  - id: max_swipe_left_color
+    type: esphome::Color
     restore_value: no
-    initial_value: ${swipe_right_color}
+    initial_value: 'esphome::Color ${max_swipe_left_color}'
+  - id: min_swipe_right_color
+    type: esphome::Color
+    restore_value: no
+    initial_value: 'esphome::Color ${min_swipe_right_color}'
+  - id: max_swipe_right_color
+    type: esphome::Color
+    restore_value: no
+    initial_value: 'esphome::Color ${max_swipe_right_color}'
   - id: touch_color
     type: int[3]
     restore_value: no
@@ -1201,31 +1207,45 @@ script:
       - script.stop: dim_led_at_button_3
       - script.stop: dim_led_at_button_4
 
-# TODO dim the right LEDs based on the button_count
+  - id: knight_rider
+    mode: restart
+    parameters:
+      left: bool
+    then:
+      - repeat:
+          count: 7
+          then:
+            - lambda: |-
+                if (${button_led_feedback_bottom}) {
+                  id(knight_rider_step)->execute(iteration, 7, left);
+                }
+                if (${button_led_feedback_top}) {
+                  id(knight_rider_step)->execute(iteration, 21, left);
+                }
+                static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
+            - delay: ${swipe_between_led_delay}
+
+  - id: knight_rider_step
+    mode: restart
+    parameters:
+      iteration: int
+      left: bool
+      led_offset: int
+    then:
+      - lambda: |-
+          ESP_LOGI("button", "knight_rider left? %d", left);
+          auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
+          esphome::Color gradient;
+          gradient = id(tx_touch).get_color_gradient(id(min_swipe_left_color), id(max_sipe_left_color), iteration);
+          target_led->get(led_offset+iteration).set(gradient);
+
   - id: led_on_swipe_left
     mode: restart
     then:
       - script.execute: stop_all
       - script.execute:
-          id: turn_on_led_at_button
-          button: 4
-          double_tap: false
-      - delay: ${swipe_between_led_delay}
-      - script.execute:
-          id: turn_on_led_at_button
-          button: 3
-          double_tap: false
-      - delay: ${swipe_between_led_delay}
-      - script.execute:
-          id: turn_on_led_at_button
-          button: 2
-          double_tap: false
-      - delay: ${swipe_between_led_delay}
-      - script.execute:
-          id: turn_on_led_at_button
-          button: 1
-          double_tap: false
-      - delay: ${swipe_between_led_delay}
+          id: knight_rider
+          left: true
       - script.execute:
           id: dim_led_at_button_4
           is_long_press: false
