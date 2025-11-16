@@ -544,8 +544,6 @@ light:
           update_interval: 100ms
       - flicker:
           name: "Flicker"
-          transition_length: 2.0s
-          update_interval: 100ms
 
   - platform: partition
     name: "LEDs Nightlight"
