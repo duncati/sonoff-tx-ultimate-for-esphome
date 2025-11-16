@@ -536,13 +536,13 @@ light:
     effects:
       - addressable_rainbow:
           name: "Rainbow"
-          speed: 30
+          speed: 3
           width: 8
       - pulse:
           name: "Pulse"
           transition_length: 1.4s
           update_interval: 100ms
-      - flicker:
+      - addressable_flicker:
           name: "Flicker"
 
   - platform: partition
@@ -591,8 +591,10 @@ light:
           name: "Scan"
       - addressable_rainbow:
           name: "Rainbow"
-          speed: 10
+          speed: 100
           width: 20
+      - addressable_flicker:
+          name: "Flicker"
 
 #This almost worked:
 # adf_pipeline:
