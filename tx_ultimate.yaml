@@ -974,6 +974,7 @@ script:
           if (stage%2 == 0) {
             color = id(touch_color);
           }
+          int led_index;
           if (${button_led_feedback_bottom}) {
             led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
             target_led->get(led_index).set(esphome::Color(color[0], color[1], color[2]));
