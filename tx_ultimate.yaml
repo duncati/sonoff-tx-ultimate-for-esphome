@@ -534,10 +534,10 @@ light:
     id: leds
     default_transition_length: 0s
     effects:
-      - addressable_rainbow:
-          name: "Rainbow"
-          speed: 3
-          width: 8
+#     - addressable_rainbow:
+#         name: "Rainbow"
+#         speed: 3
+#         width: 8
       - pulse:
           name: "Pulse"
           transition_length: 1.4s
@@ -589,10 +589,10 @@ light:
     effects:
       - addressable_scan:
           name: "Scan"
-      - addressable_rainbow:
-          name: "Rainbow"
-          speed: 100
-          width: 20
+#     - addressable_rainbow:
+#         name: "Rainbow"
+#         speed: 100
+#         width: 20
       - addressable_flicker:
           name: "Flicker"
 
