@@ -935,7 +935,6 @@ script:
           ESP_LOGW("button", "Double tap at button %d", button);
           // TODO fix this, it's hacky:
           id(button_press_start_time)[button-1] = 0;
-          id(led_on_button_press)->execute(button, true);
           switch(button) {
             case 1: 
               id(double_tap_1).publish_state(true);
@@ -950,6 +949,40 @@ script:
               id(double_tap_4).publish_state(true);
               break;
           }
+          //id(led_on_button_press)->execute(button, true);
+          id(blink)->execute(button, 1);
+      - delay: 50
+      - lambda: |-
+          id(blink)->execute(button, 2);
+      - delay: 50
+      - lambda: |-
+          id(blink)->execute(button, 1);
+      - delay: 50
+      - lambda: |-
+          id(blink)->execute(button, 1);
+          // fade out
+
+  - id: blink
+    mode: parallel
+    parameters:
+      button: int
+      stage: int
+    then:
+      - lambda: |-
+          auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
+          auto color = id(double_tap_color);
+          if (stage%2 == 0) {
+            color = id(touch_color);
+          }
+          if (${button_led_feedback_bottom}) {
+            led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
+            target_led->get(led_index).set(esphome::Color(color[0], color[1], color[2]));
+          }
+          if (${button_led_feedback_top}) {
+            led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
+            target_led->get(led_index).set(esphome::Color(color[0], color[1], color[2]));
+          }
+          target_led->schedule_show();
 
   - id: short_vibration
     then:
