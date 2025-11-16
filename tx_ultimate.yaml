@@ -1236,7 +1236,7 @@ script:
                   }
                   if (left) {
                     if (${button_led_feedback_bottom}) {
-                      led_index = 6+i;
+                      led_index = 5+i;
                       id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
                     }
                     if (${button_led_feedback_top}) {
@@ -1245,7 +1245,7 @@ script:
                     }
                   } else {
                     if (${button_led_feedback_bottom}) {
-                      led_index = 14-i;
+                      led_index = 13-i;
                       id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
                     }
                     if (${button_led_feedback_top}) {
@@ -1273,14 +1273,14 @@ script:
           }
           if (left) {
             if (${button_led_feedback_bottom}) {
-              target_led->get(6+iteration).set(gradient);
+              target_led->get(5+iteration).set(gradient);
             }
             if (${button_led_feedback_top}) {
               target_led->get(26-iteration).set(gradient);
             }
           } else {
             if (${button_led_feedback_bottom}) {
-              target_led->get(14-iteration).set(gradient);
+              target_led->get(13-iteration).set(gradient);
             }
             if (${button_led_feedback_top}) {
               target_led->get(20+iteration).set(gradient);
