@@ -1236,20 +1236,20 @@ script:
                   }
                   if (left) {
                     if (${button_led_feedback_bottom}) {
-                      led_index = 6+i;
+                      led_index = 7+i;
                       id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
                     }
                     if (${button_led_feedback_top}) {
-                      led_index = 26-i;
+                      led_index = 27-i;
                       id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
                     }
                   } else {
                     if (${button_led_feedback_bottom}) {
-                      led_index = 14-i;
+                      led_index = 13-i;
                       id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
                     }
                     if (${button_led_feedback_top}) {
-                      led_index = 20+i;
+                      led_index = 21+i;
                       id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
                     }
                   }
@@ -1273,18 +1273,21 @@ script:
           }
           if (left) {
             if (${button_led_feedback_bottom}) {
-              target_led->get(6+iteration).set(gradient);
-              ESP_LOGW("button", "knight rider step %d led %d", iteration, (6+iteration));
+              target_led->get(7+iteration).set(gradient);
+              ESP_LOGW("button", "knight rider step %d bottom led %d", iteration, (7+iteration));
             }
             if (${button_led_feedback_top}) {
-              target_led->get(26-iteration).set(gradient);
+              target_led->get(27-iteration).set(gradient);
+              ESP_LOGW("button", "knight rider step %d top led %d", iteration, (27-iteration));
             }
           } else {
             if (${button_led_feedback_bottom}) {
-              target_led->get(14-iteration).set(gradient);
+              target_led->get(13-iteration).set(gradient);
+              ESP_LOGW("button", "knight rider step %d bottom led %d", iteration, (13-iteration));
             }
             if (${button_led_feedback_top}) {
-              target_led->get(20+iteration).set(gradient);
+              target_led->get(21+iteration).set(gradient);
+              ESP_LOGW("button", "knight rider step %d top led %d", iteration, (21+iteration));
             }
           }
           target_led->schedule_show();
