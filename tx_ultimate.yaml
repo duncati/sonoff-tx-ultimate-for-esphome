@@ -1225,17 +1225,17 @@ script:
           count: 10
           then:
             - lambda: |-
-              auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
-              esphome::Color gradient;
-              for (int i=1; i<8; i++) {
-                if (left) {
-                  gradient = id(tx_touch).get_color_gradient(id(min_swipe_left_color), id(max_swipe_left_color), i);
-                } else {
-                  gradient = id(tx_touch).get_color_gradient(id(min_swipe_right_color), id(max_swipe_right_color), i);
+                auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
+                esphome::Color gradient;
+                for (int i=1; i<8; i++) {
+                  if (left) {
+                    gradient = id(tx_touch).get_color_gradient(id(min_swipe_left_color), id(max_swipe_left_color), i);
+                  } else {
+                    gradient = id(tx_touch).get_color_gradient(id(min_swipe_right_color), id(max_swipe_right_color), i);
+                  }
+                  id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
                 }
-                id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
-              }
-              target_led->schedule_show();
+                target_led->schedule_show();
             - delay: ${swipe_between_led_delay}
 
 
