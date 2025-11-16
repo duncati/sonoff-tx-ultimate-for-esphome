@@ -39,8 +39,8 @@ substitutions:
   max_bar_color2: "{0,255,0}"
   min_bar_color3: "{0,0,0}"
   max_bar_color3: "{0,0,255}"
-  min_bar_color4: "{0,0,0}"
-  max_bar_color4: "{255,255,255}"
+  min_bar_color4: "{255,150,0}"
+  max_bar_color4: "{255,0,0}"
 
   very_long_press_brightness: "1"
   very_long_press_color: "{0,100,0}"
