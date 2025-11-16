@@ -849,7 +849,6 @@ script:
           count: 100
           then:
             - lambda: |-
-                ESP_LOGD("button", "gradient: %d %d %d ", c[0], c[1], c[2]);
                 if (id(button_held)[button-1] == 0) {
                   ESP_LOGI("button", "button %d no longer held in up and down", button);
                   // TODO may be better to fade the bars out instead of turning them off
