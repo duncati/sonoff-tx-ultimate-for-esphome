@@ -960,7 +960,7 @@ script:
       - delay: 50ms
       - lambda: |-
           id(blink)->execute(button, 1);
-          // fade out
+          id(handle_on_release).execute(button, false);
 
   - id: blink
     mode: parallel
