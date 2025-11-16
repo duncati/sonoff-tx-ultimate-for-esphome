@@ -53,11 +53,11 @@ substitutions:
   multi_touch_color: "{0,0,0}"
   multi_touch_effect: "Rainbow"
 
-  min_swipe_right_color: "{255,225,92}"
-  max_swipe_right_color: "{137,21,149}"
+  min_swipe_right_color: "{0,255,175}"
+  max_swipe_right_color: "{0,36,156}"
 
   min_swipe_left_color: "{137,21,149}"
-  max_swipe_left_color: "{255,225,92}"
+  max_swipe_left_color: "{255,195,91}"
 
   after_touch_dim_delay: 500ms
   swipe_between_led_delay: 200ms
@@ -193,7 +193,7 @@ external_components:
       ref: main
     components: [tx_ultimate_touch]
     # this makes my cpp changes recompile
-    refresh: 0s
+    #refresh: 0s
 
 globals:
   - id: nightlight_color
@@ -1233,15 +1233,14 @@ script:
       led_offset: int
     then:
       - lambda: |-
-          ESP_LOGI("button", "knight_rider left? %d", left);
-          auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
           esphome::Color gradient;
           if (left) {
             gradient = id(tx_touch).get_color_gradient(id(min_swipe_left_color), id(max_swipe_left_color), iteration);
           } else {
             gradient = id(tx_touch).get_color_gradient(id(min_swipe_right_color), id(max_swipe_right_color), iteration);
           }
-          target_led->get(led_offset+iteration).set(gradient);
+          ESP_LOGI("button", "knight_rider led %d left? %d", (led_offset+iteration), left);
+          static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->get(led_offset+iteration).set(gradient);
 
   - id: led_on_swipe_left
     mode: restart
