@@ -60,7 +60,7 @@ substitutions:
   max_swipe_left_color: "{255,195,91}"
 
   after_touch_dim_delay: 500ms
-  swipe_between_led_delay: 500ms
+  swipe_between_led_delay: 50ms
   dim_led_steps: 10
   dim_led_step_delay: 50ms
 
@@ -1221,7 +1221,6 @@ script:
           then:
             - lambda: "id(knight_rider_step)->execute(iteration, left);"
             - delay: ${swipe_between_led_delay}
-      - delay: 10s
       - repeat:
           count: 10
           then:
@@ -1229,7 +1228,7 @@ script:
                 auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
                 esphome::Color gradient;
                 int led_index;
-                for (int i=1; i<8; i++) {
+                for (int i=0; i<7; i++) {
                   if (left) {
                     gradient = id(tx_touch).get_color_gradient(id(min_swipe_left_color), id(max_swipe_left_color), i);
                   } else {
@@ -1265,7 +1264,6 @@ script:
       left: bool
     then:
       - lambda: |-
-          //if (iteration == 0 || iteration == 6) {
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
           esphome::Color gradient;
           if (left) {
@@ -1293,7 +1291,6 @@ script:
             }
           }
           target_led->schedule_show();
-          //}
 
   - id: led_on_swipe_left
     mode: restart
