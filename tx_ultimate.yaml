@@ -926,10 +926,11 @@ script:
   - id: process_double_tap
     mode: parallel
     parameters:
-      button: int
+      x: int
     then:
       - delay: ${double_tap_timeout}
       - lambda: |-
+          auto button = id(button_lookup)[${button_count}-1][x-1];
           id(stop_all).execute();
           ESP_LOGW("button", "Double tap at button %d", button);
           // TODO fix this, it's hacky:
@@ -959,7 +960,7 @@ script:
       - delay: ${blink_delay}
       - lambda: |-
           id(blink)->execute(button, 2);
-          id(handle_on_release).execute(button, false);
+          id(handle_on_release).execute(x, false);
 
   - id: blink
     mode: parallel
@@ -1177,7 +1178,7 @@ script:
             if (id(button_double_tap)[button-1]>1) {
               ESP_LOGD("button", "Button %d double tapped", button);
               is_double_tap = true;
-              id(process_double_tap)->execute(button);
+              id(process_double_tap)->execute(x);
               id(button_double_tap)[button-1]=0;
             } else {
               switch(button) {
@@ -1194,8 +1195,7 @@ script:
             case 3: id(dim_led_at_button_3)->execute(is_long_press, is_double_tap); break;
             case 4: id(dim_led_at_button_4)->execute(is_long_press, is_double_tap); break;
           }
-      - lambda: >
-          ESP_LOGW("button", "Release Position: %d / State: %d", x, state ? "ON" : "OFF");
+          ESP_LOGW("button", "Release Button: %d / State: %s", button, state ? "ON" : "OFF");
 
   - id: stop_all
     mode: restart
