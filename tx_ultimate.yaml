@@ -1217,10 +1217,10 @@ script:
           then:
             - lambda: |-
                 if (${button_led_feedback_bottom}) {
-                  id(knight_rider_step)->execute(iteration, 7, left);
+                  id(knight_rider_step)->execute(iteration, left, 7);
                 }
                 if (${button_led_feedback_top}) {
-                  id(knight_rider_step)->execute(iteration, 21, left);
+                  id(knight_rider_step)->execute(iteration, left, 21);
                 }
                 static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
             - delay: ${swipe_between_led_delay}
@@ -1274,25 +1274,8 @@ script:
     then:
       - script.execute: stop_all
       - script.execute:
-          id: turn_on_led_at_button
-          button: 1
-          double_tap: false
-      - delay: ${swipe_between_led_delay}
-      - script.execute:
-          id: turn_on_led_at_button
-          button: 2
-          double_tap: false
-      - delay: ${swipe_between_led_delay}
-      - script.execute:
-          id: turn_on_led_at_button
-          button: 3
-          double_tap: false
-      - delay: ${swipe_between_led_delay}
-      - script.execute:
-          id: turn_on_led_at_button
-          button: 4
-          double_tap: false
-      - delay: ${swipe_between_led_delay}
+          id: knight_rider
+          left: false
       - script.execute:
           id: dim_led_at_button_1
           is_long_press: false
