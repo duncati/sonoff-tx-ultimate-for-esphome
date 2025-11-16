@@ -31,13 +31,6 @@ substitutions:
   touch_effect: "Scan"
 
   long_hold_uses_bars: "true"
-  bar_color1: "{255,252,0}"
-  bar_color2: "{255,222,0}"
-  bar_color3: "{255,191,0}"
-  bar_color4: "{255,159,0}"
-  bar_color5: "{255,124,0}"
-  bar_color6: "{255,83,0}"
-  bar_color7: "{255,0,0}"
   bar_delay: 300ms
 
   min_bar_color1: "{0,0,0}"
@@ -237,10 +230,6 @@ globals:
     type: int [3]
     restore_value: no
     initial_value: ${double_tap_color}
-  - id: bar_colors
-    type: esphome::Color [7]
-    restore_value: no
-    initial_value: '{ esphome::Color(${bar_color1}), esphome::Color(${bar_color2}), esphome::Color(${bar_color3}), esphome::Color(${bar_color4}), esphome::Color(${bar_color5}), esphome::Color(${bar_color6}), esphome::Color(${bar_color7}) }'
   - id: button_bar_flipper
     type: int8_t[4]
     restore_value: no
@@ -874,7 +863,7 @@ script:
       height: int
     then:
       - lambda: |-
-          //ESP_LOGI("button", "set_bar_height to %d for button %d", height, button);
+          ESP_LOGI("button", "set_bar_height to %d for button %d", height, button);
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
           auto black = esphome::Color(0, 0, 0);
           esphome::Color min_bar_color;
@@ -898,12 +887,14 @@ script:
             target_led->range(0, 6).set(black);
             target_led->get(27).set(black);
           } else {
+            esphome::Color gradient;
             for (int i=0; i<height; i++) {
-              target_led->get(13+i).set(id(tx_touch).get_color_gradient(min_bar_color, max_bar_color, i));
+              gradient = id(tx_touch).get_color_gradient(min_bar_color, max_bar_color, i);
+              target_led->get(13+i).set(gradient);
               if (i==7) {
-                target_led->get(27).set(id(tx_touch).get_color_gradient(min_bar_color, max_bar_color, i));
+                target_led->get(27).set(gradient);
               } else {
-                target_led->get(5-i).set(id(tx_touch).get_color_gradient(min_bar_color, max_bar_color, i));
+                target_led->get(5-i).set(gradient);
               }
             }
             for (int i=height; i<7; i++) {
