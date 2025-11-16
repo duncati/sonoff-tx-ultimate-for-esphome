@@ -17,7 +17,7 @@ substitutions:
   button_on_time: 500ms
 
   double_tap_timeout: 350ms
-  double_tap_color: "{100, 0, 0}"
+  double_tap_color: "{100, 100, 0}"
 
   nightlight: "on"
   nightlight_brightness: "0.2"
