@@ -199,37 +199,45 @@ external_components:
 
 globals:
   - id: nightlight_color
-    type: int [3]
+    type: int[3]
     restore_value: no
     initial_value: ${nightlight_color}
   - id: long_press_color
-    type: int [3]
+    type: int[3]
     restore_value: no
     initial_value: ${long_press_color}
   - id: very_long_press_color
-    type: int [3]
+    type: int[3]
     restore_value: no
     initial_value: ${very_long_press_color}
   - id: multi_touch_color
-    type: int [3]
+    type: int[3]
     restore_value: no
     initial_value: ${multi_touch_color}
   - id: swipe_left_color
-    type: int [3]
+    type: int[3]
     restore_value: no
     initial_value: ${swipe_left_color}
   - id: swipe_right_color
-    type: int [3]
+    type: int[3]
     restore_value: no
     initial_value: ${swipe_right_color}
   - id: touch_color
-    type: int [3]
+    type: int[3]
     restore_value: no
     initial_value: ${touch_color}
   - id: double_tap_color
-    type: int [3]
+    type: int[3]
     restore_value: no
     initial_value: ${double_tap_color}
+  - id: min_bar_color
+    type: esphome::Color[4]
+    restore_value: no
+    initial_value: '{ esphome::Color ${min_bar_color1}, esphome::Color ${min_bar_color2}, esphome::Color ${min_bar_color3}, esphome::Color ${min_bar_color4} }'
+  - id: max_bar_color
+    type: esphome::Color[4]
+    restore_value: no
+    initial_value: '{ esphome::Color ${max_bar_color1}, esphome::Color ${max_bar_color2}, esphome::Color ${max_bar_color3}, esphome::Color ${max_bar_color4} }'
   - id: button_bar_flipper
     type: int8_t[4]
     restore_value: no
@@ -866,22 +874,6 @@ script:
           ESP_LOGI("button", "set_bar_height to %d for button %d", height, button);
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
           auto black = esphome::Color(0, 0, 0);
-          esphome::Color min_bar_color;
-          esphome::Color max_bar_color;
-          switch (button) {
-            case 1:
-              min_bar_color = ${min_bar_color1};
-              max_bar_color = ${max_bar_color1};
-            case 2:
-              min_bar_color = ${min_bar_color2};
-              max_bar_color = ${max_bar_color2};
-            case 3:
-              min_bar_color = ${min_bar_color3};
-              max_bar_color = ${max_bar_color3};
-            case 4:
-              min_bar_color = ${min_bar_color4};
-              max_bar_color = ${max_bar_color4};
-          }
           if (height == 0) {
             target_led->range(13, 20).set(black);
             target_led->range(0, 6).set(black);
@@ -889,7 +881,7 @@ script:
           } else {
             esphome::Color gradient;
             for (int i=0; i<height; i++) {
-              gradient = id(tx_touch).get_color_gradient(min_bar_color, max_bar_color, i);
+              gradient = id(tx_touch).get_color_gradient(id(min_bar_color)[button], id(max_bar_color)[button], i);
               target_led->get(13+i).set(gradient);
               if (i==7) {
                 target_led->get(27).set(gradient);
