@@ -738,7 +738,7 @@ tx_ultimate_touch:
         state: ON
     - light.turn_on:
         id: leds_top
-        brightness: 100
+        brightness: 90%
         red: !lambda "return id(multi_touch_color)[0]/100.0;"
         green: !lambda "return id(multi_touch_color)[1]/100.0;"
         blue: !lambda "return id(multi_touch_color)[2]/100.0;"
