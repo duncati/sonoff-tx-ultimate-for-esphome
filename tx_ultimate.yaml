@@ -60,7 +60,7 @@ substitutions:
   max_swipe_left_color: "{255,195,91}"
 
   after_touch_dim_delay: 500ms
-  swipe_between_led_delay: 200ms
+  swipe_between_led_delay: 100ms
   dim_led_steps: 10
   dim_led_step_delay: 50ms
 
@@ -1215,14 +1215,7 @@ script:
       - repeat:
           count: 7
           then:
-            - lambda: |-
-                if (${button_led_feedback_bottom}) {
-                  id(knight_rider_step)->execute(iteration, left, 7);
-                }
-                if (${button_led_feedback_top}) {
-                  id(knight_rider_step)->execute(iteration, left, 21);
-                }
-                static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
+            - lambda: "id(knight_rider_step)->execute(iteration, left);"
             - delay: ${swipe_between_led_delay}
 
   - id: knight_rider_step
@@ -1230,17 +1223,22 @@ script:
     parameters:
       iteration: int
       left: bool
-      led_offset: int
     then:
       - lambda: |-
+          auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
           esphome::Color gradient;
           if (left) {
             gradient = id(tx_touch).get_color_gradient(id(min_swipe_left_color), id(max_swipe_left_color), iteration);
           } else {
             gradient = id(tx_touch).get_color_gradient(id(min_swipe_right_color), id(max_swipe_right_color), iteration);
           }
-          ESP_LOGI("button", "knight_rider led %d left? %d", (led_offset+iteration), left);
-          static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->get(led_offset+iteration).set(gradient);
+          if (${button_led_feedback_bottom}) {
+            target_led->get(6+iteration).set(gradient);
+          }
+          if (${button_led_feedback_top}) {
+            target_led->get(26-iteration).set(gradient);
+          }
+          target_led->schedule_show();
 
   - id: led_on_swipe_left
     mode: restart
