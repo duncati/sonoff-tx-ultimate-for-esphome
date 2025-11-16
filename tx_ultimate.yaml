@@ -951,13 +951,13 @@ script:
           }
           //id(led_on_button_press)->execute(button, true);
           id(blink)->execute(button, 1);
-      - delay: 50
+      - delay: 50ms
       - lambda: |-
           id(blink)->execute(button, 2);
-      - delay: 50
+      - delay: 50ms
       - lambda: |-
           id(blink)->execute(button, 1);
-      - delay: 50
+      - delay: 50ms
       - lambda: |-
           id(blink)->execute(button, 1);
           // fade out
