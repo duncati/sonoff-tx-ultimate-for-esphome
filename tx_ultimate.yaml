@@ -950,7 +950,7 @@ script:
       - delay: ${blink_delay}
       - lambda: |-
           id(blink)->execute(button, 2);
-          id(dim_button)->execute(button, false, false);
+          id(dim_button)->execute(button, false);
 
   - id: blink
     mode: parallel
@@ -987,16 +987,12 @@ script:
       iteration: int
       led_index: int
       is_long_press: bool
-      is_double_tap: bool
     then:
       - lambda: |-
           auto to_color = id(original_led_color)[led_index-1];
           int* from_color;
           if (is_long_press) {
             from_color = &id(long_press_color)[0];
-          // since double tap now blinks and ends in touch_color, don't fade out double_tap_color
-          //} else if (is_double_tap) {
-          //from_color = &id(double_tap_color)[0];
           } else {
             from_color = &id(touch_color)[0];
           }
@@ -1015,7 +1011,6 @@ script:
     mode: restart
     parameters:
       is_long_press: bool
-      is_double_tap: bool
     then:
       - delay: ${after_touch_dim_delay}
       - repeat:
@@ -1026,11 +1021,11 @@ script:
                 int led_index;
                 if (${button_led_feedback_bottom}) {
                   led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
-                  id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
+                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
                 }
                 if (${button_led_feedback_top}) {
                   led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
-                  id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
+                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
                 }
                 static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
             - delay: ${dim_led_step_delay}
@@ -1040,7 +1035,6 @@ script:
     mode: restart
     parameters:
       is_long_press: bool
-      is_double_tap: bool
     then:
       - delay: ${after_touch_dim_delay}
       - repeat:
@@ -1051,11 +1045,11 @@ script:
                 int led_index;
                 if (${button_led_feedback_bottom}) {
                   led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
-                  id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
+                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
                 }
                 if (${button_led_feedback_top}) {
                   led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
-                  id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
+                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
                 }
                 static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
             - delay: ${dim_led_step_delay}
@@ -1065,7 +1059,6 @@ script:
     mode: restart
     parameters:
       is_long_press: bool
-      is_double_tap: bool
     then:
       - delay: ${after_touch_dim_delay}
       - repeat:
@@ -1076,11 +1069,11 @@ script:
                 int led_index;
                 if (${button_led_feedback_bottom}) {
                   led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
-                  id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
+                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
                 }
                 if (${button_led_feedback_top}) {
                   led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
-                  id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
+                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
                 }
                 static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
             - delay: ${dim_led_step_delay}
@@ -1090,7 +1083,6 @@ script:
     mode: restart
     parameters:
       is_long_press: bool
-      is_double_tap: bool
     then:
       - delay: ${after_touch_dim_delay}
       - repeat:
@@ -1101,11 +1093,11 @@ script:
                 int led_index;
                 if (${button_led_feedback_bottom}) {
                   led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
-                  id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
+                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
                 }
                 if (${button_led_feedback_top}) {
                   led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
-                  id(dim_led_internal)->execute(iteration, led_index, is_long_press, is_double_tap);
+                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
                 }
                 static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
             - delay: ${dim_led_step_delay}
@@ -1151,7 +1143,6 @@ script:
           uint32_t button_press_duration = millis() - id(button_press_start_time)[button-1];
           ESP_LOGD("button", "Button %d released, held for %lu ms (%lu - %lu)", button, button_press_duration, millis(), id(button_press_start_time)[button-1]);
           bool is_long_press = false;
-          bool is_double_tap = false;
           if (button_press_duration >= ${long_press_time}) {
             is_long_press = true;
             ESP_LOGD("button", "Button %d long pressed", button);
@@ -1167,7 +1158,6 @@ script:
             // TODO maybe add triple tap?
             if (id(button_double_tap)[button-1]>1) {
               ESP_LOGD("button", "Button %d double tapped", button);
-              is_double_tap = true;
               id(process_double_tap)->execute(button);
               id(button_double_tap)[button-1]=0;
             } else {
@@ -1179,7 +1169,7 @@ script:
               }
             }
           }
-          id(dim_button)->execute(button, is_long_press, is_double_tap);
+          id(dim_button)->execute(button, is_long_press);
           ESP_LOGW("button", "Release Button: %d / State: %s", button, state ? "ON" : "OFF");
 
   - id: dim_button
@@ -1187,14 +1177,13 @@ script:
     parameters:
       button: int
       is_long_press: bool
-      is_double_tap: bool
     then:
       - lambda: |-
           switch(button) {
-            case 1: id(dim_led_at_button_1)->execute(is_long_press, is_double_tap); break;
-            case 2: id(dim_led_at_button_2)->execute(is_long_press, is_double_tap); break;
-            case 3: id(dim_led_at_button_3)->execute(is_long_press, is_double_tap); break;
-            case 4: id(dim_led_at_button_4)->execute(is_long_press, is_double_tap); break;
+            case 1: id(dim_led_at_button_1)->execute(is_long_press); break;
+            case 2: id(dim_led_at_button_2)->execute(is_long_press); break;
+            case 3: id(dim_led_at_button_3)->execute(is_long_press); break;
+            case 4: id(dim_led_at_button_4)->execute(is_long_press); break;
           }
 
   - id: stop_all
@@ -1232,11 +1221,20 @@ script:
           } else {
             gradient = id(tx_touch).get_color_gradient(id(min_swipe_right_color), id(max_swipe_right_color), iteration);
           }
-          if (${button_led_feedback_bottom}) {
-            target_led->get(6+iteration).set(gradient);
-          }
-          if (${button_led_feedback_top}) {
-            target_led->get(26-iteration).set(gradient);
+          if (left) {
+            if (${button_led_feedback_bottom}) {
+              target_led->get(6+iteration).set(gradient);
+            }
+            if (${button_led_feedback_top}) {
+              target_led->get(26-iteration).set(gradient);
+            }
+          } else {
+            if (${button_led_feedback_bottom}) {
+              target_led->get(13-iteration).set(gradient);
+            }
+            if (${button_led_feedback_top}) {
+              target_led->get(19+iteration).set(gradient);
+            }
           }
           target_led->schedule_show();
 
@@ -1250,22 +1248,18 @@ script:
       - script.execute:
           id: dim_led_at_button_4
           is_long_press: false
-          is_double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: dim_led_at_button_3
           is_long_press: false
-          is_double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: dim_led_at_button_2
           is_long_press: false
-          is_double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: dim_led_at_button_1
           is_long_press: false
-          is_double_tap: false
 
   - id: led_on_swipe_right
     mode: restart
@@ -1277,22 +1271,18 @@ script:
       - script.execute:
           id: dim_led_at_button_1
           is_long_press: false
-          is_double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: dim_led_at_button_2
           is_long_press: false
-          is_double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: dim_led_at_button_3
           is_long_press: false
-          is_double_tap: false
       - delay: ${swipe_between_led_delay}
       - script.execute:
           id: dim_led_at_button_4
           is_long_press: false
-          is_double_tap: false
 
   - id: led_on_multi_touch
     mode: restart
@@ -1313,19 +1303,15 @@ script:
       - script.execute:
           id: dim_led_at_button_1
           is_long_press: false
-          is_double_tap: false
       - script.execute:
           id: dim_led_at_button_2
           is_long_press: false
-          is_double_tap: false
       - script.execute:
           id: dim_led_at_button_3
           is_long_press: false
-          is_double_tap: false
       - script.execute:
           id: dim_led_at_button_4
           is_long_press: false
-          is_double_tap: false
 #     - delay: 5s
 #     - light.turn_off: leds_top
 
