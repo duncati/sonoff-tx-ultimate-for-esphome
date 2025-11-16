@@ -17,7 +17,7 @@ substitutions:
   button_on_time: 500ms
 
   double_tap_timeout: 350ms
-  double_tap_color: "{100, 100, 0}"
+  double_tap_color: "{100, 0, 100}"
 
   nightlight: "on"
   nightlight_brightness: "0.2"
@@ -960,7 +960,7 @@ script:
       - delay: 250ms
       - lambda: |-
           id(blink)->execute(button, 1);
-          //id(handle_on_release).execute(button, false);
+          id(handle_on_release).execute(button, false);
 
   - id: blink
     mode: parallel
