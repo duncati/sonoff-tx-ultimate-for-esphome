@@ -1265,7 +1265,7 @@ script:
       left: bool
     then:
       - lambda: |-
-        if (iteration == 0 || iteration == 6) {
+          if (iteration == 0 || iteration == 6) {
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
           esphome::Color gradient;
           if (left) {
@@ -1293,7 +1293,7 @@ script:
             }
           }
           target_led->schedule_show();
-        }
+          }
 
   - id: led_on_swipe_left
     mode: restart
