@@ -60,7 +60,7 @@ substitutions:
   max_swipe_left_color: "{255,195,91}"
 
   after_touch_dim_delay: 500ms
-  swipe_between_led_delay: 100ms
+  swipe_between_led_delay: 50ms
   dim_led_steps: 10
   dim_led_step_delay: 50ms
 
@@ -996,11 +996,26 @@ script:
           } else {
             from_color = &id(touch_color)[0];
           }
+          id(dim_led_internal2)->execute(iteration, led_index, from_color[0], from_color[1], from_color[2], to_color.r, to_color.g, to_color.b);
+
+  - id: dim_led_internal2
+    mode: parallel
+    parameters:
+      iteration: int
+      led_index: int
+      from_color_r: int
+      from_color_g: int
+      from_color_b: int
+      to_color_r: int
+      to_color_g: int
+      to_color_b: int
+    then:
+      - lambda: |-
           float factor = iteration * 0.1f;
           auto color = esphome::Color(
-            from_color[0]*(1.0-factor) + to_color.r*factor,
-            from_color[1]*(1.0-factor) + to_color.g*factor,
-            from_color[2]*(1.0-factor) + to_color.b*factor
+            from_color_r*(1.0-factor) + to_color_r*factor,
+            from_color_g*(1.0-factor) + to_color_g*factor,
+            from_color_b*(1.0-factor) + to_color_b*factor
           );
           static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->get(led_index).set(color);
 
@@ -1206,6 +1221,23 @@ script:
           then:
             - lambda: "id(knight_rider_step)->execute(iteration, left);"
             - delay: ${swipe_between_led_delay}
+      - repeat:
+          count: 10
+          then:
+            - lambda: |-
+              auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
+              esphome::Color gradient;
+              for (int i=1; i<8; i++) {
+                if (left) {
+                  gradient = id(tx_touch).get_color_gradient(id(min_swipe_left_color), id(max_swipe_left_color), i);
+                } else {
+                  gradient = id(tx_touch).get_color_gradient(id(min_swipe_right_color), id(max_swipe_right_color), i);
+                }
+                id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
+              }
+              target_led->schedule_show();
+            - delay: ${swipe_between_led_delay}
+
 
   - id: knight_rider_step
     mode: restart
@@ -1230,10 +1262,10 @@ script:
             }
           } else {
             if (${button_led_feedback_bottom}) {
-              target_led->get(13-iteration).set(gradient);
+              target_led->get(14-iteration).set(gradient);
             }
             if (${button_led_feedback_top}) {
-              target_led->get(19+iteration).set(gradient);
+              target_led->get(20+iteration).set(gradient);
             }
           }
           target_led->schedule_show();
