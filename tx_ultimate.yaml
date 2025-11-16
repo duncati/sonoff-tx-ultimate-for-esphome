@@ -538,10 +538,10 @@ light:
 #         name: "Rainbow"
 #         speed: 3
 #         width: 8
-      - pulse:
-          name: "Pulse"
-          transition_length: 1.4s
-          update_interval: 100ms
+#     - pulse:
+#         name: "Pulse"
+#         transition_length: 1.4s
+#         update_interval: 100ms
       - addressable_flicker:
           name: "Flicker"
 
@@ -587,8 +587,8 @@ light:
         from: 20
         to: 26
     effects:
-      - addressable_scan:
-          name: "Scan"
+#     - addressable_scan:
+#         name: "Scan"
 #     - addressable_rainbow:
 #         name: "Rainbow"
 #         speed: 100
