@@ -1237,20 +1237,20 @@ script:
                   }
                   if (left) {
                     if (${button_led_feedback_bottom}) {
-                      led_index = 7+i;
+                      led_index = 6+i;
                       id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
                     }
                     if (${button_led_feedback_top}) {
-                      led_index = 27-i;
+                      led_index = 26-i;
                       id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
                     }
                   } else {
                     if (${button_led_feedback_bottom}) {
-                      led_index = 13-i;
+                      led_index = 12-i;
                       id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
                     }
                     if (${button_led_feedback_top}) {
-                      led_index = 21+i;
+                      led_index = 20+i;
                       id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
                     }
                   }
@@ -1265,7 +1265,7 @@ script:
       left: bool
     then:
       - lambda: |-
-          if (iteration == 0 || iteration == 6) {
+          //if (iteration == 0 || iteration == 6) {
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
           esphome::Color gradient;
           if (left) {
@@ -1284,16 +1284,16 @@ script:
             }
           } else {
             if (${button_led_feedback_bottom}) {
-              target_led->get(13-iteration).set(gradient);
-              ESP_LOGW("button", "knight rider step %d bottom led %d", iteration, (13-iteration));
+              target_led->get(12-iteration).set(gradient);
+              ESP_LOGW("button", "knight rider step %d bottom led %d", iteration, (12-iteration));
             }
             if (${button_led_feedback_top}) {
-              target_led->get(21+iteration).set(gradient);
-              ESP_LOGW("button", "knight rider step %d top led %d", iteration, (21+iteration));
+              target_led->get(20+iteration).set(gradient);
+              ESP_LOGW("button", "knight rider step %d top led %d", iteration, (20+iteration));
             }
           }
           target_led->schedule_show();
-          }
+          //}
 
   - id: led_on_swipe_left
     mode: restart
