@@ -710,7 +710,7 @@ tx_ultimate_touch:
   on_release:
     - lambda: 'ESP_LOGI("button", "on_release stopping led_on_button_press and bar_go_up_and_down");'
     - script.stop: led_on_button_press
-    - lambda: id(handle_on_release).execute(touch.x, touch.state);
+    - lambda: id(handle_on_release).execute(touch.x);
 
   on_swipe_left:
     - script.execute: led_on_swipe_left
@@ -752,7 +752,7 @@ tx_ultimate_touch:
   on_long_touch:
     - lambda: |-
         ESP_LOGD("button", "Very Long Touch Event Position: %d / State: %d", touch.x, touch.state);
-        id(handle_on_release).execute(touch.x, touch.state);
+        id(handle_on_release).execute(touch.x);
         // maybe don't do LED effects for the very long touch since it doesn't do anything??
         //id(led_on_long_touch);
     - switch.turn_on: vibra
