@@ -951,13 +951,13 @@ script:
           }
           //id(led_on_button_press)->execute(button, true);
           id(blink)->execute(button, 1);
-      - delay: 150ms
+      - delay: 250ms
       - lambda: |-
           id(blink)->execute(button, 2);
-      - delay: 150ms
+      - delay: 250ms
       - lambda: |-
           id(blink)->execute(button, 1);
-      - delay: 150ms
+      - delay: 250ms
       - lambda: |-
           id(blink)->execute(button, 1);
           //id(handle_on_release).execute(button, false);
@@ -970,7 +970,7 @@ script:
     then:
       - lambda: |-
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-          auto color = id(long_press_color);
+          auto color = id(double_tap_color);
           if (stage%2 == 0) {
             color = id(touch_color);
           }
