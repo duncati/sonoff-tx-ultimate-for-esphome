@@ -116,6 +116,22 @@ namespace esphome {
          return tp;
       }
 
+      static inline uint8_t lerp(uint8_t a, uint8_t b, float t) {
+         return static_cast<uint8_t>(a + (b - a) * t);
+      }
+
+      Color compute_color_gradient(const Color &start, const Color &end, uint8_t step) {
+         if (step > 7) {
+            step = 7;
+         }
+         float t = step / 7.0f; // 8 total steps, so 7 intervals
+         return Color(lerp(start.r, end.r, t),
+                      lerp(start.g, end.g, t),
+                      lerp(start.b, end.b, t),
+                      lerp(start.w, end.w, t)
+         );
+      }
+
       int TxUltimateTouch::get_top_led_for_button(int button, int button_count) {
          switch(button_count) {
             case 4: return 18 + 2*button;

@@ -39,6 +39,7 @@ namespace esphome {
 
             int get_top_led_for_button(int button, int button_count);
             int get_bottom_led_for_button(int button, int button_count);
+            Color get_color_gradient(const Color &start, const Color &end, uint8_t step);
 
             void setup() override;
             void loop() override;

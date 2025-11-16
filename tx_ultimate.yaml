@@ -31,7 +31,6 @@ substitutions:
   touch_effect: "Scan"
 
   long_hold_uses_bars: "true"
-  bar_color: "{255,150,0}"
   bar_color1: "{255,252,0}"
   bar_color2: "{255,222,0}"
   bar_color3: "{255,191,0}"
@@ -40,6 +39,15 @@ substitutions:
   bar_color6: "{255,83,0}"
   bar_color7: "{255,0,0}"
   bar_delay: 300ms
+
+  min_bar_color1: "{0,0,0}"
+  max_bar_color1: "{255,0,0}"
+  min_bar_color2: "{0,0,0}"
+  max_bar_color2: "{0,255,0}"
+  min_bar_color3: "{0,0,0}"
+  max_bar_color3: "{0,0,255}"
+  min_bar_color4: "{0,0,0}"
+  max_bar_color4: "{255,255,255}"
 
   very_long_press_brightness: "1"
   very_long_press_color: "{0,100,0}"
@@ -229,10 +237,6 @@ globals:
     type: int [3]
     restore_value: no
     initial_value: ${double_tap_color}
-  - id: bar_color
-    type: int [3]
-    restore_value: no
-    initial_value: ${bar_color}
   - id: bar_colors
     type: esphome::Color [7]
     restore_value: no
@@ -845,10 +849,12 @@ script:
           count: 100
           then:
             - lambda: |-
+                auto c = get_color_gradient(id(min_bar_color1), id(max_bar_color1), 3);
+                ESP_LOGD("button", "gradient: %d %d %d ", c[0], c[1], c[2]);
                 if (id(button_held)[button-1] == 0) {
                   ESP_LOGI("button", "button %d no longer held in up and down", button);
                   // TODO may be better to fade the bars out instead of turning them off
-                  id(set_bar_height).execute(0);
+                  id(set_bar_height).execute(0, 0);
                   id(bars_go_up_and_down).stop();
                 } else {
                   int bar_height = id(button_bar_brightness)[button-1];
@@ -859,37 +865,19 @@ script:
                     id(button_bar_flipper)[button-1] = 1;
                   }
                   id(button_bar_brightness)[button-1]+=id(button_bar_flipper)[button-1];
-                  id(set_bar_height).execute(bar_height);
+                  id(set_bar_height).execute(button, bar_height);
                 }
             - delay: ${bar_delay}
 
   - id: set_bar_height
     mode: restart
     parameters:
+      button: int
       height: int
     then:
       - lambda: |-
-          //ESP_LOGI("button", "set_bar_height to %d", height);
+          //ESP_LOGI("button", "set_bar_height to %d for button %d", height, button);
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
-          // solid bar color with ranges
-          //  auto black = esphome::Color(0, 0, 0);
-          //  auto color = esphome::Color(id(bar_color)[0], id(bar_color)[1], id(bar_color)[2]);
-          //  if (height == 0) {
-          //    target_led->range(13, 20).set(black);
-          //    target_led->range(0, 6).set(black);
-          //    target_led->get(27).set(black);
-          //  } else {
-          //    target_led->range(13, 13+height-1).set(color);
-          //    target_led->range(13+height-1, 20).set(black);
-          //    target_led->range(0, 5-height+1).set(color);
-          //    target_led->range(5-height+1, 6).set(black);
-          //    if (height==7) {
-          //      target_led->get(27).set(color);
-          //    } else {
-          //      target_led->get(27).set(black);
-          //    }
-          //  }
-          //
           auto black = esphome::Color(0, 0, 0);
           if (height == 0) {
             target_led->range(13, 20).set(black);
@@ -1311,6 +1299,7 @@ script:
       - script.execute: stop_all
       - script.execute:
           id: set_bar_height
+          button: 0
           height: 0
 # This is more cheesy than cool
 #     - light.turn_on:
