@@ -50,8 +50,8 @@ substitutions:
   long_press_time: "500"
 
   multi_touch_brightness: "1"
-  multi_touch_color: "{0,0,0}"
-  multi_touch_effect: "Rainbow"
+  multi_touch_color: "{255,255,0}"
+  multi_touch_effect: "Pulse"
 
   min_swipe_right_color: "{137,21,149}"
   max_swipe_right_color: "{255,195,91}"
@@ -541,7 +541,7 @@ light:
       - pulse:
           name: "Pulse"
           transition_length: 1.4s
-          update_interval: 1s
+          update_interval: 100ms
 
   - platform: partition
     name: "LEDs Nightlight"
@@ -736,6 +736,16 @@ tx_ultimate_touch:
     - binary_sensor.template.publish:
         id: multi_touch
         state: ON
+    - light.turn_on:
+        id: leds_top
+        brightness: 100
+        red: !lambda "return id(multi_touch_color)[0]/100.0;"
+        green: !lambda "return id(multi_touch_color)[1]/100.0;"
+        blue: !lambda "return id(multi_touch_color)[2]/100.0;"
+        effect: ${multi_touch_effect}
+    - delay: 1.4s
+    - light.turn_off:
+        id: leds_top
     - lambda: |-
         ESP_LOGD("button", "Multi Touch Release");
 
@@ -1141,7 +1151,7 @@ script:
       - light.turn_on:
           id: leds_nightlight
           brightness: ${nightlight_brightness}
-          red: !lambda "return id(nightlight_color)[0]/100.0;"
+          red:   !lambda "return id(nightlight_color)[0]/100.0;"
           green: !lambda "return id(nightlight_color)[1]/100.0;"
           blue:  !lambda "return id(nightlight_color)[2]/100.0;"
 
@@ -1149,7 +1159,6 @@ script:
     mode: parallel
     parameters:
       x: int
-      state: bool
     then:
       - lambda: |-
           auto button = id(button_lookup)[${button_count}-1][x-1];
@@ -1185,7 +1194,7 @@ script:
             }
           }
           id(dim_button)->execute(button, is_long_press);
-          ESP_LOGW("button", "Release Button: %d / State: %s", button, state ? "ON" : "OFF");
+          ESP_LOGW("button", "Release Button: %d", button);
 
   - id: dim_button
     mode: parallel
@@ -1219,46 +1228,15 @@ script:
       - repeat:
           count: 7
           then:
-            - lambda: "id(knight_rider_step)->execute(iteration, left);"
+            - lambda: "id(knight_rider_on)->execute(iteration, left);"
             - delay: ${swipe_between_led_delay}
       - repeat:
           count: 10
           then:
-            - lambda: |-
-                auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
-                esphome::Color gradient;
-                int led_index;
-                // emulate what the repeat/count/iteration does:
-                for (int i=0; i<7; i++) {
-                  if (left) {
-                    gradient = id(tx_touch).get_color_gradient(id(min_swipe_left_color), id(max_swipe_left_color), i);
-                  } else {
-                    gradient = id(tx_touch).get_color_gradient(id(min_swipe_right_color), id(max_swipe_right_color), i);
-                  }
-                  if (left) {
-                    if (${button_led_feedback_bottom}) {
-                      led_index = 6+i;
-                      id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
-                    }
-                    if (${button_led_feedback_top}) {
-                      led_index = 26-i;
-                      id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
-                    }
-                  } else {
-                    if (${button_led_feedback_bottom}) {
-                      led_index = 12-i;
-                      id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
-                    }
-                    if (${button_led_feedback_top}) {
-                      led_index = 20+i;
-                      id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
-                    }
-                  }
-                }
-                target_led->schedule_show();
+            - lambda: "id(knight_rider_off)->execute(iteration, left);"
             - delay: ${swipe_between_led_delay}
 
-  - id: knight_rider_step
+  - id: knight_rider_on
     mode: restart
     parameters:
       iteration: int
@@ -1285,6 +1263,45 @@ script:
             }
             if (${button_led_feedback_top}) {
               target_led->get(20+iteration).set(gradient);
+            }
+          }
+          target_led->schedule_show();
+
+  - id: knight_rider_off
+    mode: restart
+    parameters:
+      iteration: int
+      left: bool
+    then:
+      - lambda: |-
+          auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
+          esphome::Color gradient;
+          int led_index;
+          // emulate what the repeat/count/iteration does:
+          for (int i=0; i<7; i++) {
+            if (left) {
+              gradient = id(tx_touch).get_color_gradient(id(min_swipe_left_color), id(max_swipe_left_color), i);
+            } else {
+              gradient = id(tx_touch).get_color_gradient(id(min_swipe_right_color), id(max_swipe_right_color), i);
+            }
+            if (left) {
+              if (${button_led_feedback_bottom}) {
+                led_index = 6+i;
+                id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
+              }
+              if (${button_led_feedback_top}) {
+                led_index = 26-i;
+                id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
+              }
+            } else {
+              if (${button_led_feedback_bottom}) {
+                led_index = 12-i;
+                id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
+              }
+              if (${button_led_feedback_top}) {
+                led_index = 20+i;
+                id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
+              }
             }
           }
           target_led->schedule_show();
