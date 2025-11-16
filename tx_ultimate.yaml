@@ -927,10 +927,10 @@ script:
     mode: parallel
     parameters:
       x: int
+      button: int
     then:
       - delay: ${double_tap_timeout}
       - lambda: |-
-          auto button = id(button_lookup)[${button_count}-1][x-1];
           id(stop_all).execute();
           ESP_LOGW("button", "Double tap at button %d", button);
           // TODO fix this, it's hacky:
@@ -1178,7 +1178,7 @@ script:
             if (id(button_double_tap)[button-1]>1) {
               ESP_LOGD("button", "Button %d double tapped", button);
               is_double_tap = true;
-              id(process_double_tap)->execute(x);
+              id(process_double_tap)->execute(x, button);
               id(button_double_tap)[button-1]=0;
             } else {
               switch(button) {
