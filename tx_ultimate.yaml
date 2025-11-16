@@ -929,9 +929,7 @@ script:
     then:
       - delay: ${double_tap_timeout}
       - lambda: |-
-          // TODO
-          // handle_on_release is already processing the release, maybe stop and restart it?
-          id(handle_on_release).stop();
+          id(stop_all).execute();
           ESP_LOGW("button", "Double tap at button %d", button);
           // TODO fix this, it's hacky:
           id(button_press_start_time)[button-1] = 0;
@@ -1197,8 +1195,7 @@ script:
       - lambda: >
           ESP_LOGW("button", "Release Position: %d / State: %d", x, state ? "ON" : "OFF");
 
-# TODO dim the right LEDs based on the button_count
-  - id: led_on_swipe_left
+  - id: stop_all
     mode: restart
     then:
       - script.stop: led_on_button_press
@@ -1207,6 +1204,12 @@ script:
       - script.stop: dim_led_at_button_2
       - script.stop: dim_led_at_button_3
       - script.stop: dim_led_at_button_4
+
+# TODO dim the right LEDs based on the button_count
+  - id: led_on_swipe_left
+    mode: restart
+    then:
+      - script.execute: stop_all
       - script.execute:
           id: turn_on_led_at_button
           button: 4
@@ -1250,12 +1253,7 @@ script:
   - id: led_on_swipe_right
     mode: restart
     then:
-      - script.stop: led_on_button_press
-      - script.stop: bars_go_up_and_down
-      - script.stop: dim_led_at_button_1
-      - script.stop: dim_led_at_button_2
-      - script.stop: dim_led_at_button_3
-      - script.stop: dim_led_at_button_4
+      - script.execute: stop_all
       - script.execute:
           id: turn_on_led_at_button
           button: 1
@@ -1299,8 +1297,7 @@ script:
   - id: led_on_multi_touch
     mode: restart
     then:
-      - script.stop: led_on_button_press
-      - script.stop: bars_go_up_and_down
+      - script.execute: stop_all
       - script.execute:
           id: set_bar_height
           height: 0
