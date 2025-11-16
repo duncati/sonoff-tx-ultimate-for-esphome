@@ -1003,8 +1003,9 @@ script:
           int* from_color;
           if (is_long_press) {
             from_color = &id(long_press_color)[0];
-          } else if (is_double_tap) {
-            from_color = &id(double_tap_color)[0];
+          // since double tap now blinks and ends in touch_color, don't fade out double_tap_color
+          //} else if (is_double_tap) {
+          //from_color = &id(double_tap_color)[0];
           } else {
             from_color = &id(touch_color)[0];
           }
