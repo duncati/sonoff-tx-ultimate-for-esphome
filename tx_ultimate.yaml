@@ -849,7 +849,7 @@ script:
           count: 100
           then:
             - lambda: |-
-                auto c = get_color_gradient(id(min_bar_color1), id(max_bar_color1), 3);
+                auto c = get_color_gradient(${min_bar_color1}, ${max_bar_color1}, 3);
                 ESP_LOGD("button", "gradient: %d %d %d ", c[0], c[1], c[2]);
                 if (id(button_held)[button-1] == 0) {
                   ESP_LOGI("button", "button %d no longer held in up and down", button);
