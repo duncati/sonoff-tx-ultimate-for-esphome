@@ -51,7 +51,7 @@ substitutions:
 
   multi_touch_brightness: "1"
   multi_touch_color: "{255,255,0}"
-  multi_touch_effect: "Pulse"
+  multi_touch_effect: "Flicker"
 
   min_swipe_right_color: "{137,21,149}"
   max_swipe_right_color: "{255,195,91}"
@@ -541,6 +541,10 @@ light:
       - pulse:
           name: "Pulse"
           transition_length: 1.4s
+          update_interval: 100ms
+      - flicker:
+          name: "Flicker"
+          transition_length: 2.0s
           update_interval: 100ms
 
   - platform: partition
@@ -1328,20 +1332,20 @@ script:
           green: !lambda "return id(multi_touch_color)[1]/100.0;"
           blue:  !lambda "return id(multi_touch_color)[2]/100.0;"
           effect: ${multi_touch_effect}
-      - delay: 1.5s
+      - delay: 2.0s
       - light.turn_off: leds_top
-#     - script.execute:
-#         id: dim_led_at_button_1
-#         is_long_press: false
-#     - script.execute:
-#         id: dim_led_at_button_2
-#         is_long_press: false
-#     - script.execute:
-#         id: dim_led_at_button_3
-#         is_long_press: false
-#     - script.execute:
-#         id: dim_led_at_button_4
-#         is_long_press: false
+      - script.execute:
+          id: dim_led_at_button_1
+          is_long_press: false
+      - script.execute:
+          id: dim_led_at_button_2
+          is_long_press: false
+      - script.execute:
+          id: dim_led_at_button_3
+          is_long_press: false
+      - script.execute:
+          id: dim_led_at_button_4
+          is_long_press: false
 
   - id: led_on_long_touch
     mode: restart
