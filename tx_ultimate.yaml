@@ -881,7 +881,7 @@ script:
           } else {
             esphome::Color gradient;
             for (int i=0; i<height; i++) {
-              gradient = id(tx_touch).get_color_gradient(id(min_bar_color)[button], id(max_bar_color)[button], i);
+              gradient = id(tx_touch).get_color_gradient(id(min_bar_color)[button-1], id(max_bar_color)[button-1], i);
               target_led->get(13+i).set(gradient);
               if (i==7) {
                 target_led->get(27).set(gradient);
