@@ -53,8 +53,8 @@ substitutions:
   multi_touch_color: "{0,0,0}"
   multi_touch_effect: "Rainbow"
 
-  min_swipe_right_color: "{0,255,175}"
-  max_swipe_right_color: "{0,36,156}"
+  min_swipe_right_color: "{137,21,149}"
+  max_swipe_right_color: "{255,195,91}"
 
   min_swipe_left_color: "{137,21,149}"
   max_swipe_left_color: "{255,195,91}"
@@ -1228,6 +1228,7 @@ script:
                 auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
                 esphome::Color gradient;
                 int led_index;
+                // emulate what the repeat/count/iteration does:
                 for (int i=0; i<7; i++) {
                   if (left) {
                     gradient = id(tx_touch).get_color_gradient(id(min_swipe_left_color), id(max_swipe_left_color), i);
@@ -1274,20 +1275,16 @@ script:
           if (left) {
             if (${button_led_feedback_bottom}) {
               target_led->get(6+iteration).set(gradient);
-              ESP_LOGW("button", "knight rider step %d bottom led %d", iteration, (6+iteration));
             }
             if (${button_led_feedback_top}) {
               target_led->get(26-iteration).set(gradient);
-              ESP_LOGW("button", "knight rider step %d top led %d", iteration, (26-iteration));
             }
           } else {
             if (${button_led_feedback_bottom}) {
               target_led->get(12-iteration).set(gradient);
-              ESP_LOGW("button", "knight rider step %d bottom led %d", iteration, (12-iteration));
             }
             if (${button_led_feedback_top}) {
               target_led->get(20+iteration).set(gradient);
-              ESP_LOGW("button", "knight rider step %d top led %d", iteration, (20+iteration));
             }
           }
           target_led->schedule_show();
