@@ -1227,13 +1227,32 @@ script:
             - lambda: |-
                 auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
                 esphome::Color gradient;
+                int led_index;
                 for (int i=1; i<8; i++) {
                   if (left) {
                     gradient = id(tx_touch).get_color_gradient(id(min_swipe_left_color), id(max_swipe_left_color), i);
                   } else {
                     gradient = id(tx_touch).get_color_gradient(id(min_swipe_right_color), id(max_swipe_right_color), i);
                   }
-                  id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
+                  if (left) {
+                    if (${button_led_feedback_bottom}) {
+                      led_index = 6+i;
+                      id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
+                    }
+                    if (${button_led_feedback_top}) {
+                      led_index = 26-i;
+                      id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
+                    }
+                  } else {
+                    if (${button_led_feedback_bottom}) {
+                      led_index = 14-i;
+                      id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
+                    }
+                    if (${button_led_feedback_top}) {
+                      led_index = 20+i;
+                      id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
+                    }
+                  }
                 }
                 target_led->schedule_show();
             - delay: ${swipe_between_led_delay}
