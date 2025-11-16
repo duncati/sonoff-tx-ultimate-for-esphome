@@ -120,7 +120,7 @@ namespace esphome {
          return static_cast<uint8_t>(a + (b - a) * t);
       }
 
-      Color compute_color_gradient(const Color &start, const Color &end, uint8_t step) {
+      Color get_color_gradient(const Color &start, const Color &end, uint8_t step) {
          if (step > 7) {
             step = 7;
          }
