@@ -1221,6 +1221,7 @@ script:
           then:
             - lambda: "id(knight_rider_step)->execute(iteration, left);"
             - delay: ${swipe_between_led_delay}
+      - delay: 10s
       - repeat:
           count: 10
           then:
@@ -1264,6 +1265,7 @@ script:
       left: bool
     then:
       - lambda: |-
+        if (iteration == 0 || iteration == 6) {
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
           esphome::Color gradient;
           if (left) {
@@ -1273,12 +1275,12 @@ script:
           }
           if (left) {
             if (${button_led_feedback_bottom}) {
-              target_led->get(7+iteration).set(gradient);
-              ESP_LOGW("button", "knight rider step %d bottom led %d", iteration, (7+iteration));
+              target_led->get(6+iteration).set(gradient);
+              ESP_LOGW("button", "knight rider step %d bottom led %d", iteration, (6+iteration));
             }
             if (${button_led_feedback_top}) {
-              target_led->get(27-iteration).set(gradient);
-              ESP_LOGW("button", "knight rider step %d top led %d", iteration, (27-iteration));
+              target_led->get(26-iteration).set(gradient);
+              ESP_LOGW("button", "knight rider step %d top led %d", iteration, (26-iteration));
             }
           } else {
             if (${button_led_feedback_bottom}) {
@@ -1291,6 +1293,7 @@ script:
             }
           }
           target_led->schedule_show();
+        }
 
   - id: led_on_swipe_left
     mode: restart
