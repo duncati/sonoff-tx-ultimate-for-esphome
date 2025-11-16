@@ -1188,7 +1188,7 @@ script:
               }
             }
           }
-          id(dim_button)->execute(button, is_long_press, is_double_tap); break;
+          id(dim_button)->execute(button, is_long_press, is_double_tap);
           ESP_LOGW("button", "Release Button: %d / State: %s", button, state ? "ON" : "OFF");
 
   - id: dim_button
