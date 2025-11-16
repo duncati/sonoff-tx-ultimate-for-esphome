@@ -829,10 +829,10 @@ script:
       - lambda: |-
           auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
           if (!double_tap) {
-            auto original_color = target_led->get(led_index).get();
-            id(original_led_color)[led_index-1] = original_color;
+            id(original_led_color)[led_index-1] = target_led->get(led_index).get();
           }
-          auto color = double_tap ? id(double_tap_color) : id(touch_color);
+          //auto color = double_tap ? id(double_tap_color) : id(touch_color);
+          auto color = id(touch_color);
           ESP_LOGD("button", "button %d press internal at LED %d, set color to %d %d %d ", button, led_index, color[0], color[1], color[2]);
           target_led->get(led_index).set(esphome::Color(color[0], color[1], color[2]));
 
