@@ -1017,6 +1017,9 @@ script:
       to_color_b: int
     then:
       - lambda: |-
+          //TODO
+          //this would lock in a 7 step gradient unless I change the cpp api
+          //gradient = id(tx_touch).get_color_gradient(from_color_r,  to_color_r, iteration);
           float factor = 1.0f * iteration / ${dim_led_steps};
           auto color = esphome::Color(
             from_color_r*(1.0-factor) + to_color_r*factor,
@@ -1227,7 +1230,7 @@ script:
             - lambda: "id(knight_rider_on)->execute(iteration, left);"
             - delay: ${swipe_between_led_delay}
       - repeat:
-          count: 10
+          count: ${dim_led_steps}
           then:
             - lambda: "id(knight_rider_off)->execute(iteration, left);"
             - delay: ${swipe_between_led_delay}
