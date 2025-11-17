@@ -61,8 +61,8 @@ substitutions:
   after_touch_dim_delay: 500ms
   swipe_between_led_delay: 50ms
 
-  dim_led_steps: 20
-  dim_led_step_delay: 25ms
+  dim_led_steps: 10
+  dim_led_step_delay: 50ms
 
   relay_1_pin: GPIO18
   relay_2_pin: GPIO17
