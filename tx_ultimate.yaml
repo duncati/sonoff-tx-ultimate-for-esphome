@@ -1017,7 +1017,7 @@ script:
       to_color_b: int
     then:
       - lambda: |-
-          float factor = iteration * 0.1f;
+          float factor = iteration / ${dim_led_steps}
           auto color = esphome::Color(
             from_color_r*(1.0-factor) + to_color_r*factor,
             from_color_g*(1.0-factor) + to_color_g*factor,
