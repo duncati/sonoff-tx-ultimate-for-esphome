@@ -1020,13 +1020,16 @@ script:
           //TODO
           //this would lock in a 7 step gradient unless I change the cpp api to include total steps
           //gradient = id(tx_touch).get_color_gradient(from_color_r,  to_color_r, iteration);
-          float factor = 1.0f * iteration / ${dim_led_steps};
+          float factor = 1.0f;
+          if (iteration != ${dim_led_steps}) {
+            factor = 1.0f * iteration / ${dim_led_steps};
+          }
           auto color = esphome::Color(
             from_color_r*(1.0-factor) + to_color_r*factor,
             from_color_g*(1.0-factor) + to_color_g*factor,
             from_color_b*(1.0-factor) + to_color_b*factor
           );
-          ESP_LOGI("button", "Dimming to %d %d %d", color.red, color.green, color.blue);
+          ESP_LOGI("button", "Iteration %d, dimming to %d %d %d", iteration, color.red, color.green, color.blue);
           static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->get(led_index).set(color);
 
 # The lovely ESPHome framework will stop execution of a script, even in parallel mode, if it's called
