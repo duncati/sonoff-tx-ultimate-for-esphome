@@ -1020,10 +1020,7 @@ script:
           //TODO
           //this would lock in a 7 step gradient unless I change the cpp api to include total steps
           //gradient = id(tx_touch).get_color_gradient(from_color_r,  to_color_r, iteration);
-          float factor = 1.0f;
-          if (iteration + 1 != ${dim_led_steps}) {
-            factor = 1.0f * iteration / ${dim_led_steps};
-          }
+          float factor = 1.0f * iteration / (${dim_led_steps} - 1);
           auto color = esphome::Color(
             from_color_r*(1.0-factor) + to_color_r*factor,
             from_color_g*(1.0-factor) + to_color_g*factor,
