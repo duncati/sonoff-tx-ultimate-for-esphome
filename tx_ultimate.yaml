@@ -1026,7 +1026,6 @@ script:
             from_color_g*(1.0-factor) + to_color_g*factor,
             from_color_b*(1.0-factor) + to_color_b*factor
           );
-          logger.log: "Device connected and booted successfully!"
           ESP_LOGI("button", "Dimming to %d %d %d", color.red, color.green, color.blue);
           static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->get(led_index).set(color);
 
