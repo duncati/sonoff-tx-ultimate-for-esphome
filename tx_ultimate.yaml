@@ -1133,7 +1133,7 @@ script:
     then:
       - if:
           condition:
-            lambda: 'return "${nightlight}" == "on";'
+            lambda: 'return std::string("${nightlight}") == "on";'
           then:
             - if:
                 condition:
