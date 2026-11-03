@@ -554,7 +554,7 @@ light:
             for (int i = 0; i < it.size(); i++) {
               if (tx_ultimate_touch::g_leds[i].active) {
                 uint32_t elapsed = now - tx_ultimate_touch::g_leds[i].start_time;
-          float progress = (tx_ultimate_touch::g_leds[i].duration_ms > 0) ? (float)elapsed / (float)tx_ultimate_touch::g_leds[i].duration_ms : 1.0f;
+                float progress = (tx_ultimate_touch::g_leds[i].duration_ms > 0) ? (float)elapsed / (float)tx_ultimate_touch::g_leds[i].duration_ms : 1.0f;
 
                 if (progress >= 1.0f) {
                   progress = 1.0f;
