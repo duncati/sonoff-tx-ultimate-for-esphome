@@ -1403,9 +1403,7 @@ script:
     then:
       - lambda: |-
           // Capture whatever color the LED is right now as the start color
-          auto current = id(leds).get_effect_data(); // or read directly
+          // auto current = id(leds).get_effect_data(); // or read directly
           // Read current color from the light component buffer:
-          esphome::light::AddressableLight &view = *id(leds);
-          esphome::Color cur = (led_index >= 0 && led_index < 28) ? view[led_index].get() : esphome::Color(0,0,0);
-
+          esphome::Color cur = (led_index >= 0 && led_index < 28) ? id(leds)[led_index].get() : esphome::Color(0,0,0);
           trigger_single_led(led_index, to_r, to_g, to_b, duration_ms, cur);
