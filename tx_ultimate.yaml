@@ -552,19 +552,19 @@ light:
           lambda: |-
             uint32_t now = millis();
             for (int i = 0; i < it.size(); i++) {
-              if (esphome::tx_ultimate_touch::g_leds[i].active) {
-                uint32_t elapsed = now - esphome::tx_ultimate_touch::g_leds[i].start_time;
-          float progress = (esphome::tx_ultimate_touch::g_leds[i].duration_ms > 0) ? (float)elapsed / (float)esphome::tx_ultimate_touch::g_leds[i].duration_ms : 1.0f;
+              if (g_leds[i].active) {
+                uint32_t elapsed = now - g_leds[i].start_time;
+                float progress = (g_leds[i].duration_ms > 0) ? (float)elapsed / (float)g_leds[i].duration_ms : 1.0f;
 
                 if (progress >= 1.0f) {
                   progress = 1.0f;
-                  esphome::tx_ultimate_touch::g_leds[i].active = false;
+                  g_leds[i].active = false;
                 }
 
                 it[i] = esphome::Color(
-                (uint8_t)(esphome::tx_ultimate_touch::g_leds[i].from_color.r + (esphome::tx_ultimate_touch::g_leds[i].to_color.r - esphome::tx_ultimate_touch::g_leds[i].from_color.r) * progress),
-                (uint8_t)(esphome::tx_ultimate_touch::g_leds[i].from_color.g + (esphome::tx_ultimate_touch::g_leds[i].to_color.g - esphome::tx_ultimate_touch::g_leds[i].from_color.g) * progress),
-                (uint8_t)(esphome::tx_ultimate_touch::g_leds[i].from_color.b + (esphome::tx_ultimate_touch::g_leds[i].to_color.b - esphome::tx_ultimate_touch::g_leds[i].from_color.b) * progress)
+                  (uint8_t)(g_leds[i].from_color.r + (g_leds[i].to_color.r - g_leds[i].from_color.r) * progress),
+                  (uint8_t)(g_leds[i].from_color.g + (g_leds[i].to_color.g - g_leds[i].from_color.g) * progress),
+                  (uint8_t)(g_leds[i].from_color.b + (g_leds[i].to_color.b - g_leds[i].from_color.b) * progress)
                 );
               }
             }
