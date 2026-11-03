@@ -1,5 +1,6 @@
 #pragma once
 
+#include "esphome.h"
 #include "esphome/core/automation.h"
 #include "esphome/core/component.h"
 #include "esphome/components/uart/uart.h"
@@ -23,6 +24,27 @@ namespace esphome {
             uint8_t x = -1;
             uint8_t state = -1;
         };
+
+// added 2/11/26 per gemini ------
+        struct LedSlot {
+          esphome::Color from_color{0, 0, 0};
+          esphome::Color to_color{0, 0, 0};
+          uint32_t start_time{0};
+          uint32_t duration_ms{0};
+          bool active{false};
+        };
+
+        inline LedSlot g_leds[28];
+
+        inline void trigger_single_led(int index, uint8_t to_r, uint8_t to_g, uint8_t to_b, uint32_t duration, esphome::Color current_color) {
+          if (index < 0 || index >= 28) return;
+          g_leds[index].from_color = current_color;
+          g_leds[index].to_color = esphome::Color(to_r, to_g, to_b);
+          g_leds[index].start_time = millis();
+          g_leds[index].duration_ms = duration;
+          g_leds[index].active = true;
+        }
+// ^^^^^ added 2/11/26 per gemini
 
         class TxUltimateTouch : public uart::UARTDevice, public Component {
         public:

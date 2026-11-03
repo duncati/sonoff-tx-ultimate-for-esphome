@@ -545,6 +545,29 @@ light:
 # Flicker doesn't appear to do anything
       - addressable_flicker:
           name: "Flicker"
+      - addressable_lambda
+          # Also a dimmer, fade to black
+          name: "Per LED Transitions"
+          update_interval: 16ms
+          lambda: |-
+            uint32_t now = millis();
+            for (int i = 0; i < it.size(); i++) {
+              if (g_leds[i].active) {
+                uint32_t elapsed = now - g_leds[i].start_time;
+                float progress = (g_leds[i].duration_ms > 0) ? (float)elapsed / (float)g_leds[i].duration_ms : 1.0f;
+
+                if (progress >= 1.0f) {
+                  progress = 1.0f;
+                  g_leds[i].active = false;
+                }
+
+                it[i] = esphome::Color(
+                  (uint8_t)(g_leds[i].from_color.r + (g_leds[i].to_color.r - g_leds[i].from_color.r) * progress),
+                  (uint8_t)(g_leds[i].from_color.g + (g_leds[i].to_color.g - g_leds[i].from_color.g) * progress),
+                  (uint8_t)(g_leds[i].from_color.b + (g_leds[i].to_color.b - g_leds[i].from_color.b) * progress)
+                );
+              }
+            }
 
   - platform: partition
     name: "LEDs Nightlight"
@@ -1366,3 +1389,23 @@ script:
           effect: ${very_long_press_effect}
       - delay: 5s
       - light.turn_off: leds_top
+
+  # added 2/11/26 per gemini
+  # Call this script anytime, for any LED, in parallel or sequentially
+  - id: transition_single_led
+    mode: parallel
+    parameters:
+      led_index: int
+      to_r: int
+      to_g: int
+      to_b: int
+      duration_ms: int
+    then:
+      - lambda: |-
+          // Capture whatever color the LED is right now as the start color
+          auto current = id(leds).get_effect_data(); // or read directly
+          // Read current color from the light component buffer:
+          esphome::light::AddressableLight &view = *id(leds);
+          esphome::Color cur = (led_index >= 0 && led_index < 28) ? view[led_index].get() : esphome::Color(0,0,0);
+
+          trigger_single_led(led_index, to_r, to_g, to_b, duration_ms, cur);
