@@ -545,7 +545,7 @@ light:
 # Flicker doesn't appear to do anything
       - addressable_flicker:
           name: "Flicker"
-      - addressable_lambda
+      - addressable_lambda:
           # Also a dimmer, fade to black
           name: "Per LED Transitions"
           update_interval: 16ms
