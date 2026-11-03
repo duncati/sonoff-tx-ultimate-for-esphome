@@ -552,19 +552,19 @@ light:
           lambda: |-
             uint32_t now = millis();
             for (int i = 0; i < it.size(); i++) {
-              if (g_leds[i].active) {
-                uint32_t elapsed = now - g_leds[i].start_time;
-                float progress = (g_leds[i].duration_ms > 0) ? (float)elapsed / (float)g_leds[i].duration_ms : 1.0f;
+              if (tx_ultimate_touch::g_leds[i].active) {
+                uint32_t elapsed = now - tx_ultimate_touch::g_leds[i].start_time;
+          float progress = (tx_ultimate_touch::g_leds[i].duration_ms > 0) ? (float)elapsed / (float)tx_ultimate_touch::g_leds[i].duration_ms : 1.0f;
 
                 if (progress >= 1.0f) {
                   progress = 1.0f;
-                  g_leds[i].active = false;
+                  tx_ultimate_touch::g_leds[i].active = false;
                 }
 
                 it[i] = esphome::Color(
-                  (uint8_t)(g_leds[i].from_color.r + (g_leds[i].to_color.r - g_leds[i].from_color.r) * progress),
-                  (uint8_t)(g_leds[i].from_color.g + (g_leds[i].to_color.g - g_leds[i].from_color.g) * progress),
-                  (uint8_t)(g_leds[i].from_color.b + (g_leds[i].to_color.b - g_leds[i].from_color.b) * progress)
+                (uint8_t)(tx_ultimate_touch::g_leds[i].from_color.r + (tx_ultimate_touch::g_leds[i].to_color.r - tx_ultimate_touch::g_leds[i].from_color.r) * progress),
+                (uint8_t)(tx_ultimate_touch::g_leds[i].from_color.g + (tx_ultimate_touch::g_leds[i].to_color.g - tx_ultimate_touch::g_leds[i].from_color.g) * progress),
+                (uint8_t)(tx_ultimate_touch::g_leds[i].from_color.b + (tx_ultimate_touch::g_leds[i].to_color.b - tx_ultimate_touch::g_leds[i].from_color.b) * progress)
                 );
               }
             }
