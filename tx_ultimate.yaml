@@ -59,7 +59,7 @@ substitutions:
   max_swipe_left_color: "{255,195,91}"
 
   after_touch_dim_delay: 500ms
-  swipe_between_led_delay: 50ms
+  swipe_between_led_delay: 42ms
 
   dim_led_steps: 12
   dim_led_step_delay: 42ms
