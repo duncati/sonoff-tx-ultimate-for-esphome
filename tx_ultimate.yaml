@@ -1415,4 +1415,4 @@ script:
           esphome::Color current_color = (led_index >= 0 && led_index < 28) ? current_led->get(led_index).get() : esphome::Color(0,0,0);
           ESP_LOGI("main", "transition_single_led current color %d %d %d", current_color.r, current_color.g, current_color.b);
           esphome::tx_ultimate_touch::trigger_single_led(led_index, to_r, to_g, to_b, duration_ms, current_color);
-          id(leds).make_call().set_effect("Transition LED").perform();
+          id(leds).turn_on().set_effect("Transition LED").perform();
