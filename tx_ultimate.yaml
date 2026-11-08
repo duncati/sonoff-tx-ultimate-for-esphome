@@ -1064,10 +1064,17 @@ script:
       - lambda: |-
           int button = 1;
           int led_index;
+          if (${button_led_feedback_bottom}) {
+            led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
+            auto to_color = id(original_led_color)[led_index-1];
+            //id(transition_single_led)->execute(led_index, to_color.r, to_color.g, to_color.b, 500);
+            id(transition_single_led)->execute(led_index, 100, 0, 0, 1000);
+          }
           if (${button_led_feedback_top}) {
             led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
             auto to_color = id(original_led_color)[led_index-1];
-            id(transition_single_led)->execute(led_index, to_color.r, to_color.g, to_color.b, 500);
+            //id(transition_single_led)->execute(led_index, to_color.r, to_color.g, to_color.b, 500);
+            id(transition_single_led)->execute(led_index, 100, 0, 0, 1000);
           }
 #     - repeat:
 #         count: ${dim_led_steps}
