@@ -62,7 +62,7 @@ substitutions:
   swipe_between_led_delay: 50ms
 
   dim_led_steps: 12
-  dim_led_step_delay: 40ms
+  dim_led_step_delay: 200ms
 
   relay_1_pin: GPIO18
   relay_2_pin: GPIO17
@@ -548,7 +548,8 @@ light:
       - addressable_lambda:
           # Also a dimmer, fade to black
           name: "Transition LED"
-          update_interval: 16ms
+          #update_interval: 16ms
+          update_interval: 200ms
           lambda: |-
             uint32_t now = millis();
             for (int i = 0; i < it.size(); i++) {
