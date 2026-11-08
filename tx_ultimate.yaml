@@ -1063,6 +1063,7 @@ script:
       - delay: ${after_touch_dim_delay}
       - lambda: |-
           int button = 1;
+          int led_index;
           if (${button_led_feedback_top}) {
             led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
             auto to_color = id(original_led_color)[led_index-1];
