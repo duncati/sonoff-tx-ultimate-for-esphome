@@ -1061,22 +1061,29 @@ script:
       is_long_press: bool
     then:
       - delay: ${after_touch_dim_delay}
-      - repeat:
-          count: ${dim_led_steps}
-          then:
-            - lambda: |-
-                int button = 1;
-                int led_index;
-                if (${button_led_feedback_bottom}) {
-                  led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
-                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
-                }
-                if (${button_led_feedback_top}) {
-                  led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
-                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
-                }
-                static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
-            - delay: ${dim_led_step_delay}
+      - lambda: |-
+          int button = 1;
+          if (${button_led_feedback_top}) {
+            led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
+            auto to_color = id(original_led_color)[led_index-1];
+            id(transition_single_led)->execute(led_index, to_color.r, to_color.g, to_color.b, 500);
+          }
+#     - repeat:
+#         count: ${dim_led_steps}
+#         then:
+#           - lambda: |-
+#               int button = 1;
+#               int led_index;
+#               if (${button_led_feedback_bottom}) {
+#                 led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
+#                 id(dim_led_internal)->execute(iteration, led_index, is_long_press);
+#               }
+#               if (${button_led_feedback_top}) {
+#                 led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
+#                 id(dim_led_internal)->execute(iteration, led_index, is_long_press);
+#               }
+#               static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
+#           - delay: ${dim_led_step_delay}
       - lambda: 'id(button_press_start_time)[0] = 0;'
 
   - id: dim_led_at_button_2
