@@ -701,18 +701,10 @@ tx_ultimate_touch:
     # TEST: play on.wav on every button press (replaces the click for presses).
     # To go back to the click, uncomment this and remove the media_player:
     # - script.execute: play_touch_sound
-
-# gemini claims:
-    - media_player.play_media:
+    - media_player.speaker.play_on_device_media_file:
         id: mp
-        media_content_id: "media-source://esphome/on_sound"
-        media_content_type: music
-
-# claude had:
-#   - media_player.speaker.play_on_device_media_file:
-#       id: mp
-#       media_file: on_sound
-#       announcement: true
+        media_file: on_sound
+        announcement: true
 
   on_release:
     - script.stop: led_on_button_press
