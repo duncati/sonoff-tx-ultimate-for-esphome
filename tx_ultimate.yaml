@@ -253,7 +253,7 @@ globals:
   - id: original_led_color
     type: esphome::Color[28]
     restore_value: no
-    initial_value: '{}'
+    initial_value: '{ esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), }'
   - id: button_lookup
     type: uint8_t[4][10]
     restore_value: no
