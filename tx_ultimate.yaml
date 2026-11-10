@@ -704,9 +704,9 @@ tx_ultimate_touch:
 
 # gemini claims:
     - media_player.play_media:
-      id: mp
-      media_content_id: "media-source://esphome/on_sound"
-      media_content_type: music
+        id: mp
+        media_content_id: "media-source://esphome/on_sound"
+        media_content_type: music
 
 # claude had:
 #   - media_player.speaker.play_on_device_media_file:
