@@ -12,13 +12,12 @@ substitutions:
   button_led_feedback_top: "true"
   button_led_feedback_bottom: "true"
 
-  short_vibra_time: 10ms
   vibra_time: 150ms
   button_on_time: 500ms
 
   double_tap_timeout: 350ms
   double_tap_color: "{100, 0, 100}"
-  blink_delay: 150ms
+  blink_delay_ms: "150"
 
   nightlight: "on"
   nightlight_brightness: "0.2"
@@ -41,16 +40,8 @@ substitutions:
   min_bar_color4: "{255,255,0}"
   max_bar_color4: "{255,0,0}"
 
-  very_long_press_brightness: "1"
-  very_long_press_color: "{0,100,0}"
-  very_long_press_effect: "Scan"
-
   long_press_color: "{0,100,0}"
   long_press_time: "500"
-
-  multi_touch_brightness: "1"
-  multi_touch_color: "{100,100,0}"
-  multi_touch_effect: "Flicker"
 
   min_swipe_right_color: "{137,21,149}"
   max_swipe_right_color: "{255,195,91}"
@@ -58,11 +49,14 @@ substitutions:
   min_swipe_left_color: "{137,21,149}"
   max_swipe_left_color: "{255,195,91}"
 
-  after_touch_dim_delay: 500ms
+  # LED fades (quadratic ease-in, run by the tx_ultimate_touch component)
+  after_touch_dim_delay_ms: "500"
+  dim_duration_ms: "500"
   swipe_between_led_delay: 42ms
+  swipe_fade_ms: "500"
 
-  dim_led_steps: 12
-  dim_led_step_delay: 42ms
+  # Touch feedback sound (RTTTL). Use "none" to disable.
+  touch_sound: "click:d=64,o=7,b=255:c"
 
   relay_1_pin: GPIO18
   relay_2_pin: GPIO17
@@ -94,6 +88,9 @@ esphome:
   on_boot:
     priority: -100
     then:
+      - lambda: |-
+          // the touch component runs all LED fades on this light
+          id(tx_touch).set_light(static_cast<light::AddressableLight *>(id(all_leds).get_output()));
       - binary_sensor.template.publish:
           id: button_1
           state: OFF
@@ -159,7 +156,6 @@ logger:
     script: INFO
     switch: INFO
     #tx_ultimate_touch: INFO
-    uart_debug: INFO
 
 dashboard_import:
   package_import_url: github://SmartHome-yourself/sonoff-tx-ultimate-for-esphome/tx_ultimate.yaml@main
@@ -179,14 +175,6 @@ improv_serial:
 captive_portal:
 
 external_components:
-# this is for ADF
-  - source:
-      type: git
-      url: https://github.com/gnumpi/esphome_audio.git
-      ref: main
-    components:
-      - adf_pipeline
-      - i2s_audio
   - source:
       type: git
       url: https://github.com/duncati/sonoff-tx-ultimate-for-esphome
@@ -204,14 +192,6 @@ globals:
     type: int[3]
     restore_value: no
     initial_value: ${long_press_color}
-  - id: very_long_press_color
-    type: int[3]
-    restore_value: no
-    initial_value: ${very_long_press_color}
-  - id: multi_touch_color
-    type: int[3]
-    restore_value: no
-    initial_value: ${multi_touch_color}
   - id: min_swipe_left_color
     type: esphome::Color
     restore_value: no
@@ -244,6 +224,11 @@ globals:
     type: esphome::Color[4]
     restore_value: no
     initial_value: '{ esphome::Color ${max_bar_color1}, esphome::Color ${max_bar_color2}, esphome::Color ${max_bar_color3}, esphome::Color ${max_bar_color4} }'
+  # true while long-press bars are showing (their LEDs' previous colors are saved)
+  - id: bars_active
+    type: bool
+    restore_value: no
+    initial_value: 'false'
   - id: button_bar_flipper
     type: int8_t[4]
     restore_value: no
@@ -264,10 +249,11 @@ globals:
     type: uint32_t[4]
     restore_value: no
     initial_value: '{0, 0, 0, 0}'
+  # Color each LED returns to after touch/swipe feedback, indexed by LED (0-27)
   - id: original_led_color
     type: esphome::Color[28]
     restore_value: no
-    initial_value: '{ esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), }'
+    initial_value: '{}'
   - id: button_lookup
     type: uint8_t[4][10]
     restore_value: no
@@ -489,6 +475,9 @@ switch:
       - delay: ${vibra_time}
       - switch.turn_off: vibra
 
+  # Speaker amplifier enable. Kept always on so short touch clicks aren't clipped
+  # by amplifier wake-up time. If it hisses when idle, switch to ALWAYS_OFF and
+  # enable the amp_hold script below (search for "amp_hold").
   - platform: gpio
     id: pa_power
     pin: ${pa_power_pin}
@@ -501,32 +490,47 @@ switch:
     pin:
       number: ${touchpanel_power_pin}
       inverted: true
+      ignore_strapping_warning: true  # fixed by the hardware design
     id: touch_power
     internal: true
     restore_mode: RESTORE_DEFAULT_ON
 
+  # Internal: whether the nightlight LEDs are currently lit (set by refresh_nightlight)
   - platform: template
-    name: "Nightlight"
+    name: "Nightlight Lit"
     id: nightlight
     internal: true
     optimistic: true
-    restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: ALWAYS_OFF
+    on_turn_on:
+      - script.execute: led_on_nightlight
+    on_turn_off:
+      - light.turn_off: leds_nightlight
 
+  # User-facing: enable the nightlight (lights up when the sun is below the horizon)
   - platform: template
     name: "Nightlight"
     id: nightlight_active
     optimistic: true
     restore_mode: RESTORE_DEFAULT_OFF
+    on_turn_on:
+      - script.execute: refresh_nightlight
+    on_turn_off:
+      - script.execute: refresh_nightlight
+
+  - platform: template
+    name: "${friendly_name} Touch Sound"
+    id: touch_sound_enabled
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    entity_category: config
 
   - platform: restart
     name: "${friendly_name} Restart"
 
 light:
   - platform: esp32_rmt_led_strip
-    rgb_order: GRB
-# - platform: neopixelbus
-#   type: GRB
-#   variant: WS2811
+    channel_colors: GRB
     chipset: WS2811
     pin: ${led_pin}
     num_leds: 28
@@ -545,29 +549,6 @@ light:
 # Flicker doesn't appear to do anything
       - addressable_flicker:
           name: "Flicker"
-      - addressable_lambda:
-          # Also a dimmer, fade to black
-          name: "Transition LED"
-          update_interval: 16ms
-          lambda: |-
-            uint32_t now = millis();
-            for (int i = 0; i < it.size(); i++) {
-              if (tx_ultimate_touch::g_leds[i].active) {
-                uint32_t elapsed = now - tx_ultimate_touch::g_leds[i].start_time;
-                float progress = (tx_ultimate_touch::g_leds[i].duration_ms > 0) ? (float)elapsed / (float)tx_ultimate_touch::g_leds[i].duration_ms : 1.0f;
-
-                if (progress >= 1.0f) {
-                  progress = 1.0f;
-                  tx_ultimate_touch::g_leds[i].active = false;
-                }
-
-                it[i] = esphome::Color(
-                (uint8_t)(tx_ultimate_touch::g_leds[i].from_color.r + (tx_ultimate_touch::g_leds[i].to_color.r - tx_ultimate_touch::g_leds[i].from_color.r) * progress),
-                (uint8_t)(tx_ultimate_touch::g_leds[i].from_color.g + (tx_ultimate_touch::g_leds[i].to_color.g - tx_ultimate_touch::g_leds[i].from_color.g) * progress),
-                (uint8_t)(tx_ultimate_touch::g_leds[i].from_color.b + (tx_ultimate_touch::g_leds[i].to_color.b - tx_ultimate_touch::g_leds[i].from_color.b) * progress)
-                );
-              }
-            }
 
   - platform: partition
     name: "LEDs Nightlight"
@@ -621,91 +602,79 @@ light:
       - addressable_flicker:
           name: "Flicker"
 
-#This almost worked:
-# adf_pipeline:
-#   - platform: i2s_audio
-#     type: audio_out
-#     id: adf_speaker
-#     i2s_audio_id: i2s_out
-#     i2s_dout_pin: ${audio_sdata_pin}
+# ---------------------------------------------------------------------------
+# Audio: I2S -> external amp (enabled by pa_power).
+# Feedback sounds (rtttl) and Home Assistant media/announcements are mixed, so a
+# touch click can play over an announcement. Settings follow TX-Ultimate-Easy:
+# https://github.com/edwardtfn/TX-Ultimate-Easy/tree/main/ESPHome
+# ---------------------------------------------------------------------------
+i2s_audio:
+  - id: i2s_bus
+    i2s_bclk_pin:
+      number: ${audio_bclk_pin}
+      ignore_strapping_warning: true
+    i2s_lrclk_pin: ${audio_lrclk_pin}
 
-# media_player:
-#   - platform: adf_pipeline
-#     id: adf_media_player
-#     name: Media player
-#     keep_pipeline_alive: false
-#     internal: false
-#     pipeline:
-#       - self
-#       - adf_speaker
+speaker:
+  - platform: i2s_audio
+    id: spk
+    i2s_audio_id: i2s_bus
+    dac_type: external
+    i2s_dout_pin:
+      number: ${audio_sdata_pin}
+      ignore_strapping_warning: true
+    i2s_comm_fmt: stand_msb   # the TX Ultimate amp needs MSB-justified data; the default gives static
+    channel: mono
+    timeout: never            # keep I2S running so sounds don't pop when they start
 
-# i2s_audio:
-#   - id: i2s_out
-#     i2s_lrclk_pin: ${audio_lrclk_pin}
-#     i2s_bclk_pin: ${audio_bclk_pin}
+  - platform: mixer
+    id: spk_mixer
+    output_speaker: spk
+    source_speakers:
+      - id: announce_spk
+      - id: media_spk
+      - id: fx_spk
 
-# This was shit:
-# - platform: mixer
-#   id: mixer_speaker
-#   speaker: audio_i2s
-#   source:
-#     - id: announcement_source
-#     - id: media_source
+  - platform: resampler
+    id: announce_in
+    output_speaker: announce_spk
+  - platform: resampler
+    id: media_in
+    output_speaker: media_spk
+  - platform: resampler
+    id: fx_in
+    output_speaker: fx_spk
 
-# speaker:
-#   - platform: i2s_audio
-#     id: my_speaker
-#     name: "Gemini sucks"
-#     i2s_lrclk_pin: ${audio_lrclk_pin}
-#     i2s_bclk_pin: ${audio_bclk_pin}
-#     i2s_dout_pin: ${audio_sdata_pin}
-#     dac_type: external
+media_player:
+  - platform: speaker
+    id: mp
+    name: "${friendly_name} Player"
+    buffer_size: 250000       # no PSRAM on this board; lower this if you see allocation failures
+    task_stack_in_psram: false
+    files:
+      - id: on_sound
+        file: sounds/on.wav
+      - id: off_sound
+        file: sounds/off.wav
+    announcement_pipeline:
+      speaker: announce_in
+      format: WAV
+      num_channels: 1
+      sample_rate: 48000
+    media_pipeline:
+      speaker: media_in
+      format: FLAC
+      num_channels: 1
+      sample_rate: 48000
+    # If pa_power is switched instead of always on, uncomment these (and the amp_hold script):
+    # on_play:
+    #   - script.execute: amp_hold
+    # on_announcement:
+    #   - script.execute: amp_hold
 
-# media_player:
-#   - platform: speaker
-#     name: ${friendly_name} Player
-#     id: speaker_out
-#     media_pipeline:
-#       speaker: media_source
-#     announcement_pipeline:
-#       speaker: announcement_source
-#     files:
-#       - id: on_sound
-#         file: "sounds/on.wav"
-#       - id: off_sound
-#         file: "sounds/off.wav"
-
-# i2s_audio:
-#   id: audio_i2s
-#   i2s_lrclk_pin: ${audio_lrclk_pin}
-#   i2s_bclk_pin: ${audio_bclk_pin}
-#   i2s_dout_pin: ${audio_sdata_pin}
-
-# media_player:
-#   - platform: i2s_audio
-#     id: media_out
-#     name: ${friendly_name} Player
-#     dac_type: external
-#     i2s_dout_pin: ${audio_sdata_pin}
-#     i2s_audio_id: audio_i2s
-#     i2s_comm_fmt: lsb
-#     mode: mono
-#
-# i2s_audio:
-#   id: audio_i2s
-#   i2s_lrclk_pin: ${audio_lrclk_pin}
-#   i2s_bclk_pin: ${audio_bclk_pin}
-#
-# speaker:
-#   - platform: i2s_audio
-#     id: speaker
-#     i2s_audio_id: my_i2s_bus # The ID you defined above
-#     dac_type: external
-#     i2s_dout_pin: ${audio_sdata_pin}
-#     # Optional settings
-#     sample_rate: 16000
-#     bits_per_sample: 16bit
-#     channel: mono
+rtttl:
+  - id: beeper
+    speaker: fx_in
 
 uart:
   tx_pin: ${uart_tx_pin}
@@ -715,14 +684,6 @@ uart:
   data_bits: 8
   stop_bits: 1
   parity: NONE
-  debug:
-    direction: RX
-    dummy_receiver: false
-    after:
-      timeout: 2s
-      bytes: 2048
-    sequence:
-      - lambda: UARTDebug::log_hex(direction, bytes, ' ');
 
 tx_ultimate_touch:
   id: tx_touch
@@ -731,19 +692,26 @@ tx_ultimate_touch:
   on_press:
     - lambda: |-
         auto button = id(button_lookup)[${button_count}-1][touch.x-1];
-        ESP_LOGI("button", "Touch Position: %d, State: %d, Button: %d at %lu", touch.x, touch.state, button, millis());
-        id(led_on_button_press)->execute(button, false);
-        id(button_held)[button-1]=1;
+        ESP_LOGI("button", "Touch Position: %d, State: %d, Button: %d at %" PRIu32, touch.x, touch.state, button, millis());
+        id(button_held)[button-1] = 1;
+        id(led_on_button_press)->execute(button);
     - switch.turn_on: vibra
+    # TEST: play on.wav on every button press (replaces the click for presses).
+    # To go back to the click, uncomment this and remove the media_player:
+    # - script.execute: play_touch_sound
+    - media_player.speaker.play_on_device_media_file:
+        id: mp
+        media_file: on_sound
+        announcement: true
 
   on_release:
-    - lambda: 'ESP_LOGI("button", "on_release stopping led_on_button_press and bar_go_up_and_down");'
     - script.stop: led_on_button_press
     - lambda: id(handle_on_release).execute(touch.x);
 
   on_swipe_left:
     - script.execute: led_on_swipe_left
     - switch.turn_on: vibra
+    - script.execute: play_touch_sound
     - binary_sensor.template.publish:
         id: swipe_left
         state: ON
@@ -753,6 +721,7 @@ tx_ultimate_touch:
   on_swipe_right:
     - script.execute: led_on_swipe_right
     - switch.turn_on: vibra
+    - script.execute: play_touch_sound
     - binary_sensor.template.publish:
         id: swipe_right
         state: ON
@@ -762,6 +731,7 @@ tx_ultimate_touch:
   on_multi_touch_release:
     - script.execute: led_on_multi_touch
     - switch.turn_on: vibra
+    - script.execute: play_touch_sound
     - binary_sensor.template.publish:
         id: multi_touch
         state: ON
@@ -772,18 +742,16 @@ tx_ultimate_touch:
     - lambda: |-
         ESP_LOGD("button", "Very Long Touch Event Position: %d / State: %d", touch.x, touch.state);
         id(handle_on_release).execute(touch.x);
-        // maybe don't do LED effects for the very long touch since it doesn't do anything??
-        //id(led_on_long_touch);
     - switch.turn_on: vibra
     - binary_sensor.template.publish:
        id: very_long_press
        state: ON
 
 time:
-  - platform: homeassistant
-    id: homeassistant_time
   - platform: sntp
     id: sntp_time
+    on_time_sync:
+      - script.execute: refresh_nightlight
     on_time:
       # Every 5 minutes
       - seconds: 0
@@ -796,144 +764,105 @@ sun:
   longitude: ${longitude}
 
 script:
+  # ---------------------------------------------------------------------------
+  # Button LEDs
+  # ---------------------------------------------------------------------------
+
+  # Set a button's LEDs to a color. With save=true (a new touch), first remember
+  # what the LEDs showed so dim_button can fade back to it, and cancel any fade in
+  # progress; if one was pending or running, the saved color is still the real
+  # original, so it is kept. With save=false (long-press color, blinks), only the
+  # color changes and a pending fade still runs afterwards.
+  - id: light_button
+    mode: parallel
+    parameters:
+      button: int
+      save: bool
+      r: int
+      g: int
+      b: int
+    then:
+      - lambda: |-
+          auto *out = static_cast<light::AddressableLight *>(id(all_leds).get_output());
+          int leds[2];
+          int n = id(tx_touch).get_button_leds(button, ${button_count}, ${button_led_feedback_bottom}, ${button_led_feedback_top}, leds);
+          for (int i = 0; i < n; i++) {
+            if (save) {
+              if (!id(tx_touch).is_fading(leds[i])) {
+                id(original_led_color)[leds[i]] = (*out)[leds[i]].get();
+              }
+              id(tx_touch).cancel_fade(leds[i]);
+            }
+            (*out)[leds[i]] = Color(r, g, b);
+          }
+          out->schedule_show();
+
+  # Fade a button's LEDs back to their saved colors (quadratic ease-in).
+  - id: dim_button
+    mode: parallel
+    parameters:
+      button: int
+      extra_delay_ms: int
+    then:
+      - lambda: |-
+          int leds[2];
+          int n = id(tx_touch).get_button_leds(button, ${button_count}, ${button_led_feedback_bottom}, ${button_led_feedback_top}, leds);
+          for (int i = 0; i < n; i++) {
+            id(tx_touch).fade_led(leds[i], id(original_led_color)[leds[i]], ${dim_duration_ms}, ${after_touch_dim_delay_ms} + extra_delay_ms);
+          }
+
   - id: led_on_button_press
     mode: parallel
     parameters:
       button: int
-      double_tap: bool
     then:
       - lambda: |-
-          int led_index;
-          if (id(button_press_start_time)[button-1] == 0) {
-            id(button_press_start_time)[button-1] = millis();
-            if (${button_led_feedback_bottom}) {
-              led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
-              id(led_on_button_press_internal)->execute(button, led_index, double_tap);
+          id(button_press_start_time)[button-1] = millis();
+          auto &c = id(touch_color);
+          id(light_button)->execute(button, true, c[0], c[1], c[2]);
+      # on_release stops this script, so the rest only runs while the button is held
+      - delay: ${long_press_time}ms
+      - lambda: |-
+          if (millis() - id(button_press_start_time)[button-1] >= ${long_press_time}) {
+            ESP_LOGI("button", "button %d long pressed", button);
+            auto &c = id(long_press_color);
+            id(light_button)->execute(button, false, c[0], c[1], c[2]);
+            id(vibra).turn_on();
+            if (${long_hold_uses_bars}) {
+              id(bars_go_up_and_down)->execute(button);
             }
-            if (${button_led_feedback_top}) {
-              led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
-              id(led_on_button_press_internal)->execute(button, led_index, double_tap);
-            }
-            static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
-          } else {
-            id(button_press_start_time)[button-1] = millis();
-            ESP_LOGI("button", "button %d pressed before fade completed", button);
           }
-      - if:
-          condition:
-            - lambda: 'return !double_tap;'
-          then:
-# This script is stopped by on_release, so only if the button is held long enough 
-# will the long press color turn on.
-            - delay: ${long_press_time}ms
-            - lambda: |-
-                ESP_LOGI("button", "button %d possibly long pressed, not stopped", button);
-                if (millis() - id(button_press_start_time)[button-1] > ${long_press_time}) {
-                  ESP_LOGI("button", "button %d long pressed", button);
-                  id(turn_on_led_at_button)->execute(button);
-                  id(vibra).turn_on();
-                  if (${long_hold_uses_bars}) {
-                    id(bars_go_up_and_down)->execute(button);
-                  }
-                }
 
-  - id: turn_on_led_at_button
+  - id: handle_on_release
     mode: parallel
     parameters:
-      button: int
+      x: int
     then:
       - lambda: |-
-          auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
-          int led_index;
-          if (${button_led_feedback_bottom}) {
-            led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
-            target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
-          }
-          if (${button_led_feedback_top}) {
-            led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
-            target_led->get(led_index).set(esphome::Color(id(long_press_color)[0], id(long_press_color)[1], id(long_press_color)[2]));
-          }
-          target_led->schedule_show();
-
-  - id: led_on_button_press_internal
-    mode: parallel
-    parameters:
-      button: int
-      led_index: int
-      double_tap: bool
-    then:
-      - lambda: |-
-          auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-          if (!double_tap) {
-            id(original_led_color)[led_index-1] = target_led->get(led_index).get();
-          }
-          //auto color = double_tap ? id(double_tap_color) : id(touch_color);
-          auto color = id(touch_color);
-          ESP_LOGD("button", "button %d press internal at LED %d, set color to %d %d %d ", button, led_index, color[0], color[1], color[2]);
-          target_led->get(led_index).set(esphome::Color(color[0], color[1], color[2]));
-
-  - id: bars_go_up_and_down
-    mode: restart
-    parameters:
-      button: int
-    then:
-      - repeat:
-          count: 100
-          then:
-            - lambda: |-
-                if (id(button_held)[button-1] == 0) {
-                  ESP_LOGI("button", "button %d no longer held in up and down", button);
-                  // TODO may be better to fade the bars out instead of turning them off
-                  id(set_bar_height).execute(0, 0);
-                  id(bars_go_up_and_down).stop();
-                } else {
-                  int bar_height = id(button_bar_brightness)[button-1];
-                  //ESP_LOGI("button", "button %d bar adjusting %d, height is %d", button, id(button_bar_flipper)[button-1], bar_height);
-                  if (bar_height == 7) {
-                    id(button_bar_flipper)[button-1] = -1;
-                  } else if (bar_height == 0) {
-                    id(button_bar_flipper)[button-1] = 1;
-                  }
-                  id(button_bar_brightness)[button-1]+=id(button_bar_flipper)[button-1];
-                  id(set_bar_height).execute(button, bar_height);
-                }
-            - delay: ${bar_delay}
-
-  - id: set_bar_height
-    mode: restart
-    parameters:
-      button: int
-      height: int
-    then:
-      - lambda: |-
-          ESP_LOGI("button", "set_bar_height to %d for button %d", height, button);
-          auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
-          auto black = esphome::Color(0, 0, 0);
-          if (height == 0) {
-            target_led->range(13, 20).set(black);
-            target_led->range(0, 6).set(black);
-            target_led->get(27).set(black);
+          auto button = id(button_lookup)[${button_count}-1][x-1];
+          id(button_held)[button-1] = 0;
+          // unsigned subtraction stays correct across the millis() wrap
+          uint32_t button_press_duration = millis() - id(button_press_start_time)[button-1];
+          ESP_LOGD("button", "Button %d released, held for %" PRIu32 " ms", button, button_press_duration);
+          binary_sensor::BinarySensor *const press[] = {id(button_1), id(button_2), id(button_3), id(button_4)};
+          binary_sensor::BinarySensor *const long_press[] = {id(long_press_1), id(long_press_2), id(long_press_3), id(long_press_4)};
+          if (button_press_duration >= ${long_press_time}) {
+            ESP_LOGD("button", "Button %d long pressed", button);
+            long_press[button-1]->publish_state(true);
           } else {
-            esphome::Color gradient;
-            for (int i=0; i<height; i++) {
-              gradient = id(tx_touch).get_color_gradient(id(min_bar_color)[button-1], id(max_bar_color)[button-1], i);
-              target_led->get(13+i).set(gradient);
-              if (i==7) {
-                target_led->get(27).set(gradient);
-              } else {
-                target_led->get(5-i).set(gradient);
-              }
-            }
-            for (int i=height; i<7; i++) {
-              target_led->get(13+i).set(black);
-              if (i==7) {
-                target_led->get(27).set(black);
-              } else {
-                target_led->get(5-i).set(black);
-              }
+            id(button_double_tap)[button-1]++;
+            id(double_tap_timer)->execute(button);
+            // TODO maybe add triple tap?
+            if (id(button_double_tap)[button-1] > 1) {
+              ESP_LOGD("button", "Button %d double tapped", button);
+              id(process_double_tap)->execute(button);
+              id(button_double_tap)[button-1] = 0;
+            } else {
+              press[button-1]->publish_state(true);
             }
           }
-          target_led->schedule_show();
+          id(dim_button)->execute(button, 0);
+          ESP_LOGD("button", "Release Button: %d", button);
 
   - id: double_tap_timer
     mode: restart
@@ -952,34 +881,17 @@ script:
       - lambda: |-
           id(stop_all).execute();
           ESP_LOGW("button", "Double tap at button %d", button);
-          // TODO fix this, it's hacky:
-          id(button_press_start_time)[button-1] = 0;
-          switch(button) {
-            case 1: 
-              id(double_tap_1).publish_state(true);
-              break;
-            case 2:
-              id(double_tap_2).publish_state(true);
-              break;
-            case 3:
-              id(double_tap_3).publish_state(true);
-              break;
-            case 4:
-              id(double_tap_4).publish_state(true);
-              break;
-          }
-          //id(led_on_button_press)->execute(button, true);
+          binary_sensor::BinarySensor *const double_tap[] = {id(double_tap_1), id(double_tap_2), id(double_tap_3), id(double_tap_4)};
+          double_tap[button-1]->publish_state(true);
+          // push the release fade back until the blinks below are done
+          id(dim_button)->execute(button, 3 * ${blink_delay_ms});
           id(blink)->execute(button, 1);
-      - delay: ${blink_delay}
-      - lambda: |-
-          id(blink)->execute(button, 2);
-      - delay: ${blink_delay}
-      - lambda: |-
-          id(blink)->execute(button, 1);
-      - delay: ${blink_delay}
-      - lambda: |-
-          id(blink)->execute(button, 2);
-          id(dim_button)->execute(button, false);
+      - delay: ${blink_delay_ms}ms
+      - lambda: 'id(blink)->execute(button, 2);'
+      - delay: ${blink_delay_ms}ms
+      - lambda: 'id(blink)->execute(button, 1);'
+      - delay: ${blink_delay_ms}ms
+      - lambda: 'id(blink)->execute(button, 2);'
 
   - id: blink
     mode: parallel
@@ -988,291 +900,139 @@ script:
       stage: int
     then:
       - lambda: |-
-          auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-          auto color = id(double_tap_color);
-          if (stage%2 == 0) {
-            color = id(touch_color);
-          }
-          int led_index;
-          if (${button_led_feedback_bottom}) {
-            led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
-            target_led->get(led_index).set(esphome::Color(color[0], color[1], color[2]));
-          }
-          if (${button_led_feedback_top}) {
-            led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
-            target_led->get(led_index).set(esphome::Color(color[0], color[1], color[2]));
-          }
-          target_led->schedule_show();
+          auto &c = (stage % 2 == 0) ? id(touch_color) : id(double_tap_color);
+          id(light_button)->execute(button, false, c[0], c[1], c[2]);
 
-  - id: short_vibration
-    then:
-      - switch.turn_on: vibra
-      - delay: ${short_vibra_time}
-      - switch.turn_off: vibra
-
-  - id: dim_led_internal
-    mode: parallel
-    parameters:
-      iteration: int
-      led_index: int
-      is_long_press: bool
-    then:
-      - lambda: |-
-          auto to_color = id(original_led_color)[led_index-1];
-          int* from_color;
-          if (is_long_press) {
-            from_color = &id(long_press_color)[0];
-          } else {
-            from_color = &id(touch_color)[0];
-          }
-          id(dim_led_internal2)->execute(iteration, led_index, from_color[0], from_color[1], from_color[2], to_color.r, to_color.g, to_color.b);
-
-  - id: dim_led_internal2
-    mode: parallel
-    parameters:
-      iteration: int
-      led_index: int
-      from_color_r: int
-      from_color_g: int
-      from_color_b: int
-      to_color_r: int
-      to_color_g: int
-      to_color_b: int
-    then:
-      - lambda: |-
-          //TODO
-          //this would lock in a 7 step gradient unless I change the cpp api to include total steps
-          //gradient = id(tx_touch).get_color_gradient(from_color_r,  to_color_r, iteration);
-          float linear = 1.0f * iteration / (${dim_led_steps} - 1);
-          float factor = linear * linear;
-          auto color = esphome::Color(
-            from_color_r*(1.0-factor) + to_color_r*factor,
-            from_color_g*(1.0-factor) + to_color_g*factor,
-            from_color_b*(1.0-factor) + to_color_b*factor
-          );
-          //ESP_LOGI("button", "Iteration %d, dimming to %d %d %d", iteration, color.red, color.green, color.blue);
-          static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->get(led_index).set(color);
-
-# The lovely ESPHome framework will stop execution of a script, even in parallel mode, if it's called
-# again while the first execution is in a delay. The solution: duplicate this dim script for each
-# button so that it does not get called twice. Thanks, ESPHome!
-  - id: dim_led_at_button_1
+  # ---------------------------------------------------------------------------
+  # Long-press bars
+  # ---------------------------------------------------------------------------
+  - id: bars_go_up_and_down
     mode: restart
-    parameters:
-      is_long_press: bool
-    then:
-      - delay: ${after_touch_dim_delay}
-# added 2/11/26 per gemini
-#     - lambda: |-
-#         int button = 1;
-#         int led_index;
-#         if (${button_led_feedback_bottom}) {
-#           led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
-#           auto to_color = id(original_led_color)[led_index-1];
-#           id(transition_single_led)->execute(led_index, to_color.r, to_color.g, to_color.b, 500);
-#         }
-#         if (${button_led_feedback_top}) {
-#           led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
-#           auto to_color = id(original_led_color)[led_index-1];
-#           id(transition_single_led)->execute(led_index, to_color.r, to_color.g, to_color.b, 500);
-#         }
-      - repeat:
-          count: ${dim_led_steps}
-          then:
-            - lambda: |-
-                int button = 1;
-                int led_index;
-                if (${button_led_feedback_bottom}) {
-                  led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
-                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
-                }
-                if (${button_led_feedback_top}) {
-                  led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
-                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
-                }
-                static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
-            - delay: ${dim_led_step_delay}
-      - lambda: 'id(button_press_start_time)[0] = 0;'
-
-  - id: dim_led_at_button_2
-    mode: restart
-    parameters:
-      is_long_press: bool
-    then:
-      - delay: ${after_touch_dim_delay}
-      - repeat:
-          count: ${dim_led_steps}
-          then:
-            - lambda: |-
-                int button = 2;
-                int led_index;
-                if (${button_led_feedback_bottom}) {
-                  led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
-                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
-                }
-                if (${button_led_feedback_top}) {
-                  led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
-                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
-                }
-                static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
-            - delay: ${dim_led_step_delay}
-      - lambda: 'id(button_press_start_time)[1] = 0;'
-
-  - id: dim_led_at_button_3
-    mode: restart
-    parameters:
-      is_long_press: bool
-    then:
-      - delay: ${after_touch_dim_delay}
-      - repeat:
-          count: ${dim_led_steps}
-          then:
-            - lambda: |-
-                int button = 3;
-                int led_index;
-                if (${button_led_feedback_bottom}) {
-                  led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
-                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
-                }
-                if (${button_led_feedback_top}) {
-                  led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
-                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
-                }
-                static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
-            - delay: ${dim_led_step_delay}
-      - lambda: 'id(button_press_start_time)[2] = 0;'
-
-  - id: dim_led_at_button_4
-    mode: restart
-    parameters:
-      is_long_press: bool
-    then:
-      - delay: ${after_touch_dim_delay}
-      - repeat:
-          count: ${dim_led_steps}
-          then:
-            - lambda: |-
-                int button = 4;
-                int led_index;
-                if (${button_led_feedback_bottom}) {
-                  led_index = id(tx_touch).get_bottom_led_for_button(button, ${button_count});
-                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
-                }
-                if (${button_led_feedback_top}) {
-                  led_index = id(tx_touch).get_top_led_for_button(button, ${button_count});
-                  id(dim_led_internal)->execute(iteration, led_index, is_long_press);
-                }
-                static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output())->schedule_show();
-            - delay: ${dim_led_step_delay}
-      - lambda: 'id(button_press_start_time)[3] = 0;'
-
-  - id: refresh_nightlight
-    mode: restart
-    then:
-      - if:
-          condition:
-            lambda: 'return std::string("${nightlight}") == "on";'
-          then:
-            - if:
-                condition:
-                  - sun.is_below_horizon:
-                then:
-                  - switch.turn_on:
-                      id: nightlight
-                else:
-                  - switch.turn_off:
-                      id: nightlight
-
-  - id: led_on_nightlight
-    mode: restart
-    then:
-      - light.turn_on:
-          id: leds_nightlight
-          brightness: ${nightlight_brightness}
-          red:   !lambda "return id(nightlight_color)[0]/100.0;"
-          green: !lambda "return id(nightlight_color)[1]/100.0;"
-          blue:  !lambda "return id(nightlight_color)[2]/100.0;"
-
-  - id: handle_on_release
-    mode: parallel
-    parameters:
-      x: int
-    then:
-      - lambda: |-
-          auto button = id(button_lookup)[${button_count}-1][x-1];
-          id(button_held)[button-1]=0;
-          // this will be wrong once every 49.7 days when millis() resets to 0 *shrug*
-          uint32_t button_press_duration = millis() - id(button_press_start_time)[button-1];
-          ESP_LOGD("button", "Button %d released, held for %lu ms (%lu - %lu)", button, button_press_duration, millis(), id(button_press_start_time)[button-1]);
-          bool is_long_press = false;
-          if (button_press_duration >= ${long_press_time}) {
-            is_long_press = true;
-            ESP_LOGD("button", "Button %d long pressed", button);
-            switch(button) {
-              case 1: id(long_press_1).publish_state(true); break;
-              case 2: id(long_press_2).publish_state(true); break;
-              case 3: id(long_press_3).publish_state(true); break;
-              case 4: id(long_press_4).publish_state(true); break;
-            }
-          } else {
-            id(button_double_tap)[button-1]++;
-            id(double_tap_timer)->execute(button);
-            // TODO maybe add triple tap?
-            if (id(button_double_tap)[button-1]>1) {
-              ESP_LOGD("button", "Button %d double tapped", button);
-              id(process_double_tap)->execute(button);
-              id(button_double_tap)[button-1]=0;
-            } else {
-              switch(button) {
-                case 1: id(button_1).publish_state(true); break;
-                case 2: id(button_2).publish_state(true); break;
-                case 3: id(button_3).publish_state(true); break;
-                case 4: id(button_4).publish_state(true); break;
-              }
-            }
-          }
-          id(dim_button)->execute(button, is_long_press);
-          ESP_LOGW("button", "Release Button: %d", button);
-
-  - id: dim_button
-    mode: parallel
     parameters:
       button: int
-      is_long_press: bool
     then:
       - lambda: |-
-          switch(button) {
-            case 1: id(dim_led_at_button_1)->execute(is_long_press); break;
-            case 2: id(dim_led_at_button_2)->execute(is_long_press); break;
-            case 3: id(dim_led_at_button_3)->execute(is_long_press); break;
-            case 4: id(dim_led_at_button_4)->execute(is_long_press); break;
+          // Save what the bar LEDs show now (e.g. the nightlight), so unlit bar
+          // segments show it and clearing the bars fades back to it.
+          if (!id(bars_active)) {
+            auto *out = static_cast<light::AddressableLight *>(id(all_leds).get_output());
+            for (int i = 0; i < 7; i++) {
+              for (int led : {13 + i, i == 6 ? 27 : 5 - i}) {
+                if (!id(tx_touch).is_fading(led)) {
+                  id(original_led_color)[led] = (*out)[led].get();
+                }
+                id(tx_touch).cancel_fade(led);
+              }
+            }
+            id(bars_active) = true;
           }
+      - repeat:
+          count: 100
+          then:
+            - lambda: |-
+                if (id(button_held)[button-1] == 0) {
+                  ESP_LOGI("button", "button %d no longer held in up and down", button);
+                  id(clear_bars).execute();
+                  id(bars_go_up_and_down).stop();
+                } else {
+                  int bar_height = id(button_bar_brightness)[button-1];
+                  if (bar_height == 7) {
+                    id(button_bar_flipper)[button-1] = -1;
+                  } else if (bar_height == 0) {
+                    id(button_bar_flipper)[button-1] = 1;
+                  }
+                  id(button_bar_brightness)[button-1] += id(button_bar_flipper)[button-1];
+                  id(set_bar_height).execute(button, bar_height);
+                }
+            - delay: ${bar_delay}
 
+  # Two 7-LED bars: 13..19 going up one side, and 5,4,3,2,1,0,27 going up the other.
+  # Segments above `height` show the LED's saved color instead of black.
+  - id: set_bar_height
+    mode: restart
+    parameters:
+      button: int
+      height: int
+    then:
+      - lambda: |-
+          ESP_LOGD("button", "set_bar_height to %d for button %d", height, button);
+          auto *out = static_cast<light::AddressableLight *>(id(all_leds).get_output());
+          const int h = std::min(height, 7);
+          for (int i = 0; i < 7; i++) {
+            Color lit;
+            if (i < h) {
+              lit = id(tx_touch).get_color_gradient(id(min_bar_color)[button-1], id(max_bar_color)[button-1], i);
+            }
+            for (int led : {13 + i, i == 6 ? 27 : 5 - i}) {
+              (*out)[led] = i < h ? lit : id(original_led_color)[led];
+            }
+          }
+          out->schedule_show();
+
+  # Fade the bars back to the colors saved when they started. Does nothing if
+  # no bars are showing, so it is safe to call from stop_all.
+  - id: clear_bars
+    mode: restart
+    then:
+      - lambda: |-
+          if (!id(bars_active)) return;
+          for (int i = 0; i < 7; i++) {
+            for (int led : {13 + i, i == 6 ? 27 : 5 - i}) {
+              id(tx_touch).fade_led(led, id(original_led_color)[led], ${dim_duration_ms});
+            }
+          }
+          id(bars_active) = false;
+
+  # ---------------------------------------------------------------------------
+  # Swipes and multi-touch
+  # ---------------------------------------------------------------------------
   - id: stop_all
     mode: restart
     then:
       - script.stop: led_on_button_press
       - script.stop: bars_go_up_and_down
-      - script.stop: dim_led_at_button_1
-      - script.stop: dim_led_at_button_2
-      - script.stop: dim_led_at_button_3
-      - script.stop: dim_led_at_button_4
+      - script.execute: clear_bars
 
   - id: knight_rider
     mode: restart
     parameters:
       left: bool
     then:
+      - lambda: |-
+          // Remember what the swept LEDs show now, so they fade back to it instead
+          // of to black. LEDs that are mid-fade or belong to a held button already
+          // have their real original saved, so keep that.
+          auto *out = static_cast<light::AddressableLight *>(id(all_leds).get_output());
+          bool keep[28] = {};
+          for (int b = 1; b <= ${button_count}; b++) {
+            if (!id(button_held)[b-1]) continue;
+            int leds[2];
+            int n = id(tx_touch).get_button_leds(b, ${button_count}, true, true, leds);
+            for (int i = 0; i < n; i++) keep[leds[i]] = true;
+          }
+          for (int i = 0; i < 7; i++) {
+            int swept[2];
+            int n = 0;
+            if (${button_led_feedback_bottom}) swept[n++] = 6 + i;
+            if (${button_led_feedback_top}) swept[n++] = 20 + i;
+            for (int j = 0; j < n; j++) {
+              int led = swept[j];
+              if (!keep[led] && !id(tx_touch).is_fading(led)) {
+                id(original_led_color)[led] = (*out)[led].get();
+              }
+              id(tx_touch).cancel_fade(led);
+            }
+          }
       - repeat:
           count: 7
           then:
             - lambda: "id(knight_rider_on)->execute(iteration, left);"
             - delay: ${swipe_between_led_delay}
-      - repeat:
-          count: ${dim_led_steps}
-          then:
-            - lambda: "id(knight_rider_off)->execute(iteration, left);"
-            - delay: ${swipe_between_led_delay}
+      - lambda: |-
+          for (int i = 0; i < 7; i++) {
+            if (${button_led_feedback_bottom}) id(tx_touch).fade_led(6 + i, id(original_led_color)[6 + i], ${swipe_fade_ms});
+            if (${button_led_feedback_top}) id(tx_touch).fade_led(20 + i, id(original_led_color)[20 + i], ${swipe_fade_ms});
+          }
 
   - id: knight_rider_on
     mode: restart
@@ -1281,68 +1041,17 @@ script:
       left: bool
     then:
       - lambda: |-
-          auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
-          esphome::Color gradient;
-          if (left) {
-            gradient = id(tx_touch).get_color_gradient(id(min_swipe_left_color), id(max_swipe_left_color), iteration);
-          } else {
-            gradient = id(tx_touch).get_color_gradient(id(min_swipe_right_color), id(max_swipe_right_color), iteration);
+          auto *out = static_cast<light::AddressableLight *>(id(all_leds).get_output());
+          Color gradient = left
+            ? id(tx_touch).get_color_gradient(id(min_swipe_left_color), id(max_swipe_left_color), iteration)
+            : id(tx_touch).get_color_gradient(id(min_swipe_right_color), id(max_swipe_right_color), iteration);
+          if (${button_led_feedback_bottom}) {
+            (*out)[left ? 6 + iteration : 12 - iteration] = gradient;
           }
-          if (left) {
-            if (${button_led_feedback_bottom}) {
-              target_led->get(6+iteration).set(gradient);
-            }
-            if (${button_led_feedback_top}) {
-              target_led->get(26-iteration).set(gradient);
-            }
-          } else {
-            if (${button_led_feedback_bottom}) {
-              target_led->get(12-iteration).set(gradient);
-            }
-            if (${button_led_feedback_top}) {
-              target_led->get(20+iteration).set(gradient);
-            }
+          if (${button_led_feedback_top}) {
+            (*out)[left ? 26 - iteration : 20 + iteration] = gradient;
           }
-          target_led->schedule_show();
-
-  - id: knight_rider_off
-    mode: restart
-    parameters:
-      iteration: int
-      left: bool
-    then:
-      - lambda: |-
-          auto target_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output()); 
-          esphome::Color gradient;
-          int led_index;
-          // emulate what the repeat/count/iteration does:
-          for (int i=0; i<7; i++) {
-            if (left) {
-              gradient = id(tx_touch).get_color_gradient(id(min_swipe_left_color), id(max_swipe_left_color), i);
-            } else {
-              gradient = id(tx_touch).get_color_gradient(id(min_swipe_right_color), id(max_swipe_right_color), i);
-            }
-            if (left) {
-              if (${button_led_feedback_bottom}) {
-                led_index = 6+i;
-                id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
-              }
-              if (${button_led_feedback_top}) {
-                led_index = 26-i;
-                id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
-              }
-            } else {
-              if (${button_led_feedback_bottom}) {
-                led_index = 12-i;
-                id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
-              }
-              if (${button_led_feedback_top}) {
-                led_index = 20+i;
-                id(dim_led_internal2)->execute(iteration, led_index, gradient.r, gradient.g, gradient.b, 0, 0, 0);
-              }
-            }
-          }
-          target_led->schedule_show();
+          out->schedule_show();
 
   - id: led_on_swipe_left
     mode: restart
@@ -1364,49 +1073,16 @@ script:
     mode: restart
     then:
       - script.execute: stop_all
-      - script.execute:
-          id: set_bar_height
-          button: 0
-          height: 0
-# This is more cheesy than cool?
-#     - light.turn_on:
-#         id: leds_top
-#         brightness: ${multi_touch_brightness}
-#         red: !lambda "return id(multi_touch_color)[0]/100.0;"
-#         green: !lambda "return id(multi_touch_color)[1]/100.0;"
-#         blue:  !lambda "return id(multi_touch_color)[2]/100.0;"
-#         effect: ${multi_touch_effect}
-#     - delay: 2.0s
-#     - light.turn_off: leds_top
-      - script.execute:
-          id: dim_led_at_button_1
-          is_long_press: false
-      - script.execute:
-          id: dim_led_at_button_2
-          is_long_press: false
-      - script.execute:
-          id: dim_led_at_button_3
-          is_long_press: false
-      - script.execute:
-          id: dim_led_at_button_4
-          is_long_press: false
+      - lambda: |-
+          // flash every button with the touch color, then fade them all back
+          auto &c = id(touch_color);
+          for (int b = 1; b <= ${button_count}; b++) {
+            id(light_button)->execute(b, true, c[0], c[1], c[2]);
+            id(dim_button)->execute(b, 0);
+          }
 
-# TODO: do I want to remove this?
-  - id: led_on_long_touch
-    mode: restart
-    then:
-      - light.turn_on:
-          id: leds_top
-          brightness: ${very_long_press_brightness}
-          red: !lambda "return id(very_long_press_color)[0]/100.0;"
-          green: !lambda "return id(very_long_press_color)[1]/100.0;"
-          blue:  !lambda "return id(very_long_press_color)[2]/100.0;"
-          effect: ${very_long_press_effect}
-      - delay: 5s
-      - light.turn_off: leds_top
-
-  # added 2/11/26 per gemini
-  # Call this script anytime, for any LED, in parallel or sequentially
+  # Fade any LED to a color over duration_ms (quadratic ease-in), starting from
+  # whatever it shows now. Safe to call for many LEDs at once.
   - id: transition_single_led
     mode: parallel
     parameters:
@@ -1416,10 +1092,56 @@ script:
       to_b: int
       duration_ms: int
     then:
-      - lambda: |-
-          // Capture the curent LED color as the start color
-          auto current_led = static_cast<esphome::light::AddressableLight *>(id(all_leds).get_output());
-          esphome::Color current_color = (led_index >= 0 && led_index < 28) ? current_led->get(led_index).get() : esphome::Color(0,0,0);
-          //ESP_LOGI("main", "transition_single_led current color %d %d %d", current_color.r, current_color.g, current_color.b);
-          esphome::tx_ultimate_touch::trigger_single_led(led_index, to_r, to_g, to_b, duration_ms, current_color);
-          id(leds).turn_on().set_effect("Transition LED").perform();
+      - lambda: 'id(tx_touch).fade_led(led_index, Color(to_r, to_g, to_b), duration_ms);'
+
+  # ---------------------------------------------------------------------------
+  # Nightlight
+  # ---------------------------------------------------------------------------
+  - id: refresh_nightlight
+    mode: restart
+    then:
+      - if:
+          condition:
+            and:
+              - lambda: 'return strcmp("${nightlight}", "on") == 0 && id(nightlight_active).state;'
+              - sun.is_below_horizon:
+          then:
+            - switch.turn_on: nightlight
+          else:
+            - switch.turn_off: nightlight
+
+  - id: led_on_nightlight
+    mode: restart
+    then:
+      - light.turn_on:
+          id: leds_nightlight
+          brightness: ${nightlight_brightness}
+          red:   !lambda "return id(nightlight_color)[0]/100.0;"
+          green: !lambda "return id(nightlight_color)[1]/100.0;"
+          blue:  !lambda "return id(nightlight_color)[2]/100.0;"
+
+  # ---------------------------------------------------------------------------
+  # Sound
+  # ---------------------------------------------------------------------------
+  - id: play_touch_sound
+    mode: restart
+    then:
+      - if:
+          condition:
+            lambda: 'return id(touch_sound_enabled).state && strcmp("${touch_sound}", "none") != 0;'
+          then:
+            - rtttl.play:
+                id: beeper
+                rtttl: "${touch_sound}"
+
+  # Only needed if pa_power is switched instead of always on (see the pa_power
+  # switch). Call it from on_press and the media player's on_play/on_announcement;
+  # play the touch sound on release so the amp has time to wake up.
+  # - id: amp_hold
+  #   mode: restart
+  #   then:
+  #     - switch.turn_on: pa_power
+  #     - wait_until:
+  #         lambda: 'return id(mp).state == media_player::MEDIA_PLAYER_STATE_IDLE;'
+  #     - delay: 30s
+  #     - switch.turn_off: pa_power
