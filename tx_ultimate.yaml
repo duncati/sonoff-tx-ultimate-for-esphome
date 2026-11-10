@@ -57,6 +57,8 @@ substitutions:
 
   # Touch feedback sound (RTTTL). Use "none" to disable.
   touch_sound: "click:d=32,o=5,b=160:c"
+  swipe_right_sound: "gliss_up:d=32,o=5,b=240:c,c#,d,d#,e,f,f#,g,g#,a,a#,b,6c"
+  swipe_left_sound: "gliss_down:d=32,o=6,b=240:c,5b,5a#,5a,5g#,5g,5f#,5f,5e,5d#,5d,5c#"
 
   relay_1_pin: GPIO18
   relay_2_pin: GPIO17
@@ -699,10 +701,18 @@ tx_ultimate_touch:
     # TEST: play on.wav on every button press (replaces the click for presses).
     # To go back to the click, uncomment this and remove the media_player:
     # - script.execute: play_touch_sound
-    - media_player.speaker.play_on_device_media_file:
-        id: mp
-        media_file: on_sound
-        announcement: true
+
+# gemini claims:
+    - media_player.play_media:
+      id: mp
+      media_content_id: "media-source://esphome/on_sound"
+      media_content_type: music
+
+# claude had:
+#   - media_player.speaker.play_on_device_media_file:
+#       id: mp
+#       media_file: on_sound
+#       announcement: true
 
   on_release:
     - script.stop: led_on_button_press
@@ -1133,6 +1143,28 @@ script:
             - rtttl.play:
                 id: beeper
                 rtttl: "${touch_sound}"
+
+  - id: play_swipe_right_sound
+    mode: restart
+    then:
+      - if:
+          condition:
+            lambda: 'return id(touch_sound_enabled).state && strcmp("${swipe_right_sound}", "none") != 0;'
+          then:
+            - rtttl.play:
+                id: beeper
+                rtttl: "${swipe_right_sound}"
+
+  - id: play_swipe_left_sound
+    mode: restart
+    then:
+      - if:
+          condition:
+            lambda: 'return id(touch_sound_enabled).state && strcmp("${swipe_left_sound}", "none") != 0;'
+          then:
+            - rtttl.play:
+                id: beeper
+                rtttl: "${swipe_left_sound}"
 
   # Only needed if pa_power is switched instead of always on (see the pa_power
   # switch). Call it from on_press and the media player's on_play/on_announcement;
