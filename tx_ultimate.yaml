@@ -56,7 +56,7 @@ substitutions:
   swipe_fade_ms: "500"
 
   # Touch feedback sound (RTTTL). Use "none" to disable.
-  touch_sound: "click:d=64,o=7,b=255:c"
+  touch_sound: "click:d=32,o=5,b=160:c"
 
   relay_1_pin: GPIO18
   relay_2_pin: GPIO17
@@ -649,7 +649,7 @@ media_player:
   - platform: speaker
     id: mp
     name: "${friendly_name} Player"
-    buffer_size: 250000       # no PSRAM on this board; lower this if you see allocation failures
+    buffer_size: 32768
     task_stack_in_psram: false
     files:
       - id: on_sound
@@ -660,12 +660,12 @@ media_player:
       speaker: announce_in
       format: WAV
       num_channels: 1
-      sample_rate: 48000
+      sample_rate: 16000
     media_pipeline:
       speaker: media_in
       format: FLAC
       num_channels: 1
-      sample_rate: 48000
+      sample_rate: 16000
     # If pa_power is switched instead of always on, uncomment these (and the amp_hold script):
     # on_play:
     #   - script.execute: amp_hold
