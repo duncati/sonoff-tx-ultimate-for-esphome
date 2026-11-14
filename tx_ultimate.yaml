@@ -29,7 +29,19 @@ substitutions:
   touch_color: "{0,0,100}"
 
   long_hold_uses_bars: "true"
-  bar_delay: 300ms
+  # Long-press brightness: ramps up/down by brightness_step_pct every brightness_interval
+  # while held (5% / 100ms = 2s from 0 to 100%), and is sent to Home Assistant each step.
+  # The bars show it rounded to 7 segments.
+  brightness_interval: 100ms
+  brightness_step_pct: "5"
+  # lowest brightness the ramp goes to before turning back up (0 would turn the light off)
+  brightness_min_pct: "5"
+  # Each bar segment fades in (linear) or out (quadratic) over this time
+  bar_fade_ms: "250"
+  # At the bottom of the ramp the bottom bar segment glows at this % of its lit color,
+  # so the minimum brightness is still visible. LEDs are gamma corrected, so low
+  # values look much dimmer than the number suggests.
+  bar_min_glow_pct: "50"
 
   min_bar_color1: "{0,0,0}"
   max_bar_color1: "{255,0,0}"
@@ -52,13 +64,14 @@ substitutions:
   # LED fades (quadratic ease-in, run by the tx_ultimate_touch component)
   after_touch_dim_delay_ms: "500"
   dim_duration_ms: "500"
-  swipe_between_led_delay: 42ms
+  swipe_between_led_delay_ms: "42"
   swipe_fade_ms: "500"
+  # knight_rider3 (comet): how long each LED stays lit before it starts dimming
+  comet_tail_ms: "126"
 
   # Touch feedback sound (RTTTL). Use "none" to disable.
-  touch_sound: "click:d=32,o=5,b=160:c"
-  swipe_right_sound: "gliss_up:d=32,o=5,b=240:c,c#,d,d#,e,f,f#,g,g#,a,a#,b,6c"
-  swipe_left_sound: "gliss_down:d=32,o=6,b=240:c,5b,5a#,5a,5g#,5g,5f#,5f,5e,5d#,5d,5c#"
+  # ~75 ms; a 15 ms click may be lost while the mixer/resampler pipeline starts up
+  touch_sound: "click:d=16,o=6,b=200:c"
 
   relay_1_pin: GPIO18
   relay_2_pin: GPIO17
@@ -231,14 +244,25 @@ globals:
     type: bool
     restore_value: no
     initial_value: 'false'
+  # which button the bars belong to (1-4), and the bar height shown (0-7, -1 = none drawn)
+  - id: bars_button
+    type: int
+    restore_value: no
+    initial_value: '0'
+  - id: bar_shown_height
+    type: int
+    restore_value: no
+    initial_value: '-1'
+  # long-press brightness per button (0-100%) and its ramp direction (+1 / -1);
+  # each hold continues from where the last one on that button stopped
   - id: button_bar_flipper
     type: int8_t[4]
     restore_value: no
     initial_value: '{1, 1, 1, 1}'
   - id: button_bar_brightness
-    type: uint8_t[4]
+    type: float[4]
     restore_value: no
-    initial_value: '{1, 1, 1, 1}'
+    initial_value: '{15, 15, 15, 15}'
   - id: button_double_tap
     type: uint8_t[4]
     restore_value: no
@@ -255,7 +279,7 @@ globals:
   - id: original_led_color
     type: esphome::Color[28]
     restore_value: no
-    initial_value: '{ esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), esphome::Color(0, 0, 0), }'
+    initial_value: '{}'
   - id: button_lookup
     type: uint8_t[4][10]
     restore_value: no
@@ -651,8 +675,12 @@ media_player:
   - platform: speaker
     id: mp
     name: "${friendly_name} Player"
-    buffer_size: 32768
+    buffer_size: 250000       # no PSRAM on this board; lower this if you see allocation failures
     task_stack_in_psram: false
+    # Volume is software gain: the slider maps linearly to -49..0 dB, so the default
+    # 50% is about -25 dB (quiet). 100% is the loudest possible; the amp's gain is fixed.
+    # This only applies until a volume is saved; after that, set it from Home Assistant.
+    volume_initial: 1.0
     files:
       - id: on_sound
         file: sounds/on.wav
@@ -662,12 +690,12 @@ media_player:
       speaker: announce_in
       format: WAV
       num_channels: 1
-      sample_rate: 16000
+      sample_rate: 48000
     media_pipeline:
       speaker: media_in
       format: FLAC
       num_channels: 1
-      sample_rate: 16000
+      sample_rate: 48000
     # If pa_power is switched instead of always on, uncomment these (and the amp_hold script):
     # on_play:
     #   - script.execute: amp_hold
@@ -677,6 +705,54 @@ media_player:
 rtttl:
   - id: beeper
     speaker: fx_in
+    # All speakers share the I2S speaker's single volume, and rtttl sets it to this
+    # gain each time it plays (default 0.6, about -20 dB), which also turns HA media down.
+    gain: 1.0
+
+# Long-press brightness per button, 0-100%. Published every brightness_interval
+# while the button is held, so a Home Assistant automation can follow it live.
+sensor:
+  - platform: template
+    id: brightness_level_1
+    name: "Button 1 Brightness Level"
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    update_interval: never
+    icon: mdi:brightness-percent
+  - platform: template
+    id: brightness_level_2
+    name: "Button 2 Brightness Level"
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    update_interval: never
+    icon: mdi:brightness-percent
+  - platform: template
+    id: brightness_level_3
+    name: "Button 3 Brightness Level"
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    update_interval: never
+    icon: mdi:brightness-percent
+  - platform: template
+    id: brightness_level_4
+    name: "Button 4 Brightness Level"
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    update_interval: never
+    icon: mdi:brightness-percent
+
+select:
+  - platform: template
+    id: swipe_effect
+    name: "${friendly_name} Swipe Effect"
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    options:
+      - "Knight Rider"
+      - "Knight Rider 2 (staggered fade)"
+      - "Knight Rider 3 (comet)"
+    initial_option: "Knight Rider"
 
 uart:
   tx_pin: ${uart_tx_pin}
@@ -864,6 +940,12 @@ script:
             }
           }
           id(dim_button)->execute(button, 0);
+          // releasing the button that owns the bars: stop them where they are,
+          // then fade them back after the same delay as the button LEDs
+          if (id(bars_active) && id(bars_button) == button) {
+            id(bars_go_up_and_down)->stop();
+            id(clear_bars)->execute(${after_touch_dim_delay_ms});
+          }
           ESP_LOGD("button", "Release Button: %d", button);
 
   - id: double_tap_timer
@@ -927,29 +1009,34 @@ script:
               }
             }
             id(bars_active) = true;
+            id(bar_shown_height) = -1;
           }
+          id(bars_button) = button;
       - repeat:
-          count: 100
+          count: 600   # 60 s at 100 ms; releasing the button stops it sooner
           then:
             - lambda: |-
                 if (id(button_held)[button-1] == 0) {
-                  ESP_LOGI("button", "button %d no longer held in up and down", button);
-                  id(clear_bars).execute();
+                  // normally handle_on_release has already stopped this script
+                  id(clear_bars).execute(${after_touch_dim_delay_ms});
                   id(bars_go_up_and_down).stop();
-                } else {
-                  int bar_height = id(button_bar_brightness)[button-1];
-                  if (bar_height == 7) {
-                    id(button_bar_flipper)[button-1] = -1;
-                  } else if (bar_height == 0) {
-                    id(button_bar_flipper)[button-1] = 1;
-                  }
-                  id(button_bar_brightness)[button-1] += id(button_bar_flipper)[button-1];
-                  id(set_bar_height).execute(button, bar_height);
+                  return;
                 }
-            - delay: ${bar_delay}
+                // ramp the brightness, bouncing between brightness_min_pct and 100%
+                float &brightness = id(button_bar_brightness)[button-1];
+                int8_t &dir = id(button_bar_flipper)[button-1];
+                brightness += dir * ${brightness_step_pct};
+                if (brightness >= 100.0f) { brightness = 100.0f; dir = -1; }
+                if (brightness <= ${brightness_min_pct}) { brightness = ${brightness_min_pct}; dir = 1; }
+                sensor::Sensor *const level[] = {id(brightness_level_1), id(brightness_level_2), id(brightness_level_3), id(brightness_level_4)};
+                level[button-1]->publish_state(roundf(brightness));
+                // the bars show it rounded to 7 segments
+                id(set_bar_height).execute(button, (int) roundf(brightness * 7.0f / 100.0f));
+            - delay: ${brightness_interval}
 
   # Two 7-LED bars: 13..19 going up one side, and 5,4,3,2,1,0,27 going up the other.
-  # Segments above `height` show the LED's saved color instead of black.
+  # Only the segments that change are touched: newly lit ones fade in (linear) to
+  # their gradient color, newly unlit ones fade out (quadratic) to the saved color.
   - id: set_bar_height
     mode: restart
     parameters:
@@ -957,33 +1044,53 @@ script:
       height: int
     then:
       - lambda: |-
-          ESP_LOGD("button", "set_bar_height to %d for button %d", height, button);
-          auto *out = static_cast<light::AddressableLight *>(id(all_leds).get_output());
-          const int h = std::min(height, 7);
+          // height 0 = only the bottom segment, glowing dimly (the ramp's minimum)
+          const int h = std::max(0, std::min(height, 7));
+          const int prev = id(bar_shown_height);  // -1 = nothing drawn yet
+          if (h == prev) return;  // called every brightness step; only act when a segment changes
+          ESP_LOGD("button", "set_bar_height to %d for button %d", h, button);
+          // segment state for a given height: 0 = saved color, 1 = dim glow, 2 = lit
+          auto state = [](int i, int height) { return height < 0 ? 0 : i < height ? 2 : (i == 0 && height == 0) ? 1 : 0; };
           for (int i = 0; i < 7; i++) {
-            Color lit;
-            if (i < h) {
-              lit = id(tx_touch).get_color_gradient(id(min_bar_color)[button-1], id(max_bar_color)[button-1], i);
+            const int from = state(i, prev), to = state(i, h);
+            if (from == to) continue;
+            // segment i is lit with the color 1/7th..7/7th of the way from min to max
+            Color lit = id(tx_touch).get_color_gradient(id(min_bar_color)[button-1], id(max_bar_color)[button-1], i + 1);
+            if (to == 1) {
+              const float k = ${bar_min_glow_pct} / 100.0f;
+              lit = Color(static_cast<uint8_t>(lit.r * k), static_cast<uint8_t>(lit.g * k), static_cast<uint8_t>(lit.b * k));
             }
             for (int led : {13 + i, i == 6 ? 27 : 5 - i}) {
-              (*out)[led] = i < h ? lit : id(original_led_color)[led];
+              if (to > from) {
+                id(tx_touch).fade_led(led, lit, ${bar_fade_ms}, 0, tx_ultimate_touch::EASE_LINEAR);
+              } else if (to == 1) {
+                id(tx_touch).fade_led(led, lit, ${bar_fade_ms});
+              } else {
+                id(tx_touch).fade_led(led, id(original_led_color)[led], ${bar_fade_ms});
+              }
             }
           }
-          out->schedule_show();
+          id(bar_shown_height) = h;
 
-  # Fade the bars back to the colors saved when they started. Does nothing if
-  # no bars are showing, so it is safe to call from stop_all.
+  # Fade the bars back to the colors saved when they started, after delay_ms.
+  # Any segment still fading in stops where it is and waits there. Does nothing
+  # if no bars are showing, so it is safe to call from stop_all.
   - id: clear_bars
     mode: restart
+    parameters:
+      delay_ms: int
     then:
       - lambda: |-
           if (!id(bars_active)) return;
           for (int i = 0; i < 7; i++) {
             for (int led : {13 + i, i == 6 ? 27 : 5 - i}) {
-              id(tx_touch).fade_led(led, id(original_led_color)[led], ${dim_duration_ms});
+              id(tx_touch).cancel_fade(led);  // freeze at the current color
+              id(tx_touch).fade_led(led, id(original_led_color)[led], ${dim_duration_ms}, delay_ms);
             }
           }
           id(bars_active) = false;
+          id(bar_shown_height) = -1;
+          id(bars_button) = 0;
 
   # ---------------------------------------------------------------------------
   # Swipes and multi-touch
@@ -993,17 +1100,16 @@ script:
     then:
       - script.stop: led_on_button_press
       - script.stop: bars_go_up_and_down
-      - script.execute: clear_bars
+      - script.execute:
+          id: clear_bars
+          delay_ms: 0
 
-  - id: knight_rider
-    mode: restart
-    parameters:
-      left: bool
+  # Remember what the swept LEDs show now, so they fade back to it instead of to
+  # black. LEDs that are mid-fade or belong to a held button already have their
+  # real original saved, so keep that. Shared by all knight_rider variants.
+  - id: knight_rider_prepare
     then:
       - lambda: |-
-          // Remember what the swept LEDs show now, so they fade back to it instead
-          // of to black. LEDs that are mid-fade or belong to a held button already
-          // have their real original saved, so keep that.
           auto *out = static_cast<light::AddressableLight *>(id(all_leds).get_output());
           bool keep[28] = {};
           for (int b = 1; b <= ${button_count}; b++) {
@@ -1025,16 +1131,73 @@ script:
               id(tx_touch).cancel_fade(led);
             }
           }
+
+  # Original: sweep, then all swept LEDs fade out together.
+  - id: knight_rider
+    mode: restart
+    parameters:
+      left: bool
+    then:
+      - script.execute: knight_rider_prepare
       - repeat:
           count: 7
           then:
             - lambda: "id(knight_rider_on)->execute(iteration, left);"
-            - delay: ${swipe_between_led_delay}
+            - delay: ${swipe_between_led_delay_ms}ms
       - lambda: |-
           for (int i = 0; i < 7; i++) {
             if (${button_led_feedback_bottom}) id(tx_touch).fade_led(6 + i, id(original_led_color)[6 + i], ${swipe_fade_ms});
             if (${button_led_feedback_top}) id(tx_touch).fade_led(20 + i, id(original_led_color)[20 + i], ${swipe_fade_ms});
           }
+
+  # Sweep, then fade out in the order the LEDs lit up: the first-lit LED starts
+  # dimming when the sweep ends, and each following one a step later.
+  - id: knight_rider2
+    mode: restart
+    parameters:
+      left: bool
+    then:
+      - script.execute: knight_rider_prepare
+      - repeat:
+          count: 7
+          then:
+            - lambda: "id(knight_rider_on)->execute(iteration, left);"
+            - delay: ${swipe_between_led_delay_ms}ms
+      - lambda: |-
+          for (int i = 0; i < 7; i++) {
+            const uint32_t delay = i * ${swipe_between_led_delay_ms};
+            if (${button_led_feedback_bottom}) {
+              int led = left ? 6 + i : 12 - i;
+              id(tx_touch).fade_led(led, id(original_led_color)[led], ${swipe_fade_ms}, delay);
+            }
+            if (${button_led_feedback_top}) {
+              int led = left ? 26 - i : 20 + i;
+              id(tx_touch).fade_led(led, id(original_led_color)[led], ${swipe_fade_ms}, delay);
+            }
+          }
+
+  # Comet: each LED starts dimming comet_tail_ms after it lights, while the sweep
+  # is still moving, so a fading tail follows the head.
+  - id: knight_rider3
+    mode: restart
+    parameters:
+      left: bool
+    then:
+      - script.execute: knight_rider_prepare
+      - repeat:
+          count: 7
+          then:
+            - lambda: |-
+                id(knight_rider_on)->execute(iteration, left);
+                if (${button_led_feedback_bottom}) {
+                  int led = left ? 6 + iteration : 12 - iteration;
+                  id(tx_touch).fade_led(led, id(original_led_color)[led], ${swipe_fade_ms}, ${comet_tail_ms});
+                }
+                if (${button_led_feedback_top}) {
+                  int led = left ? 26 - iteration : 20 + iteration;
+                  id(tx_touch).fade_led(led, id(original_led_color)[led], ${swipe_fade_ms}, ${comet_tail_ms});
+                }
+            - delay: ${swipe_between_led_delay_ms}ms
 
   - id: knight_rider_on
     mode: restart
@@ -1055,12 +1218,29 @@ script:
           }
           out->schedule_show();
 
+  # Runs the knight_rider variant chosen by the "Swipe Effect" select.
+  - id: run_swipe_effect
+    mode: restart
+    parameters:
+      left: bool
+    then:
+      - lambda: |-
+          // stop any sweep still running, even one started by a different variant
+          id(knight_rider)->stop();
+          id(knight_rider2)->stop();
+          id(knight_rider3)->stop();
+          switch (id(swipe_effect).active_index().value_or(0)) {
+            case 1: id(knight_rider2)->execute(left); break;
+            case 2: id(knight_rider3)->execute(left); break;
+            default: id(knight_rider)->execute(left); break;
+          }
+
   - id: led_on_swipe_left
     mode: restart
     then:
       - script.execute: stop_all
       - script.execute:
-          id: knight_rider
+          id: run_swipe_effect
           left: true
 
   - id: led_on_swipe_right
@@ -1068,7 +1248,7 @@ script:
     then:
       - script.execute: stop_all
       - script.execute:
-          id: knight_rider
+          id: run_swipe_effect
           left: false
 
   - id: led_on_multi_touch
@@ -1135,28 +1315,6 @@ script:
             - rtttl.play:
                 id: beeper
                 rtttl: "${touch_sound}"
-
-  - id: play_swipe_right_sound
-    mode: restart
-    then:
-      - if:
-          condition:
-            lambda: 'return id(touch_sound_enabled).state && strcmp("${swipe_right_sound}", "none") != 0;'
-          then:
-            - rtttl.play:
-                id: beeper
-                rtttl: "${swipe_right_sound}"
-
-  - id: play_swipe_left_sound
-    mode: restart
-    then:
-      - if:
-          condition:
-            lambda: 'return id(touch_sound_enabled).state && strcmp("${swipe_left_sound}", "none") != 0;'
-          then:
-            - rtttl.play:
-                id: beeper
-                rtttl: "${swipe_left_sound}"
 
   # Only needed if pa_power is switched instead of always on (see the pa_power
   # switch). Call it from on_press and the media player's on_play/on_announcement;

@@ -140,12 +140,13 @@ namespace esphome {
          return static_cast<uint8_t>(a + (b - a) * t);
       }
 
-      void TxUltimateTouch::fade_led(int index, Color to, uint32_t duration_ms, uint32_t delay_ms) {
+      void TxUltimateTouch::fade_led(int index, Color to, uint32_t duration_ms, uint32_t delay_ms, FadeEase ease) {
          if (index < 0 || index >= NUM_LEDS) return;
          LedFade &f = this->fades_[index];
          f.to = to;
          f.start = millis() + delay_ms;
          f.duration = duration_ms;
+         f.ease = ease;
          f.captured = false;
          f.active = true;
       }
@@ -186,7 +187,7 @@ namespace esphome {
                t = 1.0f;
                f.active = false;
             }
-            const float k = t * t;  // ease-in: slow start, fast finish
+            const float k = f.ease == EASE_LINEAR ? t : t * t;  // EASE_IN_QUAD: slow start, fast finish
             (*this->light_)[i] = Color(lerp(f.from.r, f.to.r, k),
                                        lerp(f.from.g, f.to.g, k),
                                        lerp(f.from.b, f.to.b, k));

@@ -19,6 +19,12 @@ namespace esphome {
 
         const static int NUM_LEDS = 28;
 
+        // How a fade moves from its start color to its target.
+        enum FadeEase : uint8_t {
+            EASE_IN_QUAD = 0,  // slow start, fast finish (default)
+            EASE_LINEAR = 1,   // constant speed
+        };
+
         struct TouchPoint {
             uint8_t x = -1;
             uint8_t state = -1;
@@ -50,7 +56,9 @@ namespace esphome {
             // Fade LED `index` to `to` over `duration_ms`, starting after `delay_ms`.
             // The start color is read from the LED when the fade actually begins,
             // so whatever is showing at that moment (touch, long-press, blink...) fades smoothly.
-            void fade_led(int index, Color to, uint32_t duration_ms, uint32_t delay_ms = 0);
+            void fade_led(int index, Color to, uint32_t duration_ms, uint32_t delay_ms = 0,
+                          FadeEase ease = EASE_IN_QUAD);
+            // Stop a fade, leaving the LED at whatever color it has reached.
             void cancel_fade(int index);
             void cancel_all_fades();
             // True while a fade is pending (in its delay) or running.
@@ -66,6 +74,7 @@ namespace esphome {
                 Color to;
                 uint32_t start{0};
                 uint32_t duration{0};
+                FadeEase ease{EASE_IN_QUAD};
                 bool active{false};
                 bool captured{false};
             };
