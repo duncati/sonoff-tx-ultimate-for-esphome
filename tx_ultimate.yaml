@@ -677,7 +677,7 @@ media_player:
   - platform: speaker
     id: mp
     name: "${friendly_name} Player"
-    buffer_size: 32768       # no PSRAM on this board; lower this if you see allocation failures
+    buffer_size: 65536       # no PSRAM on this board; lower this if you see allocation failures
     task_stack_in_psram: false
     # Volume is software gain: the slider maps linearly to -49..0 dB, so the default
     # 50% is about -25 dB (quiet). 100% is the loudest possible; the amp's gain is fixed.
