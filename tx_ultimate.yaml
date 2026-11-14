@@ -688,6 +688,12 @@ media_player:
         file: sounds/on.wav
       - id: off_sound
         file: sounds/off.wav
+      - id: swipe_right_sound
+        file: sounds/pianoglissup.wav
+      - id: swipe_left_sound
+        file: sounds/pianoglissdown.wav
+      - id: doorbell_sound
+        file: sounds/doorbell.wav
     announcement_pipeline:
       speaker: announce_in
       format: WAV
@@ -775,7 +781,7 @@ tx_ultimate_touch:
         ESP_LOGI("button", "Touch Position: %d, State: %d, Button: %d at %" PRIu32, touch.x, touch.state, button, millis());
         id(button_held)[button-1] = 1;
         id(led_on_button_press)->execute(button);
-    - switch.turn_on: vibra
+#   - switch.turn_on: vibra
     # TEST: play on.wav on every button press (replaces the click for presses).
     # To go back to the click, uncomment this and remove the media_player:
     # - script.execute: play_touch_sound
@@ -790,8 +796,11 @@ tx_ultimate_touch:
 
   on_swipe_left:
     - script.execute: led_on_swipe_left
-    - switch.turn_on: vibra
-    - script.execute: play_swipe_left_sound
+#   - switch.turn_on: vibra
+    - media_player.speaker.play_on_device_media_file:
+        id: mp
+        media_file: swipe_left_sound
+        announcement: true
     - binary_sensor.template.publish:
         id: swipe_left
         state: ON
@@ -800,8 +809,11 @@ tx_ultimate_touch:
 
   on_swipe_right:
     - script.execute: led_on_swipe_right
-    - switch.turn_on: vibra
-    - script.execute: play_swipe_right_sound
+#   - switch.turn_on: vibra
+    - media_player.speaker.play_on_device_media_file:
+        id: mp
+        media_file: swipe_right_sound
+        announcement: true
     - binary_sensor.template.publish:
         id: swipe_right
         state: ON
