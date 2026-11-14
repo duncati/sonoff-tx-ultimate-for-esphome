@@ -72,6 +72,8 @@ substitutions:
   # Touch feedback sound (RTTTL). Use "none" to disable.
   # ~75 ms; a 15 ms click may be lost while the mixer/resampler pipeline starts up
   touch_sound: "click:d=16,o=6,b=200:c"
+  swipe_right_sound: "gliss_up:d=32,o=5,b=240:c,c#,d,d#,e,f,f#,g,g#,a,a#,b,6c"
+  swipe_left_sound: "gliss_down:d=32,o=6,b=240:c,5b,5a#,5a,5g#,5g,5f#,5f,5e,5d#,5d,5c#"
 
   relay_1_pin: GPIO18
   relay_2_pin: GPIO17
@@ -675,7 +677,7 @@ media_player:
   - platform: speaker
     id: mp
     name: "${friendly_name} Player"
-    buffer_size: 250000       # no PSRAM on this board; lower this if you see allocation failures
+    buffer_size: 32768       # no PSRAM on this board; lower this if you see allocation failures
     task_stack_in_psram: false
     # Volume is software gain: the slider maps linearly to -49..0 dB, so the default
     # 50% is about -25 dB (quiet). 100% is the loudest possible; the amp's gain is fixed.
@@ -789,7 +791,7 @@ tx_ultimate_touch:
   on_swipe_left:
     - script.execute: led_on_swipe_left
     - switch.turn_on: vibra
-    - script.execute: play_touch_sound
+    - script.execute: play_swipe_left_sound
     - binary_sensor.template.publish:
         id: swipe_left
         state: ON
@@ -799,7 +801,7 @@ tx_ultimate_touch:
   on_swipe_right:
     - script.execute: led_on_swipe_right
     - switch.turn_on: vibra
-    - script.execute: play_touch_sound
+    - script.execute: play_swipe_right_sound
     - binary_sensor.template.publish:
         id: swipe_right
         state: ON
@@ -1315,6 +1317,29 @@ script:
             - rtttl.play:
                 id: beeper
                 rtttl: "${touch_sound}"
+
+  - id: play_swipe_right_sound
+    mode: restart
+    then:
+      - if:
+          condition:
+            lambda: 'return id(touch_sound_enabled).state && strcmp("${swipe_right_sound}", "none") != 0;'
+          then:
+            - rtttl.play:
+                id: beeper
+                rtttl: "${swipe_right_sound}"
+
+  - id: play_swipe_left_sound
+    mode: restart
+    then:
+      - if:
+          condition:
+            lambda: 'return id(touch_sound_enabled).state && strcmp("${swipe_left_sound}", "none") != 0;'
+          then:
+            - rtttl.play:
+                id: beeper
+                rtttl: "${swipe_left_sound}"
+
 
   # Only needed if pa_power is switched instead of always on (see the pa_power
   # switch). Call it from on_press and the media player's on_play/on_announcement;
