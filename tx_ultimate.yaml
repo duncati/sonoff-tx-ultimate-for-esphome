@@ -1374,3 +1374,9 @@ script:
   #         lambda: 'return id(mp).state == media_player::MEDIA_PLAYER_STATE_IDLE;'
   #     - delay: 30s
   #     - switch.turn_off: pa_power
+
+button:
+  - platform: template
+    name: "Play Doorbell Sound"
+    on_press:
+      - script.execute: play_doorbell_sound
