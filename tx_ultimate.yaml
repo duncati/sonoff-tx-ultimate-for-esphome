@@ -1320,10 +1320,10 @@ script:
   # Locally stored sound
   # ---------------------------------------------------------------------------
   - id: play_doorbell_sound
-    - media_player.speaker.play_on_device_media_file:
-        id: mp
-        media_file: doorbell_sound
-        announcement: true
+    media_player.speaker.play_on_device_media_file:
+      id: mp
+      media_file: doorbell_sound
+      announcement: true
 
   # ---------------------------------------------------------------------------
   # RTTTL Sound
