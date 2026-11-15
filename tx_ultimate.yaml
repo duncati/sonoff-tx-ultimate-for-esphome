@@ -1317,7 +1317,16 @@ script:
           blue:  !lambda "return id(nightlight_color)[2]/100.0;"
 
   # ---------------------------------------------------------------------------
-  # Sound
+  # Locally stored sound
+  # ---------------------------------------------------------------------------
+  - id: play_doorbell_sound
+    - media_player.speaker.play_on_device_media_file:
+        id: mp
+        media_file: doorbell_sound
+        announcement: true
+
+  # ---------------------------------------------------------------------------
+  # RTTTL Sound
   # ---------------------------------------------------------------------------
   - id: play_touch_sound
     mode: restart
