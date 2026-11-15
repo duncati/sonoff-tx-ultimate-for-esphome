@@ -1321,6 +1321,9 @@ script:
   # ---------------------------------------------------------------------------
   - id: play_doorbell_sound
     then:
+      - media_player.volume_set:
+          id: mp
+          volume: 100%
       - media_player.speaker.play_on_device_media_file:
           id: mp
           media_file: doorbell_sound
