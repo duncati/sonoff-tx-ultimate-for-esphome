@@ -1383,6 +1383,12 @@ button:
     name: "Play Doorbell Sound"
     on_press:
       - script.execute: play_doorbell_sound
+  - platform: template
+    name: "Stop RTTTL"
+    icon: "mdi:stop"
+    on_press:
+      then:
+        - rtttl.stop
 
 text:
   - platform: template
@@ -1403,10 +1409,3 @@ text:
               - rtttl.play:
                   id: beeper
                   rtttl: !lambda 'return x;'
-button:
-  - platform: template
-    name: "Stop RTTTL"
-    icon: "mdi:stop"
-    on_press:
-      then:
-        - rtttl.stop
