@@ -66,14 +66,14 @@ substitutions:
   dim_duration_ms: "500"
   swipe_between_led_delay_ms: "42"
   swipe_fade_ms: "500"
-  # knight_rider3 (comet): how long each LED stays lit before it starts dimming
+  # swipe comet: how long each LED stays lit before it starts dimming (used in knight_rider effectT)
   comet_tail_ms: "126"
 
   # Touch feedback sound (RTTTL). Use "none" to disable.
   # ~75 ms; a 15 ms click may be lost while the mixer/resampler pipeline starts up
-  touch_sound: "click:d=16,o=6,b=200:c"
-#  swipe_right_sound: "gliss_up:d=32,o=5,b=240:c,c#,d,d#,e,f,f#,g,g#,a,a#,b,6c"
-#  swipe_left_sound: "gliss_down:d=32,o=6,b=240:c,5b,5a#,5a,5g#,5g,5f#,5f,5e,5d#,5d,5c#"
+  touch_rtttl: "click:d=16,o=6,b=200:c"
+#  swipe_right_rtttl: "gliss_up:d=32,o=5,b=240:c,c#,d,d#,e,f,f#,g,g#,a,a#,b,6c"
+#  swipe_left_rtttl: "gliss_down:d=32,o=6,b=240:c,5b,5a#,5a,5g#,5g,5f#,5f,5e,5d#,5d,5c#"
 
   relay_1_pin: GPIO18
   relay_2_pin: GPIO17
@@ -168,11 +168,32 @@ logger:
 #  hardware_uart: UART2
   level: DEBUG
   logs:
+    # debug tags for touch/LED timing; set any of these to INFO to silence it
+    # txu.raw: raw touch-panel frames      txu.fade: every LED fade
+    # txu.led: button LED writes           txu.bars / txu.swipe: long-press bars / swipes
     binary_sensor: INFO
     light: INFO
     script: INFO
     switch: INFO
     #tx_ultimate_touch: INFO
+    # Quieted while debugging touch/LED timing: these built-in components log on
+    # every state change or audio event and bury the txu.* lines. WARN keeps their
+    # warnings and errors (including "took a long time" timing warnings from
+    # component). Remove a line to see that component's debug output again.
+    sensor: WARN          # Brightness Level sensors publish every 100 ms during a long press
+    media_player: WARN
+    speaker_media_player: WARN
+    speaker_media_player.pipeline: WARN
+    audio_reader: WARN
+    audio.decoder: WARN
+    i2s_audio.speaker: WARN
+    i2s_audio.speaker.std: WARN
+    speaker_mixer: WARN
+    resampler_speaker: WARN
+    rtttl: WARN
+    sun: WARN
+    sntp: WARN
+    time: WARN
 
 dashboard_import:
   package_import_url: github://SmartHome-yourself/sonoff-tx-ultimate-for-esphome/tx_ultimate.yaml@main
@@ -578,6 +599,175 @@ light:
       - addressable_flicker:
           name: "Flicker"
 
+      # -----------------------------------------------------------------------
+      # Ring effects. The 28 LEDs form a ring: index increases clockwise and
+      # LED 23 is the top center (12 o'clock), LED 9 the bottom center.
+      # Effects that use current_color follow the color picked in Home Assistant.
+      # -----------------------------------------------------------------------
+
+      # Slow, calm breathing of the whole ring in the chosen color (6 s cycle).
+      - addressable_lambda:
+          name: "Breathe"
+          update_interval: 20ms
+          lambda: |-
+            const float t = millis() / 1000.0f;
+            const float k = 0.08f + 0.92f * (0.5f - 0.5f * cosf(t * 6.2831853f / 6.0f));
+            it.all() = Color(current_color.r * k, current_color.g * k, current_color.b * k);
+
+      # A comet in the chosen color circling clockwise with a fading tail.
+      - addressable_lambda:
+          name: "Orbit"
+          update_interval: 20ms
+          lambda: |-
+            const int n = it.size();
+            const float head = fmodf(millis() / 2500.0f, 1.0f) * n;
+            for (int i = 0; i < n; i++) {
+              const float behind = fmodf(head - i + n, n);  // LEDs behind the head
+              float k = behind < 9.0f ? 1.0f - behind / 9.0f : 0.0f;
+              k *= k;
+              it[i] = Color(current_color.r * k, current_color.g * k, current_color.b * k);
+            }
+
+      # Two comets in opposite colors circling in opposite directions; they blend where they cross.
+      - addressable_lambda:
+          name: "Twin Orbit"
+          update_interval: 20ms
+          lambda: |-
+            const int n = it.size();
+            const uint32_t now = millis();
+            const uint8_t hue = (now / 120) & 0xFF;  // both colors drift slowly around the wheel
+            const Color a = light::ESPHSVColor(hue, 255, 255).to_rgb();
+            const Color b = light::ESPHSVColor(hue + 128, 255, 255).to_rgb();
+            const float h1 = fmodf(now / 3000.0f, 1.0f) * n;
+            const float h2 = n - fmodf(now / 3700.0f, 1.0f) * n;
+            for (int i = 0; i < n; i++) {
+              float k1 = fmodf(h1 - i + n, n), k2 = fmodf(i - h2 + 2 * n, n);
+              k1 = k1 < 6.0f ? (1.0f - k1 / 6.0f) * (1.0f - k1 / 6.0f) : 0.0f;
+              k2 = k2 < 6.0f ? (1.0f - k2 / 6.0f) * (1.0f - k2 / 6.0f) : 0.0f;
+              it[i] = Color(std::min(255.0f, a.r * k1 + b.r * k2),
+                            std::min(255.0f, a.g * k1 + b.g * k2),
+                            std::min(255.0f, a.b * k1 + b.b * k2));
+            }
+
+      # Northern lights: slow, overlapping waves of green, teal and violet.
+      - addressable_lambda:
+          name: "Aurora"
+          update_interval: 30ms
+          lambda: |-
+            const int n = it.size();
+            const float t = millis() / 1000.0f;
+            for (int i = 0; i < n; i++) {
+              const float a = i * 6.2831853f / n;
+              const float shade = 0.5f + 0.5f * sinf(2 * a + t * 0.31f);
+              float glow = 0.5f + 0.5f * sinf(3 * a - t * 0.23f + 1.3f) * sinf(a + t * 0.17f);
+              glow = 0.15f + 0.85f * glow * glow;
+              const uint8_t hue = 85 + shade * 105;  // green (85) .. violet (190)
+              it[i] = light::ESPHSVColor(hue, 230, 255 * glow).to_rgb();
+            }
+
+      # Rolling blue and teal swells with white foam on the crests.
+      - addressable_lambda:
+          name: "Ocean"
+          update_interval: 25ms
+          lambda: |-
+            const int n = it.size();
+            const float t = millis() / 1000.0f;
+            for (int i = 0; i < n; i++) {
+              const float a = i * 6.2831853f / n;
+              const float swell = 0.5f + 0.5f * sinf(2 * a - t * 0.9f) * cosf(a + t * 0.25f);
+              const uint8_t hue = 160 - swell * 30;  // deep blue .. teal
+              Color c = light::ESPHSVColor(hue, 255, 60 + 195 * swell).to_rgb();
+              if (swell > 0.88f) {  // foam
+                const float foam = (swell - 0.88f) / 0.12f;
+                c = Color(c.r + (255 - c.r) * foam * 0.7f, c.g + (255 - c.g) * foam * 0.7f, c.b + (255 - c.b) * foam * 0.7f);
+              }
+              it[i] = c;
+            }
+
+      # Warm blobs of red, orange and magenta drifting slowly around the ring.
+      - addressable_lambda:
+          name: "Lava Lamp"
+          update_interval: 30ms
+          lambda: |-
+            const int n = it.size();
+            const float t = millis() / 1000.0f;
+            const float centers[3] = {fmodf(t * 1.1f, n), fmodf(n - t * 0.7f + 9, n), fmodf(t * 0.45f + 18, n)};
+            const uint8_t hues[3] = {0, 18, 235};  // red, orange, magenta
+            for (int i = 0; i < n; i++) {
+              float r = 0, g = 0, b = 0;
+              for (int j = 0; j < 3; j++) {
+                float d = fabsf(i - centers[j]);
+                d = std::min(d, n - d);  // distance around the ring
+                const float k = expf(-d * d / 10.0f);
+                const Color c = light::ESPHSVColor(hues[j], 255, 255).to_rgb();
+                r += c.r * k; g += c.g * k; b += c.b * k;
+              }
+              it[i] = Color(std::min(255.0f, r + 6), std::min(255.0f, g), std::min(255.0f, b + 2));
+            }
+
+      # Each LED flickers like its own candle flame.
+      - addressable_lambda:
+          name: "Candle"
+          update_interval: 40ms
+          lambda: |-
+            static float level[28], target[28];
+            const int n = std::min(28, (int) it.size());
+            for (int i = 0; i < n; i++) {
+              if (initial_run) { level[i] = target[i] = 0.7f; }
+              if (random_float() < 0.15f) target[i] = 0.35f + 0.65f * random_float();
+              level[i] += (target[i] - level[i]) * 0.35f;
+              it[i] = Color(255 * level[i], 120 * level[i] * level[i], 25 * level[i] * level[i]);
+            }
+
+      # Deep night blue with stars that twinkle in and out.
+      - addressable_lambda:
+          name: "Starfield"
+          update_interval: 25ms
+          lambda: |-
+            static float star[28];
+            const int n = std::min(28, (int) it.size());
+            if (initial_run) for (int i = 0; i < n; i++) star[i] = 0;
+            if (random_float() < 0.12f) star[random_uint32() % n] = 1.0f;
+            for (int i = 0; i < n; i++) {
+              star[i] *= 0.94f;
+              const float s = star[i];
+              it[i] = Color(4 + 251 * s, 6 + 249 * s, 40 + 215 * s);
+            }
+
+      # A "lub-dub" double pulse in the chosen color, about 50 beats per minute.
+      - addressable_lambda:
+          name: "Heartbeat"
+          update_interval: 20ms
+          lambda: |-
+            const float p = fmodf(millis() / 1200.0f, 1.0f);
+            auto beat = [](float x, float at, float width) { const float d = (x - at) / width; return expf(-d * d); };
+            const float k = std::min(1.0f, 0.06f + beat(p, 0.10f, 0.045f) + 0.6f * beat(p, 0.32f, 0.055f));
+            it.all() = Color(current_color.r * k, current_color.g * k, current_color.b * k);
+
+      # Analog clock: amber hour hand, cyan minute hand, dim white second dot,
+      # faint markers at 12/3/6/9. Shows a slow blue pulse until the time is synced.
+      - addressable_lambda:
+          name: "Clock"
+          update_interval: 200ms
+          lambda: |-
+            const int n = it.size();
+            auto pos = [n](float fraction) { return (23 + (int) roundf(fraction * n)) % n; };  // 23 = 12 o'clock
+            auto now = id(sntp_time).now();
+            if (!now.is_valid()) {
+              const float k = 0.1f + 0.2f * (0.5f + 0.5f * sinf(millis() / 600.0f));
+              it.all() = Color(0, 0, 255 * k);
+              return;
+            }
+            it.all() = Color(0, 0, 0);
+            for (int q = 0; q < 4; q++) it[pos(q / 4.0f)] = Color(12, 12, 12);
+            it[pos(now.second / 60.0f)] = Color(40, 40, 40);
+            const int m = pos((now.minute + now.second / 60.0f) / 60.0f);
+            it[m] = Color(0, 200, 255);
+            const int h = pos(((now.hour % 12) + now.minute / 60.0f) / 12.0f);
+            it[h] = Color(255, 140, 0);
+            it[(h + 1) % n] = Color(90, 50, 0);
+            it[(h + n - 1) % n] = Color(90, 50, 0);
+
   - platform: partition
     name: "LEDs Nightlight"
     id: leds_nightlight
@@ -698,12 +888,12 @@ media_player:
       speaker: announce_in
       format: WAV
       num_channels: 1
-      sample_rate: 48000
+      sample_rate: 16000   # matches the I2S output rate, so files are resampled only once
     media_pipeline:
       speaker: media_in
       format: FLAC
       num_channels: 1
-      sample_rate: 48000
+      sample_rate: 16000
     # If pa_power is switched instead of always on, uncomment these (and the amp_hold script):
     # on_play:
     #   - script.execute: amp_hold
@@ -749,18 +939,224 @@ sensor:
     update_interval: never
     icon: mdi:brightness-percent
 
+# ---------------------------------------------------------------------------
+# Runtime log levels: one dropdown per log group (Settings > device > Configuration).
+# Changing one takes effect immediately and is remembered across reboots.
+# The logger: logs: section above only sets the levels used on the very first boot.
+# Levels above the logger's compile-time level (DEBUG) can't be selected.
+# ---------------------------------------------------------------------------
 select:
+  - platform: logger
+    name: "Log Level (all other tags)"
+
   - platform: template
-    id: swipe_effect
-    name: "${friendly_name} Swipe Effect"
+    id: log_level_txu_raw
+    name: "Log Touch Raw Frames"
+    icon: mdi:bug
     entity_category: config
     optimistic: true
     restore_value: true
-    options:
-      - "Knight Rider"
-      - "Knight Rider 2 (staggered fade)"
-      - "Knight Rider 3 (comet)"
-    initial_option: "Knight Rider"
+    options: ["NONE", "ERROR", "WARN", "INFO", "DEBUG"]
+    initial_option: "INFO"
+    on_value:
+      - lambda: |-
+          // option index -> level: NONE, ERROR, WARN, INFO, DEBUG
+          static const uint8_t levels[] = {ESPHOME_LOG_LEVEL_NONE, ESPHOME_LOG_LEVEL_ERROR, ESPHOME_LOG_LEVEL_WARN,
+                                           ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_DEBUG};
+          static const char *const tags[] = {"txu.raw"};
+          if (logger::global_logger == nullptr || i >= 5) return;
+          for (const char *tag : tags) logger::global_logger->set_log_level(tag, levels[i]);
+          ESP_LOGI("logger", "Log Touch Raw Frames: %s", x.c_str());
+
+  - platform: template
+    id: log_level_touch
+    name: "Log Touch Events"
+    icon: mdi:bug
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    options: ["NONE", "ERROR", "WARN", "INFO", "DEBUG"]
+    initial_option: "DEBUG"
+    on_value:
+      - lambda: |-
+          // option index -> level: NONE, ERROR, WARN, INFO, DEBUG
+          static const uint8_t levels[] = {ESPHOME_LOG_LEVEL_NONE, ESPHOME_LOG_LEVEL_ERROR, ESPHOME_LOG_LEVEL_WARN,
+                                           ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_DEBUG};
+          static const char *const tags[] = {"tx_ultimate_touch"};
+          if (logger::global_logger == nullptr || i >= 5) return;
+          for (const char *tag : tags) logger::global_logger->set_log_level(tag, levels[i]);
+          ESP_LOGI("logger", "Log Touch Events: %s", x.c_str());
+
+  - platform: template
+    id: log_level_button
+    name: "Log Buttons"
+    icon: mdi:bug
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    options: ["NONE", "ERROR", "WARN", "INFO", "DEBUG"]
+    initial_option: "DEBUG"
+    on_value:
+      - lambda: |-
+          // option index -> level: NONE, ERROR, WARN, INFO, DEBUG
+          static const uint8_t levels[] = {ESPHOME_LOG_LEVEL_NONE, ESPHOME_LOG_LEVEL_ERROR, ESPHOME_LOG_LEVEL_WARN,
+                                           ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_DEBUG};
+          static const char *const tags[] = {"button"};
+          if (logger::global_logger == nullptr || i >= 5) return;
+          for (const char *tag : tags) logger::global_logger->set_log_level(tag, levels[i]);
+          ESP_LOGI("logger", "Log Buttons: %s", x.c_str());
+
+  - platform: template
+    id: log_level_txu_led
+    name: "Log LED Writes"
+    icon: mdi:bug
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    options: ["NONE", "ERROR", "WARN", "INFO", "DEBUG"]
+    initial_option: "INFO"
+    on_value:
+      - lambda: |-
+          // option index -> level: NONE, ERROR, WARN, INFO, DEBUG
+          static const uint8_t levels[] = {ESPHOME_LOG_LEVEL_NONE, ESPHOME_LOG_LEVEL_ERROR, ESPHOME_LOG_LEVEL_WARN,
+                                           ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_DEBUG};
+          static const char *const tags[] = {"txu.led"};
+          if (logger::global_logger == nullptr || i >= 5) return;
+          for (const char *tag : tags) logger::global_logger->set_log_level(tag, levels[i]);
+          ESP_LOGI("logger", "Log LED Writes: %s", x.c_str());
+
+  - platform: template
+    id: log_level_txu_fade
+    name: "Log LED Fades"
+    icon: mdi:bug
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    options: ["NONE", "ERROR", "WARN", "INFO", "DEBUG"]
+    initial_option: "INFO"
+    on_value:
+      - lambda: |-
+          // option index -> level: NONE, ERROR, WARN, INFO, DEBUG
+          static const uint8_t levels[] = {ESPHOME_LOG_LEVEL_NONE, ESPHOME_LOG_LEVEL_ERROR, ESPHOME_LOG_LEVEL_WARN,
+                                           ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_DEBUG};
+          static const char *const tags[] = {"txu.fade"};
+          if (logger::global_logger == nullptr || i >= 5) return;
+          for (const char *tag : tags) logger::global_logger->set_log_level(tag, levels[i]);
+          ESP_LOGI("logger", "Log LED Fades: %s", x.c_str());
+
+  - platform: template
+    id: log_level_txu_bars
+    name: "Log Bars"
+    icon: mdi:bug
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    options: ["NONE", "ERROR", "WARN", "INFO", "DEBUG"]
+    initial_option: "INFO"
+    on_value:
+      - lambda: |-
+          // option index -> level: NONE, ERROR, WARN, INFO, DEBUG
+          static const uint8_t levels[] = {ESPHOME_LOG_LEVEL_NONE, ESPHOME_LOG_LEVEL_ERROR, ESPHOME_LOG_LEVEL_WARN,
+                                           ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_DEBUG};
+          static const char *const tags[] = {"txu.bars"};
+          if (logger::global_logger == nullptr || i >= 5) return;
+          for (const char *tag : tags) logger::global_logger->set_log_level(tag, levels[i]);
+          ESP_LOGI("logger", "Log Bars: %s", x.c_str());
+
+  - platform: template
+    id: log_level_txu_swipe
+    name: "Log Swipes"
+    icon: mdi:bug
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    options: ["NONE", "ERROR", "WARN", "INFO", "DEBUG"]
+    initial_option: "DEBUG"
+    on_value:
+      - lambda: |-
+          // option index -> level: NONE, ERROR, WARN, INFO, DEBUG
+          static const uint8_t levels[] = {ESPHOME_LOG_LEVEL_NONE, ESPHOME_LOG_LEVEL_ERROR, ESPHOME_LOG_LEVEL_WARN,
+                                           ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_DEBUG};
+          static const char *const tags[] = {"txu.swipe"};
+          if (logger::global_logger == nullptr || i >= 5) return;
+          for (const char *tag : tags) logger::global_logger->set_log_level(tag, levels[i]);
+          ESP_LOGI("logger", "Log Swipes: %s", x.c_str());
+
+  - platform: template
+    id: log_level_sensor
+    name: "Log Sensors"
+    icon: mdi:bug
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    options: ["NONE", "ERROR", "WARN", "INFO", "DEBUG"]
+    initial_option: "WARN"
+    on_value:
+      - lambda: |-
+          // option index -> level: NONE, ERROR, WARN, INFO, DEBUG
+          static const uint8_t levels[] = {ESPHOME_LOG_LEVEL_NONE, ESPHOME_LOG_LEVEL_ERROR, ESPHOME_LOG_LEVEL_WARN,
+                                           ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_DEBUG};
+          static const char *const tags[] = {"sensor"};
+          if (logger::global_logger == nullptr || i >= 5) return;
+          for (const char *tag : tags) logger::global_logger->set_log_level(tag, levels[i]);
+          ESP_LOGI("logger", "Log Sensors: %s", x.c_str());
+
+  - platform: template
+    id: log_level_entities
+    name: "Log Entities"
+    icon: mdi:bug
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    options: ["NONE", "ERROR", "WARN", "INFO", "DEBUG"]
+    initial_option: "INFO"
+    on_value:
+      - lambda: |-
+          // option index -> level: NONE, ERROR, WARN, INFO, DEBUG
+          static const uint8_t levels[] = {ESPHOME_LOG_LEVEL_NONE, ESPHOME_LOG_LEVEL_ERROR, ESPHOME_LOG_LEVEL_WARN,
+                                           ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_DEBUG};
+          static const char *const tags[] = {"binary_sensor", "light", "script", "switch"};
+          if (logger::global_logger == nullptr || i >= 5) return;
+          for (const char *tag : tags) logger::global_logger->set_log_level(tag, levels[i]);
+          ESP_LOGI("logger", "Log Entities: %s", x.c_str());
+
+  - platform: template
+    id: log_level_audio
+    name: "Log Audio"
+    icon: mdi:bug
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    options: ["NONE", "ERROR", "WARN", "INFO", "DEBUG"]
+    initial_option: "WARN"
+    on_value:
+      - lambda: |-
+          // option index -> level: NONE, ERROR, WARN, INFO, DEBUG
+          static const uint8_t levels[] = {ESPHOME_LOG_LEVEL_NONE, ESPHOME_LOG_LEVEL_ERROR, ESPHOME_LOG_LEVEL_WARN,
+                                           ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_DEBUG};
+          static const char *const tags[] = {"media_player", "speaker_media_player", "speaker_media_player.pipeline", "audio_reader", "audio.decoder", "i2s_audio.speaker", "i2s_audio.speaker.std", "speaker_mixer", "resampler_speaker", "rtttl"};
+          if (logger::global_logger == nullptr || i >= 5) return;
+          for (const char *tag : tags) logger::global_logger->set_log_level(tag, levels[i]);
+          ESP_LOGI("logger", "Log Audio: %s", x.c_str());
+
+  - platform: template
+    id: log_level_time
+    name: "Log Time"
+    icon: mdi:bug
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    options: ["NONE", "ERROR", "WARN", "INFO", "DEBUG"]
+    initial_option: "WARN"
+    on_value:
+      - lambda: |-
+          // option index -> level: NONE, ERROR, WARN, INFO, DEBUG
+          static const uint8_t levels[] = {ESPHOME_LOG_LEVEL_NONE, ESPHOME_LOG_LEVEL_ERROR, ESPHOME_LOG_LEVEL_WARN,
+                                           ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_DEBUG};
+          static const char *const tags[] = {"sun", "sntp", "time"};
+          if (logger::global_logger == nullptr || i >= 5) return;
+          for (const char *tag : tags) logger::global_logger->set_log_level(tag, levels[i]);
+          ESP_LOGI("logger", "Log Time: %s", x.c_str());
 
 uart:
   tx_pin: ${uart_tx_pin}
@@ -778,7 +1174,7 @@ tx_ultimate_touch:
   on_press:
     - lambda: |-
         auto button = id(button_lookup)[${button_count}-1][touch.x-1];
-        ESP_LOGI("button", "Touch Position: %d, State: %d, Button: %d at %" PRIu32, touch.x, touch.state, button, millis());
+        ESP_LOGI("button", "[%" PRIu32 "] on_press x=%d -> button %d (held=%d, double_tap_count=%d)", millis(), touch.x, button, id(button_held)[button-1], id(button_double_tap)[button-1]);
         id(button_held)[button-1] = 1;
         id(led_on_button_press)->execute(button);
 #   - switch.turn_on: vibra
@@ -791,6 +1187,7 @@ tx_ultimate_touch:
         announcement: true
 
   on_release:
+    - lambda: 'ESP_LOGI("button", "[%" PRIu32 "] on_release x=%d", millis(), touch.x);'
     - script.stop: led_on_button_press
     - lambda: id(handle_on_release).execute(touch.x);
 
@@ -805,7 +1202,7 @@ tx_ultimate_touch:
         id: swipe_left
         state: ON
     - lambda: >
-        ESP_LOGD("button", "Swipe Left Position: %d / State: %d", touch.x, touch.state);
+        ESP_LOGI("button", "[%" PRIu32 "] on_swipe_left (held: %d %d %d %d)", millis(), id(button_held)[0], id(button_held)[1], id(button_held)[2], id(button_held)[3]);
 
   on_swipe_right:
     - script.execute: led_on_swipe_right
@@ -818,7 +1215,7 @@ tx_ultimate_touch:
         id: swipe_right
         state: ON
     - lambda: >
-        ESP_LOGD("button", "Swipe Right Position: %d / State: %d", touch.x, touch.state);
+        ESP_LOGI("button", "[%" PRIu32 "] on_swipe_right (held: %d %d %d %d)", millis(), id(button_held)[0], id(button_held)[1], id(button_held)[2], id(button_held)[3]);
 
   on_multi_touch_release:
     - script.execute: led_on_multi_touch
@@ -828,11 +1225,11 @@ tx_ultimate_touch:
         id: multi_touch
         state: ON
     - lambda: |-
-        ESP_LOGD("button", "Multi Touch Release");
+        ESP_LOGI("button", "[%" PRIu32 "] on_multi_touch_release", millis());
 
   on_long_touch:
     - lambda: |-
-        ESP_LOGD("button", "Very Long Touch Event Position: %d / State: %d", touch.x, touch.state);
+        ESP_LOGI("button", "[%" PRIu32 "] on_long_touch x=%d", millis(), touch.x);
         id(handle_on_release).execute(touch.x);
     - switch.turn_on: vibra
     - binary_sensor.template.publish:
@@ -882,9 +1279,14 @@ script:
             if (save) {
               if (!id(tx_touch).is_fading(leds[i])) {
                 id(original_led_color)[leds[i]] = (*out)[leds[i]].get();
+                auto &o = id(original_led_color)[leds[i]];
+                ESP_LOGD("txu.led", "[%" PRIu32 "] button %d led %d: saved original (%d,%d,%d)", millis(), button, leds[i], o.r, o.g, o.b);
+              } else {
+                ESP_LOGD("txu.led", "[%" PRIu32 "] button %d led %d: fade in progress, keeping saved original", millis(), button, leds[i]);
               }
               id(tx_touch).cancel_fade(leds[i]);
             }
+            ESP_LOGD("txu.led", "[%" PRIu32 "] button %d led %d: set (%d,%d,%d)%s", millis(), button, leds[i], r, g, b, save ? "" : " (no save)");
             (*out)[leds[i]] = Color(r, g, b);
           }
           out->schedule_show();
@@ -899,6 +1301,7 @@ script:
       - lambda: |-
           int leds[2];
           int n = id(tx_touch).get_button_leds(button, ${button_count}, ${button_led_feedback_bottom}, ${button_led_feedback_top}, leds);
+          ESP_LOGD("txu.led", "[%" PRIu32 "] dim_button %d in %d ms", millis(), button, ${after_touch_dim_delay_ms} + extra_delay_ms);
           for (int i = 0; i < n; i++) {
             id(tx_touch).fade_led(leds[i], id(original_led_color)[leds[i]], ${dim_duration_ms}, ${after_touch_dim_delay_ms} + extra_delay_ms);
           }
@@ -916,7 +1319,7 @@ script:
       - delay: ${long_press_time}ms
       - lambda: |-
           if (millis() - id(button_press_start_time)[button-1] >= ${long_press_time}) {
-            ESP_LOGI("button", "button %d long pressed", button);
+            ESP_LOGI("button", "[%" PRIu32 "] button %d long press detected (held %" PRIu32 " ms)", millis(), button, millis() - id(button_press_start_time)[button-1]);
             auto &c = id(long_press_color);
             id(light_button)->execute(button, false, c[0], c[1], c[2]);
             //id(vibra).turn_on();
@@ -935,21 +1338,22 @@ script:
           id(button_held)[button-1] = 0;
           // unsigned subtraction stays correct across the millis() wrap
           uint32_t button_press_duration = millis() - id(button_press_start_time)[button-1];
-          ESP_LOGD("button", "Button %d released, held for %" PRIu32 " ms", button, button_press_duration);
+          ESP_LOGI("button", "[%" PRIu32 "] button %d released after %" PRIu32 " ms (bars_active=%d bars_button=%d)", millis(), button, button_press_duration, id(bars_active), id(bars_button));
           binary_sensor::BinarySensor *const press[] = {id(button_1), id(button_2), id(button_3), id(button_4)};
           binary_sensor::BinarySensor *const long_press[] = {id(long_press_1), id(long_press_2), id(long_press_3), id(long_press_4)};
           if (button_press_duration >= ${long_press_time}) {
-            ESP_LOGD("button", "Button %d long pressed", button);
+            ESP_LOGI("button", "[%" PRIu32 "] button %d -> long press", millis(), button);
             long_press[button-1]->publish_state(true);
           } else {
             id(button_double_tap)[button-1]++;
             id(double_tap_timer)->execute(button);
             // TODO maybe add triple tap?
             if (id(button_double_tap)[button-1] > 1) {
-              ESP_LOGD("button", "Button %d double tapped", button);
+              ESP_LOGI("button", "[%" PRIu32 "] button %d -> double tap", millis(), button);
               id(process_double_tap)->execute(button);
               id(button_double_tap)[button-1] = 0;
             } else {
+              ESP_LOGI("button", "[%" PRIu32 "] button %d -> single press", millis(), button);
               press[button-1]->publish_state(true);
             }
           }
@@ -960,7 +1364,7 @@ script:
             id(bars_go_up_and_down)->stop();
             id(clear_bars)->execute(${after_touch_dim_delay_ms});
           }
-          ESP_LOGD("button", "Release Button: %d", button);
+          ESP_LOGD("button", "[%" PRIu32 "] release of button %d handled", millis(), button);
 
   - id: double_tap_timer
     mode: restart
@@ -968,7 +1372,9 @@ script:
       button: int
     then:
       - delay: ${double_tap_timeout}
-      - lambda: 'id(button_double_tap)[button-1] = 0;'
+      - lambda: |-
+          ESP_LOGD("button", "[%" PRIu32 "] button %d double-tap window closed", millis(), button);
+          id(button_double_tap)[button-1] = 0;
 
   - id: process_double_tap
     mode: parallel
@@ -978,7 +1384,7 @@ script:
       - delay: ${double_tap_timeout}
       - lambda: |-
           id(stop_all).execute();
-          ESP_LOGW("button", "Double tap at button %d", button);
+          ESP_LOGI("button", "[%" PRIu32 "] button %d double tap: blinking", millis(), button);
           binary_sensor::BinarySensor *const double_tap[] = {id(double_tap_1), id(double_tap_2), id(double_tap_3), id(double_tap_4)};
           double_tap[button-1]->publish_state(true);
           // push the release fade back until the blinks below are done
@@ -999,6 +1405,7 @@ script:
     then:
       - lambda: |-
           auto &c = (stage % 2 == 0) ? id(touch_color) : id(double_tap_color);
+          ESP_LOGD("txu.led", "[%" PRIu32 "] button %d blink stage %d", millis(), button, stage);
           id(light_button)->execute(button, false, c[0], c[1], c[2]);
 
   # ---------------------------------------------------------------------------
@@ -1024,6 +1431,9 @@ script:
             }
             id(bars_active) = true;
             id(bar_shown_height) = -1;
+            ESP_LOGI("txu.bars", "[%" PRIu32 "] bars start for button %d at %.0f%%", millis(), button, id(button_bar_brightness)[button-1]);
+          } else {
+            ESP_LOGI("txu.bars", "[%" PRIu32 "] bars restart for button %d (were for button %d)", millis(), button, id(bars_button));
           }
           id(bars_button) = button;
       - repeat:
@@ -1032,6 +1442,7 @@ script:
             - lambda: |-
                 if (id(button_held)[button-1] == 0) {
                   // normally handle_on_release has already stopped this script
+                  ESP_LOGW("txu.bars", "[%" PRIu32 "] button %d no longer held but bars still running; clearing", millis(), button);
                   id(clear_bars).execute(${after_touch_dim_delay_ms});
                   id(bars_go_up_and_down).stop();
                   return;
@@ -1062,7 +1473,7 @@ script:
           const int h = std::max(0, std::min(height, 7));
           const int prev = id(bar_shown_height);  // -1 = nothing drawn yet
           if (h == prev) return;  // called every brightness step; only act when a segment changes
-          ESP_LOGD("button", "set_bar_height to %d for button %d", h, button);
+          ESP_LOGD("txu.bars", "[%" PRIu32 "] height %d -> %d for button %d (brightness %.0f%%)", millis(), prev, h, button, button >= 1 ? id(button_bar_brightness)[button-1] : 0.0f);
           // segment state for a given height: 0 = saved color, 1 = dim glow, 2 = lit
           auto state = [](int i, int height) { return height < 0 ? 0 : i < height ? 2 : (i == 0 && height == 0) ? 1 : 0; };
           for (int i = 0; i < 7; i++) {
@@ -1095,7 +1506,11 @@ script:
       delay_ms: int
     then:
       - lambda: |-
-          if (!id(bars_active)) return;
+          if (!id(bars_active)) {
+            ESP_LOGV("txu.bars", "[%" PRIu32 "] clear_bars: no bars showing", millis());
+            return;
+          }
+          ESP_LOGI("txu.bars", "[%" PRIu32 "] clear_bars for button %d in %d ms (shown height %d)", millis(), id(bars_button), delay_ms, id(bar_shown_height));
           for (int i = 0; i < 7; i++) {
             for (int led : {13 + i, i == 6 ? 27 : 5 - i}) {
               id(tx_touch).cancel_fade(led);  // freeze at the current color
@@ -1112,6 +1527,7 @@ script:
   - id: stop_all
     mode: restart
     then:
+      - lambda: 'ESP_LOGD("button", "[%" PRIu32 "] stop_all", millis());'
       - script.stop: led_on_button_press
       - script.stop: bars_go_up_and_down
       - script.execute:
@@ -1120,7 +1536,7 @@ script:
 
   # Remember what the swept LEDs show now, so they fade back to it instead of to
   # black. LEDs that are mid-fade or belong to a held button already have their
-  # real original saved, so keep that. Shared by all knight_rider variants.
+  # real original saved, so keep that.
   - id: knight_rider_prepare
     then:
       - lambda: |-
@@ -1141,62 +1557,21 @@ script:
               int led = swept[j];
               if (!keep[led] && !id(tx_touch).is_fading(led)) {
                 id(original_led_color)[led] = (*out)[led].get();
+              } else {
+                ESP_LOGD("txu.swipe", "[%" PRIu32 "] led %d keeps saved original (%s)", millis(), led, keep[led] ? "button held" : "fade in progress");
               }
               id(tx_touch).cancel_fade(led);
             }
           }
 
-  # Original: sweep, then all swept LEDs fade out together.
+  # Comet: each LED starts dimming comet_tail_ms after it lights, while the sweep
+  # is still moving, so a fading tail follows the head.
   - id: knight_rider
     mode: restart
     parameters:
       left: bool
     then:
-      - script.execute: knight_rider_prepare
-      - repeat:
-          count: 7
-          then:
-            - lambda: "id(knight_rider_on)->execute(iteration, left);"
-            - delay: ${swipe_between_led_delay_ms}ms
-      - lambda: |-
-          for (int i = 0; i < 7; i++) {
-            if (${button_led_feedback_bottom}) id(tx_touch).fade_led(6 + i, id(original_led_color)[6 + i], ${swipe_fade_ms});
-            if (${button_led_feedback_top}) id(tx_touch).fade_led(20 + i, id(original_led_color)[20 + i], ${swipe_fade_ms});
-          }
-
-  # Sweep, then fade out in the order the LEDs lit up: the first-lit LED starts
-  # dimming when the sweep ends, and each following one a step later.
-  - id: knight_rider2
-    mode: restart
-    parameters:
-      left: bool
-    then:
-      - script.execute: knight_rider_prepare
-      - repeat:
-          count: 7
-          then:
-            - lambda: "id(knight_rider_on)->execute(iteration, left);"
-            - delay: ${swipe_between_led_delay_ms}ms
-      - lambda: |-
-          for (int i = 0; i < 7; i++) {
-            const uint32_t delay = i * ${swipe_between_led_delay_ms};
-            if (${button_led_feedback_bottom}) {
-              int led = left ? 6 + i : 12 - i;
-              id(tx_touch).fade_led(led, id(original_led_color)[led], ${swipe_fade_ms}, delay);
-            }
-            if (${button_led_feedback_top}) {
-              int led = left ? 26 - i : 20 + i;
-              id(tx_touch).fade_led(led, id(original_led_color)[led], ${swipe_fade_ms}, delay);
-            }
-          }
-
-  # Comet: each LED starts dimming comet_tail_ms after it lights, while the sweep
-  # is still moving, so a fading tail follows the head.
-  - id: knight_rider3
-    mode: restart
-    parameters:
-      left: bool
-    then:
+      - lambda: 'ESP_LOGI("txu.swipe", "[%" PRIu32 "] sweep %s start", millis(), left ? "left" : "right");'
       - script.execute: knight_rider_prepare
       - repeat:
           count: 7
@@ -1232,29 +1607,12 @@ script:
           }
           out->schedule_show();
 
-  # Runs the knight_rider variant chosen by the "Swipe Effect" select.
-  - id: run_swipe_effect
-    mode: restart
-    parameters:
-      left: bool
-    then:
-      - lambda: |-
-          // stop any sweep still running, even one started by a different variant
-          id(knight_rider)->stop();
-          id(knight_rider2)->stop();
-          id(knight_rider3)->stop();
-          switch (id(swipe_effect).active_index().value_or(0)) {
-            case 1: id(knight_rider2)->execute(left); break;
-            case 2: id(knight_rider3)->execute(left); break;
-            default: id(knight_rider)->execute(left); break;
-          }
-
   - id: led_on_swipe_left
     mode: restart
     then:
       - script.execute: stop_all
       - script.execute:
-          id: run_swipe_effect
+          id: knight_rider
           left: true
 
   - id: led_on_swipe_right
@@ -1262,7 +1620,7 @@ script:
     then:
       - script.execute: stop_all
       - script.execute:
-          id: run_swipe_effect
+          id: knight_rider
           left: false
 
   - id: led_on_multi_touch
@@ -1337,33 +1695,33 @@ script:
     then:
       - if:
           condition:
-            lambda: 'return id(touch_sound_enabled).state && strcmp("${touch_sound}", "none") != 0;'
+            lambda: 'return id(touch_sound_enabled).state && strcmp("${touch_rtttl}", "none") != 0;'
           then:
             - rtttl.play:
                 id: beeper
-                rtttl: "${touch_sound}"
+                rtttl: "${touch_rtttl}"
 
   - id: play_swipe_right_sound
     mode: restart
     then:
       - if:
           condition:
-            lambda: 'return id(touch_sound_enabled).state && strcmp("${swipe_right_sound}", "none") != 0;'
+            lambda: 'return id(touch_sound_enabled).state && strcmp("${swipe_right_rtttl}", "none") != 0;'
           then:
             - rtttl.play:
                 id: beeper
-                rtttl: "${swipe_right_sound}"
+                rtttl: "${swipe_right_rtttl}"
 
   - id: play_swipe_left_sound
     mode: restart
     then:
       - if:
           condition:
-            lambda: 'return id(touch_sound_enabled).state && strcmp("${swipe_left_sound}", "none") != 0;'
+            lambda: 'return id(touch_sound_enabled).state && strcmp("${swipe_left_rtttl}", "none") != 0;'
           then:
             - rtttl.play:
                 id: beeper
-                rtttl: "${swipe_left_sound}"
+                rtttl: "${swipe_left_rtttl}"
 
 
   # Only needed if pa_power is switched instead of always on (see the pa_power

@@ -3,10 +3,15 @@
 #include "tx_ultimate_touch.h"
 
 #include <algorithm>
+#include <cinttypes>
+#include <cstdio>
 
 namespace esphome {
    namespace tx_ultimate_touch {
       static const char *const TAG = "tx_ultimate_touch";
+      // Separate tags so each kind of debug output can be silenced in logger: logs:
+      static const char *const TAG_RAW = "txu.raw";    // every complete touch-panel frame
+      static const char *const TAG_FADE = "txu.fade";  // every fade queued, started, finished, cancelled
 
       // Frame layout: 170 85 | 1 (version) | 2 (opcode) | len | data[len] | 2-byte checksum (ignored)
       static const uint8_t HEADER[] = {170, 85, 1, 2};
@@ -52,12 +57,17 @@ namespace esphome {
 
             const uint8_t data_len = this->frame_[HEADER_LEN];
             if (data_len == 0 || data_len > MAX_DATA_LEN) {
-               ESP_LOGW(TAG, "Dropping frame with bad length %d", data_len);
+               ESP_LOGW(TAG, "[%" PRIu32 "] Dropping frame with bad length %d", millis(), data_len);
                this->frame_len_ = 0;
                continue;
             }
             // header + length byte + data; the checksum that follows is skipped by resync
             if (this->frame_len_ == HEADER_LEN + 1 + data_len) {
+               char hex[3 * MAX_DATA_LEN + 1] = {};
+               for (uint8_t i = 0; i < data_len; i++) {
+                  snprintf(hex + 3 * i, 4, "%02X ", this->frame_[HEADER_LEN + 1 + i]);
+               }
+               ESP_LOGD(TAG_RAW, "[%" PRIu32 "] frame len=%d data=%s", millis(), data_len, hex);
                this->send_touch_(this->get_touch_point(this->frame_));
                this->frame_len_ = 0;
             }
@@ -69,31 +79,31 @@ namespace esphome {
             case TOUCH_STATE_RELEASE:
                if (tp.x >= 17) {
                   tp.x -= 16;
-                  ESP_LOGD(TAG, "Long Press Release (x=%d)", tp.x);
+                  ESP_LOGD(TAG, "[%" PRIu32 "] Long Press Release (x=%d)", millis(), tp.x);
                   this->long_touch_release_trigger_.trigger(tp);
                } else {
-                  ESP_LOGD(TAG, "Release (x=%d)", tp.x);
+                  ESP_LOGD(TAG, "[%" PRIu32 "] Release (x=%d)", millis(), tp.x);
                   this->release_trigger_.trigger(tp);
                }
                break;
 
             case TOUCH_STATE_PRESS:
-               ESP_LOGD(TAG, "Press (x=%d)", tp.x);
+               ESP_LOGD(TAG, "[%" PRIu32 "] Press (x=%d)", millis(), tp.x);
                this->touch_trigger_.trigger(tp);
                break;
 
             case TOUCH_STATE_SWIPE_LEFT:
-               ESP_LOGD(TAG, "Swipe Left (x=%d)", tp.x);
+               ESP_LOGD(TAG, "[%" PRIu32 "] Swipe Left (x=%d)", millis(), tp.x);
                this->swipe_trigger_left_.trigger(tp);
                break;
 
             case TOUCH_STATE_SWIPE_RIGHT:
-               ESP_LOGD(TAG, "Swipe Right (x=%d)", tp.x);
+               ESP_LOGD(TAG, "[%" PRIu32 "] Swipe Right (x=%d)", millis(), tp.x);
                this->swipe_trigger_right_.trigger(tp);
                break;
 
             case TOUCH_STATE_ALL_FIELDS:
-               ESP_LOGD(TAG, "Multi Touch Release");
+               ESP_LOGD(TAG, "[%" PRIu32 "] Multi Touch Release", millis());
                this->multi_touch_release_trigger_.trigger(tp);
                break;
 
@@ -128,7 +138,7 @@ namespace esphome {
                tp.state = bytes[5];
                break;
             default:
-               ESP_LOGW(TAG, "Tx Ultimate Touch unknown state %d", bytes[4]);
+               ESP_LOGW(TAG, "[%" PRIu32 "] Tx Ultimate Touch unknown state %d", millis(), bytes[4]);
          }
          return tp;
       }
@@ -143,6 +153,9 @@ namespace esphome {
       void TxUltimateTouch::fade_led(int index, Color to, uint32_t duration_ms, uint32_t delay_ms, FadeEase ease) {
          if (index < 0 || index >= NUM_LEDS) return;
          LedFade &f = this->fades_[index];
+         ESP_LOGD(TAG_FADE, "[%" PRIu32 "] queue  led=%2d to=(%3d,%3d,%3d) dur=%" PRIu32 " delay=%" PRIu32 " ease=%s%s",
+                  millis(), index, to.r, to.g, to.b, duration_ms, delay_ms,
+                  ease == EASE_LINEAR ? "linear" : "quad", f.active ? " (replaces active fade)" : "");
          f.to = to;
          f.start = millis() + delay_ms;
          f.duration = duration_ms;
@@ -153,10 +166,15 @@ namespace esphome {
 
       void TxUltimateTouch::cancel_fade(int index) {
          if (index < 0 || index >= NUM_LEDS) return;
+         if (this->fades_[index].active) {
+            ESP_LOGD(TAG_FADE, "[%" PRIu32 "] cancel led=%2d%s", millis(), index,
+                     this->fades_[index].captured ? " (mid-fade, LED keeps its current color)" : " (was still waiting)");
+         }
          this->fades_[index].active = false;
       }
 
       void TxUltimateTouch::cancel_all_fades() {
+         ESP_LOGD(TAG_FADE, "[%" PRIu32 "] cancel all", millis());
          for (auto &f : this->fades_) f.active = false;
       }
 
@@ -180,12 +198,15 @@ namespace esphome {
             if (!f.captured) {
                f.from = (*this->light_)[i].get();
                f.captured = true;
+               ESP_LOGD(TAG_FADE, "[%" PRIu32 "] start  led=%2d from=(%3d,%3d,%3d) to=(%3d,%3d,%3d)",
+                        now, i, f.from.r, f.from.g, f.from.b, f.to.r, f.to.g, f.to.b);
             }
 
             float t = f.duration > 0 ? static_cast<float>(elapsed) / f.duration : 1.0f;
             if (t >= 1.0f) {
                t = 1.0f;
                f.active = false;
+               ESP_LOGD(TAG_FADE, "[%" PRIu32 "] done   led=%2d at=(%3d,%3d,%3d)", now, i, f.to.r, f.to.g, f.to.b);
             }
             const float k = f.ease == EASE_LINEAR ? t : t * t;  // EASE_IN_QUAD: slow start, fast finish
             (*this->light_)[i] = Color(lerp(f.from.r, f.to.r, k),
