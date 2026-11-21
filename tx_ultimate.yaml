@@ -43,12 +43,13 @@ substitutions:
   # values look much dimmer than the number suggests.
   bar_min_glow_pct: "50"
 
-  min_bar_color1: "{0,0,0}"
+  # set dimmer long press color gradient
+  min_bar_color1: "{255,255,0}"
   max_bar_color1: "{255,0,0}"
-  min_bar_color2: "{0,0,0}"
-  max_bar_color2: "{0,255,0}"
-  min_bar_color3: "{0,0,0}"
-  max_bar_color3: "{0,0,255}"
+  min_bar_color2: "{255,255,0}"
+  max_bar_color2: "{255,0,0}"
+  min_bar_color3: "{255,255,0}"
+  max_bar_color3: "{255,0,0}"
   min_bar_color4: "{255,255,0}"
   max_bar_color4: "{255,0,0}"
 
@@ -1459,7 +1460,7 @@ script:
                 id(set_bar_height).execute(button, (int) roundf(brightness * 7.0f / 100.0f));
             - delay: ${brightness_interval}
 
-  # Two 7-LED bars: 13..19 going up one side, and 5,4,3,2,1,0,27 going up the other.
+  # Two 7-LED bars: 13-19 going up one side, and 5,4,3,2,1,0,27 going up the other.
   # Only the segments that change are touched: newly lit ones fade in (linear) to
   # their gradient color, newly unlit ones fade out (quadratic) to the saved color.
   - id: set_bar_height
