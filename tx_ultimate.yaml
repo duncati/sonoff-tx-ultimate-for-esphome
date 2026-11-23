@@ -745,8 +745,8 @@ light:
             const float k = std::min(1.0f, 0.06f + beat(p, 0.10f, 0.045f) + 0.6f * beat(p, 0.32f, 0.055f));
             it.all() = Color(current_color.r * k, current_color.g * k, current_color.b * k);
 
-      # Analog clock: amber hour hand, cyan minute hand, dim white second dot,
-      # faint markers at 12/3/6/9. Shows a slow blue pulse until the time is synced.
+      # Analog clock: amber hour hand, cyan minute hand, dim white second dot.
+      # Shows a slow blue pulse until the time is synced.
       - addressable_lambda:
           name: "Clock"
           update_interval: 200ms
@@ -760,7 +760,6 @@ light:
               return;
             }
             it.all() = Color(0, 0, 0);
-            for (int q = 0; q < 4; q++) it[pos(q / 4.0f)] = Color(12, 12, 12);
             it[pos(now.second / 60.0f)] = Color(40, 40, 40);
             const int m = pos((now.minute + now.second / 60.0f) / 60.0f);
             it[m] = Color(0, 200, 255);
@@ -768,6 +767,41 @@ light:
             it[h] = Color(255, 140, 0);
             it[(h + 1) % n] = Color(90, 50, 0);
             it[(h + n - 1) % n] = Color(90, 50, 0);
+
+      # Party: a fast-spinning rainbow of four color bands that pumps on a 128 BPM
+      # beat, with a white kick flash on every 4th beat and random colored sparkles.
+      - addressable_lambda:
+          name: "Party"
+          update_interval: 16ms
+          lambda: |-
+            static float sparkle[28];
+            static uint8_t sparkle_hue[28];
+            const int n = std::min(28, (int) it.size());
+            const uint32_t now = millis();
+            const float beat_ms = 60000.0f / 128.0f;
+            const float beat_phase = fmodf(now / beat_ms, 1.0f);          // 0..1 within each beat
+            const bool kick = ((uint32_t) (now / beat_ms)) % 4 == 0;      // every 4th beat
+            const float pump = 0.35f + 0.65f * expf(-beat_phase * 5.0f);  // bright on the beat, then decays
+            const float flash = kick ? expf(-beat_phase * 12.0f) : 0.0f;  // short white kick
+            const uint8_t spin = (now / 6) & 0xFF;                        // rainbow rotation
+            if (initial_run) for (int i = 0; i < n; i++) sparkle[i] = 0;
+            if (random_float() < 0.35f) {
+              const int i = random_uint32() % n;
+              sparkle[i] = 1.0f;
+              sparkle_hue[i] = random_uint32() & 0xFF;
+            }
+            for (int i = 0; i < n; i++) {
+              const uint8_t hue = spin + i * 256 * 4 / n;                 // four bands around the ring
+              Color c = light::ESPHSVColor(hue, 255, 255 * pump).to_rgb();
+              float r = c.r, g = c.g, b = c.b;
+              if (sparkle[i] > 0.01f) {
+                const Color sc = light::ESPHSVColor(sparkle_hue[i], 180, 255).to_rgb();
+                r += sc.r * sparkle[i]; g += sc.g * sparkle[i]; b += sc.b * sparkle[i];
+                sparkle[i] *= 0.82f;
+              }
+              r += 255 * flash; g += 255 * flash; b += 255 * flash;
+              it[i] = Color(std::min(255.0f, r), std::min(255.0f, g), std::min(255.0f, b));
+            }
 
   - platform: partition
     name: "LEDs Nightlight"
@@ -1278,12 +1312,18 @@ script:
           int n = id(tx_touch).get_button_leds(button, ${button_count}, ${button_led_feedback_bottom}, ${button_led_feedback_top}, leds);
           for (int i = 0; i < n; i++) {
             if (save) {
-              if (!id(tx_touch).is_fading(leds[i])) {
+              // The LED shows feedback, not its real color, while the button is held
+              // (pressed, no release yet) or a fade back is pending/running. In those
+              // cases the saved original is still the real one, so keep it.
+              const bool held = id(button_held)[button-1];
+              const bool fading = id(tx_touch).is_fading(leds[i]);
+              if (!held && !fading) {
                 id(original_led_color)[leds[i]] = (*out)[leds[i]].get();
                 auto &o = id(original_led_color)[leds[i]];
                 ESP_LOGD("txu.led", "[%" PRIu32 "] button %d led %d: saved original (%d,%d,%d)", millis(), button, leds[i], o.r, o.g, o.b);
               } else {
-                ESP_LOGD("txu.led", "[%" PRIu32 "] button %d led %d: fade in progress, keeping saved original", millis(), button, leds[i]);
+                ESP_LOGD("txu.led", "[%" PRIu32 "] button %d led %d: %s, keeping saved original", millis(), button, leds[i],
+                         held ? "button held" : "fade in progress");
               }
               id(tx_touch).cancel_fade(leds[i]);
             }
@@ -1635,6 +1675,14 @@ script:
             id(light_button)->execute(b, true, c[0], c[1], c[2]);
             id(dim_button)->execute(b, 0);
           }
+          // The panel sends a press for the first finger but no release when the
+          // gesture ends as a multi-touch, so clear any button still marked held.
+          for (int b = 1; b <= ${button_count}; b++) {
+            if (id(button_held)[b-1]) {
+              ESP_LOGI("button", "[%" PRIu32 "] multi-touch: clearing held button %d (no release will come)", millis(), b);
+              id(button_held)[b-1] = 0;
+            }
+          }
 
   # Fade any LED to a color over duration_ms (quadratic ease-in), starting from
   # whatever it shows now. Safe to call for many LEDs at once.
@@ -1760,6 +1808,9 @@ text:
     icon: "mdi:music-note"
     on_value:
       then:
+        - lambda: |-
+            ESP_LOGI("rtttl_input", "[%" PRIu32 "] received %u chars: '%s' (beeper %s)", millis(), (unsigned) x.size(), x.c_str(),
+                     id(beeper).is_playing() ? "busy" : "idle");
         - if:
             condition:
               # Only play if the input isn't empty
